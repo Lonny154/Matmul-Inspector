@@ -22,6 +22,6 @@ public:
     const Matrix& a,
     const Matrix& b,
     const Matrix& c
-);
+    );
 };
 
