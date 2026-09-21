@@ -8,9 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/daniel/projects/matmul-inspector/src/inspector.cpp" "CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o" "gcc" "CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o.d"
   "/home/daniel/projects/matmul-inspector/src/main.cpp" "CMakeFiles/matmul-inspector.dir/src/main.cpp.o" "gcc" "CMakeFiles/matmul-inspector.dir/src/main.cpp.o.d"
-  "/home/daniel/projects/matmul-inspector/src/matrix.cpp" "CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o" "gcc" "CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

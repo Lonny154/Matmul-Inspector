@@ -89,8 +89,8 @@ void Inspector::trace_matmul(
     std::cout << "----------------\n";
 
     for (std::size_t k = 0; k < a.cols(); ++k) {
-        const float* a_ptr = a.data() + (row * a.cols() + k);
-        const float* b_ptr = b.data() + (k * b.cols() + col);
+        const float* a_ptr = &a(row, k);
+        const float* b_ptr = &b(k, col);
 
         float product = (*a_ptr) * (*b_ptr);
         sum += product;
@@ -108,7 +108,7 @@ void Inspector::trace_matmul(
             << '\n';
     }
 
-    const float* c_ptr = c.data() + (row * c.cols() + col);
+    const float* c_ptr = &c(row, col);
 
     float difference = std::fabs(*c_ptr - sum);
 
@@ -189,22 +189,20 @@ void Inspector::trace_matmul(
 }
 
 void Inspector::dump_memory(const Matrix& matrix) {
-    const float* ptr = matrix.data();
-
     std::cout << "Memory dump\n";
     std::cout << "-----------\n";
 
     for (std::size_t row = 0; row < matrix.rows(); ++row) {
         for (std::size_t col = 0; col < matrix.cols(); ++col) {
-            std::size_t index = row * matrix.cols() + col;
+            const float* ptr = &matrix(row, col);
 
             std::cout
                 << "[" << row << "," << col << "]  "
-                << static_cast<const void*>(ptr + index)
+                << static_cast<const void*>(ptr)
                 << "  "
                 << std::fixed
                 << std::setprecision(3)
-                << *(ptr + index)
+                << *ptr
                 << '\n';
         }
     }

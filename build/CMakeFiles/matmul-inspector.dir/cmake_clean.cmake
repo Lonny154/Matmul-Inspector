@@ -1,10 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o"
-  "CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o.d"
   "CMakeFiles/matmul-inspector.dir/src/main.cpp.o"
   "CMakeFiles/matmul-inspector.dir/src/main.cpp.o.d"
-  "CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o"
-  "CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o.d"
   "matmul-inspector"
   "matmul-inspector.pdb"
 )
