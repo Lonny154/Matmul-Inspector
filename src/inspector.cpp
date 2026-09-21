@@ -1,80 +1,9 @@
 #include "inspector.hpp"
+#include "numeric.hpp"
 
-#include <algorithm>
-#include <bitset>
 #include <cmath>
-#include <cstdint>
-#include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <limits>
-
-static std::uint32_t float_to_bits(float value) {
-    std::uint32_t bits;
-    std::memcpy(&bits, &value, sizeof(float));
-    return bits;
-}
-
-static std::bitset<32> float_bits(float value) {
-    return std::bitset<32>(float_to_bits(value));
-}
-
-static std::uint32_t float_to_ordered(float value) {
-    std::uint32_t bits = float_to_bits(value);
-
-    if (bits & 0x80000000u) {
-        return ~bits;
-    }
-
-    return bits | 0x80000000u;
-}
-
-static std::uint32_t ulp_distance(float a, float b) {
-    if (std::isnan(a) || std::isnan(b)) {
-        return std::numeric_limits<std::uint32_t>::max();
-    }
-
-    // Treat +0.0f and -0.0f as numerically identical.
-    if (a == b) {
-        return 0;
-    }
-
-    std::uint32_t a_ordered = float_to_ordered(a);
-    std::uint32_t b_ordered = float_to_ordered(b);
-
-    return a_ordered > b_ordered
-        ? a_ordered - b_ordered
-        : b_ordered - a_ordered;
-}
-
-static bool nearly_equal(
-    float actual,
-    float expected,
-    float abs_tolerance,
-    float rel_tolerance
-) {
-    if (std::isnan(actual) || std::isnan(expected)) {
-        return false;
-    }
-
-    if (actual == expected) {
-        return true;
-    }
-
-    float difference = std::fabs(actual - expected);
-
-    float scale = std::max(
-        std::fabs(actual),
-        std::fabs(expected)
-    );
-
-    float tolerance = std::max(
-        abs_tolerance,
-        rel_tolerance * scale
-    );
-
-    return difference <= tolerance;
-}
 
 void Inspector::find_first_mismatch(
     const Matrix& a,
@@ -104,7 +33,7 @@ void Inspector::find_first_mismatch(
 
             float actual = c(row, col);
 
-            if (!nearly_equal(
+            if (!numeric::nearly_equal(
                     actual,
                     expected,
                     abs_tolerance,
@@ -112,14 +41,11 @@ void Inspector::find_first_mismatch(
                 )) {
                 float difference = std::fabs(actual - expected);
 
-                float scale = std::max(
-                    std::fabs(actual),
-                    std::fabs(expected)
-                );
-
-                float tolerance = std::max(
+                float tolerance = numeric::comparison_tolerance(
+                    actual,
+                    expected,
                     abs_tolerance,
-                    rel_tolerance * scale
+                    rel_tolerance
                 );
 
                 std::cout << std::setprecision(10);
@@ -189,7 +115,7 @@ void Inspector::trace_matmul(
     constexpr float abs_tolerance = 1e-6f;
     constexpr float rel_tolerance = 1e-5f;
 
-    bool numeric_match = nearly_equal(
+    bool numeric_match = numeric::nearly_equal(
         *c_ptr,
         sum,
         abs_tolerance,
@@ -197,7 +123,7 @@ void Inspector::trace_matmul(
     );
 
     bool bitwise_match =
-        std::memcmp(c_ptr, &sum, sizeof(float)) == 0;
+        numeric::float_to_bits(*c_ptr) == numeric::float_to_bits(sum);
 
     float relative_error = 0.0f;
 
@@ -218,11 +144,11 @@ void Inspector::trace_matmul(
     std::cout << "recomputed result = " << sum << '\n';
 
     std::cout << "actual bits:     "
-              << float_bits(*c_ptr)
+              << numeric::float_bits(*c_ptr)
               << '\n';
 
     std::cout << "expected bits:   "
-              << float_bits(sum)
+              << numeric::float_bits(sum)
               << '\n';
 
     std::cout
@@ -230,19 +156,19 @@ void Inspector::trace_matmul(
         << std::hex
         << std::setw(8)
         << std::setfill('0')
-        << float_to_bits(*c_ptr)
+        << numeric::float_to_bits(*c_ptr)
         << '\n';
 
     std::cout
         << "expected hex:    0x"
         << std::setw(8)
-        << float_to_bits(sum)
+        << numeric::float_to_bits(sum)
         << std::dec
         << std::setfill(' ')
         << '\n';
 
     std::cout << "ULP distance:    "
-              << ulp_distance(*c_ptr, sum)
+              << numeric::ulp_distance(*c_ptr, sum)
               << '\n';
 
     std::cout << "absolute error:  "
@@ -310,7 +236,7 @@ void Inspector::find_first_bitwise_mismatch(
             float actual = c(row, col);
 
             bool bitwise_match =
-                std::memcmp(&actual, &expected, sizeof(float)) == 0;
+                numeric::float_to_bits(actual) == numeric::float_to_bits(expected);
 
             if (!bitwise_match) {
                 std::cout << std::setprecision(10);

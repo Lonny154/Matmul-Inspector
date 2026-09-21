@@ -10,5 +10,13 @@ Current features:
 - Display IEEE-754 bit patterns and hexadecimal representations
 - Compute ULP distance between floating-point results
 
+Build and run the numeric utility tests:
+
+```sh
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
 Long-term goal:
 Explore tooling for tracing numerical divergence from high-level tensor operations down toward low-level execution and memory behavior.
