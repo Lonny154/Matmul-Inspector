@@ -4,6 +4,11 @@
 
 class Inspector {
 public:
+    // Compare logical output elements directly, independent of their strides.
+    // Reports numerical agreement and bitwise agreement separately, including
+    // diagnostics for the first mismatch of each kind. Expected is the reference.
+    static void compare_results(const Matrix& expected, const Matrix& actual);
+
     static void dump_memory(const Matrix& matrix);
 
     static void trace_matmul(
@@ -24,4 +29,3 @@ public:
     const Matrix& c
     );
 };
-

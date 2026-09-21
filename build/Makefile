@@ -140,6 +140,19 @@ numeric/fast:
 .PHONY : numeric/fast
 
 #=============================================================================
+# Target rules for targets named matrix
+
+# Build rule for target.
+matrix: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 matrix
+.PHONY : matrix
+
+# fast build rule for target.
+matrix/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/build
+.PHONY : matrix/fast
+
+#=============================================================================
 # Target rules for targets named inspector
 
 # Build rule for target.
@@ -151,6 +164,19 @@ inspector: cmake_check_build_system
 inspector/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/build
 .PHONY : inspector/fast
+
+#=============================================================================
+# Target rules for targets named cuda_matmul
+
+# Build rule for target.
+cuda_matmul: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cuda_matmul
+.PHONY : cuda_matmul
+
+# fast build rule for target.
+cuda_matmul/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/build
+.PHONY : cuda_matmul/fast
 
 #=============================================================================
 # Target rules for targets named matmul-inspector
@@ -555,6 +581,56 @@ matrix-tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix-tests.dir/build.make CMakeFiles/matrix-tests.dir/build
 .PHONY : matrix-tests/fast
 
+#=============================================================================
+# Target rules for targets named comparison-tests
+
+# Build rule for target.
+comparison-tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 comparison-tests
+.PHONY : comparison-tests
+
+# fast build rule for target.
+comparison-tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/build
+.PHONY : comparison-tests/fast
+
+#=============================================================================
+# Target rules for targets named cuda-matmul-tests
+
+# Build rule for target.
+cuda-matmul-tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cuda-matmul-tests
+.PHONY : cuda-matmul-tests
+
+# fast build rule for target.
+cuda-matmul-tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/build
+.PHONY : cuda-matmul-tests/fast
+
+src/cuda_matmul.o: src/cuda_matmul.cu.o
+.PHONY : src/cuda_matmul.o
+
+# target to build an object file
+src/cuda_matmul.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/src/cuda_matmul.cu.o
+.PHONY : src/cuda_matmul.cu.o
+
+src/cuda_matmul.i: src/cuda_matmul.cu.i
+.PHONY : src/cuda_matmul.i
+
+# target to preprocess a source file
+src/cuda_matmul.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/src/cuda_matmul.cu.i
+.PHONY : src/cuda_matmul.cu.i
+
+src/cuda_matmul.s: src/cuda_matmul.cu.s
+.PHONY : src/cuda_matmul.s
+
+# target to generate assembly for a file
+src/cuda_matmul.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/src/cuda_matmul.cu.s
+.PHONY : src/cuda_matmul.cu.s
+
 src/inspector.o: src/inspector.cpp.o
 .PHONY : src/inspector.o
 
@@ -608,7 +684,7 @@ src/matrix.o: src/matrix.cpp.o
 
 # target to build an object file
 src/matrix.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/src/matrix.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/src/matrix.cpp.o
 .PHONY : src/matrix.cpp.o
 
 src/matrix.i: src/matrix.cpp.i
@@ -616,7 +692,7 @@ src/matrix.i: src/matrix.cpp.i
 
 # target to preprocess a source file
 src/matrix.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/src/matrix.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/src/matrix.cpp.i
 .PHONY : src/matrix.cpp.i
 
 src/matrix.s: src/matrix.cpp.s
@@ -624,7 +700,7 @@ src/matrix.s: src/matrix.cpp.s
 
 # target to generate assembly for a file
 src/matrix.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/src/matrix.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/src/matrix.cpp.s
 .PHONY : src/matrix.cpp.s
 
 src/numeric.o: src/numeric.cpp.o
@@ -650,6 +726,54 @@ src/numeric.s: src/numeric.cpp.s
 src/numeric.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/numeric.dir/build.make CMakeFiles/numeric.dir/src/numeric.cpp.s
 .PHONY : src/numeric.cpp.s
+
+tests/comparison_test.o: tests/comparison_test.cpp.o
+.PHONY : tests/comparison_test.o
+
+# target to build an object file
+tests/comparison_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/tests/comparison_test.cpp.o
+.PHONY : tests/comparison_test.cpp.o
+
+tests/comparison_test.i: tests/comparison_test.cpp.i
+.PHONY : tests/comparison_test.i
+
+# target to preprocess a source file
+tests/comparison_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/tests/comparison_test.cpp.i
+.PHONY : tests/comparison_test.cpp.i
+
+tests/comparison_test.s: tests/comparison_test.cpp.s
+.PHONY : tests/comparison_test.s
+
+# target to generate assembly for a file
+tests/comparison_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/tests/comparison_test.cpp.s
+.PHONY : tests/comparison_test.cpp.s
+
+tests/cuda_matmul_test.o: tests/cuda_matmul_test.cpp.o
+.PHONY : tests/cuda_matmul_test.o
+
+# target to build an object file
+tests/cuda_matmul_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/tests/cuda_matmul_test.cpp.o
+.PHONY : tests/cuda_matmul_test.cpp.o
+
+tests/cuda_matmul_test.i: tests/cuda_matmul_test.cpp.i
+.PHONY : tests/cuda_matmul_test.i
+
+# target to preprocess a source file
+tests/cuda_matmul_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/tests/cuda_matmul_test.cpp.i
+.PHONY : tests/cuda_matmul_test.cpp.i
+
+tests/cuda_matmul_test.s: tests/cuda_matmul_test.cpp.s
+.PHONY : tests/cuda_matmul_test.s
+
+# target to generate assembly for a file
+tests/cuda_matmul_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/tests/cuda_matmul_test.cpp.s
+.PHONY : tests/cuda_matmul_test.cpp.s
 
 tests/matrix_test.o: tests/matrix_test.cpp.o
 .PHONY : tests/matrix_test.o
@@ -736,11 +860,18 @@ help:
 	@echo "... NightlySubmit"
 	@echo "... NightlyTest"
 	@echo "... NightlyUpdate"
+	@echo "... comparison-tests"
+	@echo "... cuda-matmul-tests"
+	@echo "... cuda_matmul"
 	@echo "... inspector"
 	@echo "... matmul-inspector"
+	@echo "... matrix"
 	@echo "... matrix-tests"
 	@echo "... numeric"
 	@echo "... numeric-tests"
+	@echo "... src/cuda_matmul.o"
+	@echo "... src/cuda_matmul.i"
+	@echo "... src/cuda_matmul.s"
 	@echo "... src/inspector.o"
 	@echo "... src/inspector.i"
 	@echo "... src/inspector.s"
@@ -753,6 +884,12 @@ help:
 	@echo "... src/numeric.o"
 	@echo "... src/numeric.i"
 	@echo "... src/numeric.s"
+	@echo "... tests/comparison_test.o"
+	@echo "... tests/comparison_test.i"
+	@echo "... tests/comparison_test.s"
+	@echo "... tests/cuda_matmul_test.o"
+	@echo "... tests/cuda_matmul_test.i"
+	@echo "... tests/cuda_matmul_test.s"
 	@echo "... tests/matrix_test.o"
 	@echo "... tests/matrix_test.i"
 	@echo "... tests/matrix_test.s"

@@ -1,8 +1,27 @@
 #include <iostream>
-#include <cmath>
+#include <exception>
 
 #include "inspector.hpp"
 #include "matrix.hpp"
+
+#ifdef MATMUL_INSPECTOR_HAS_CUDA
+#include "cuda_matmul.hpp"
+#endif
+
+namespace {
+
+void print_matrix(const char* label, const Matrix& matrix) {
+    std::cout << label << '\n';
+    for (std::size_t row = 0; row < matrix.rows(); ++row) {
+        for (std::size_t col = 0; col < matrix.cols(); ++col) {
+            std::cout << matrix(row, col) << ' ';
+        }
+        std::cout << '\n';
+    }
+    std::cout << '\n';
+}
+
+}  // namespace
 
 int main() {
     Matrix a(2, 3);
@@ -22,24 +41,27 @@ int main() {
     b(2, 0) = 11.0f;
     b(2, 1) = 12.0f;
 
-    Matrix c = matmul(a, b);
-    c(0, 1) = 64.00001f;
+    Matrix cpu = matmul(a, b);
+    print_matrix("CPU C", cpu);
 
-    std::cout << "Matrix C\n";
-
-    for (std::size_t row = 0; row < c.rows(); ++row) {
-        for (std::size_t col = 0; col < c.cols(); ++col) {
-            std::cout << c(row, col) << ' ';
-        }
-        std::cout << '\n';
+#ifdef MATMUL_INSPECTOR_HAS_CUDA
+    std::string reason;
+    if (!cuda_available(&reason)) {
+        std::cout << "GPU comparison skipped: " << reason << '\n';
+        return 0;
     }
-
-    std::cout << '\n';
-
-    Inspector::trace_matmul(a, b, c, 0, 1);
-    Inspector::find_first_mismatch(a, b, c);
-    std::cout << '\n';
-    Inspector::find_first_bitwise_mismatch(a, b, c);
+    try {
+        Matrix gpu = cuda_matmul(a, b);
+        print_matrix("GPU C", gpu);
+        std::cout << "CPU vs GPU (expected: CPU, actual: GPU)\n";
+        Inspector::compare_results(cpu, gpu);
+    } catch (const std::exception& error) {
+        std::cerr << "GPU matmul failed: " << error.what() << '\n';
+        return 1;
+    }
+#else
+    std::cout << "GPU comparison skipped: CUDA support was not built\n";
+#endif
 
     return 0;
 }

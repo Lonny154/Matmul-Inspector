@@ -1,9 +1,68 @@
 #include "inspector.hpp"
 #include "numeric.hpp"
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
+
+void Inspector::compare_results(const Matrix& expected, const Matrix& actual) {
+    if (actual.rows() != expected.rows() || actual.cols() != expected.cols()) {
+        std::cerr << "Cannot compare results with different dimensions\n";
+        return;
+    }
+
+    constexpr float abs_tolerance = 1e-6f;
+    constexpr float rel_tolerance = 1e-5f;
+    bool numeric_match = true;
+    bool bitwise_match = true;
+    std::size_t numeric_row = 0, numeric_col = 0;
+    std::size_t bitwise_row = 0, bitwise_col = 0;
+    for (std::size_t row = 0; row < expected.rows(); ++row) {
+        for (std::size_t col = 0; col < expected.cols(); ++col) {
+            if (numeric_match && !numeric::nearly_equal(
+                    actual(row, col), expected(row, col), abs_tolerance, rel_tolerance)) {
+                numeric_match = false;
+                numeric_row = row;
+                numeric_col = col;
+            }
+            if (bitwise_match && !numeric::bitwise_equal(actual(row, col), expected(row, col))) {
+                bitwise_match = false;
+                bitwise_row = row;
+                bitwise_col = col;
+            }
+        }
+    }
+
+    std::cout << "numeric: " << (numeric_match ? "MATCH" : "MISMATCH") << '\n';
+    std::cout << "bitwise: " << (bitwise_match ? "MATCH" : "MISMATCH") << '\n';
+    auto report = [&](const char* heading, std::size_t row, std::size_t col) {
+        float a = actual(row, col);
+        float e = expected(row, col);
+        std::cout << std::setprecision(10)
+                  << heading << "\nC[" << row << ',' << col << "]\n"
+                  << "actual:         " << a << '\n'
+                  << "expected:       " << e << '\n'
+                  << "actual bits:    " << numeric::float_bits(a) << '\n'
+                  << "expected bits:  " << numeric::float_bits(e) << '\n'
+                  << "ULP distance:   " << numeric::ulp_distance(a, e) << '\n'
+                  << "absolute error: " << numeric::absolute_error(a, e) << '\n'
+                  << "relative error: " << numeric::relative_error(a, e) << '\n'
+                  << "tolerance:      " << numeric::comparison_tolerance(a, e, abs_tolerance, rel_tolerance)
+                  << '\n';
+    };
+    if (numeric_match) {
+        std::cout << "No numeric mismatches found\n";
+    } else {
+        report("FIRST NUMERIC MISMATCH", numeric_row, numeric_col);
+    }
+    if (bitwise_match) {
+        std::cout << "No bitwise mismatches found\n";
+    } else {
+        report("FIRST BITWISE MISMATCH", bitwise_row, bitwise_col);
+        if (numeric_match) {
+            std::cout << "Bitwise differences are within numerical tolerance.\n";
+        }
+    }
+}
 
 void Inspector::find_first_mismatch(
     const Matrix& a,
@@ -39,7 +98,7 @@ void Inspector::find_first_mismatch(
                     abs_tolerance,
                     rel_tolerance
                 )) {
-                float difference = std::fabs(actual - expected);
+                float difference = numeric::absolute_error(actual, expected);
 
                 float tolerance = numeric::comparison_tolerance(
                     actual,
@@ -110,7 +169,7 @@ void Inspector::trace_matmul(
 
     const float* c_ptr = &c(row, col);
 
-    float difference = std::fabs(*c_ptr - sum);
+    float difference = numeric::absolute_error(*c_ptr, sum);
 
     constexpr float abs_tolerance = 1e-6f;
     constexpr float rel_tolerance = 1e-5f;
@@ -122,14 +181,8 @@ void Inspector::trace_matmul(
         rel_tolerance
     );
 
-    bool bitwise_match =
-        numeric::float_to_bits(*c_ptr) == numeric::float_to_bits(sum);
-
-    float relative_error = 0.0f;
-
-    if (sum != 0.0f) {
-        relative_error = difference / std::fabs(sum);
-    }
+    bool bitwise_match = numeric::bitwise_equal(*c_ptr, sum);
+    float relative_error = numeric::relative_error(*c_ptr, sum);
 
     std::cout << std::setprecision(10);
 
@@ -233,8 +286,7 @@ void Inspector::find_first_bitwise_mismatch(
 
             float actual = c(row, col);
 
-            bool bitwise_match =
-                numeric::float_to_bits(actual) == numeric::float_to_bits(expected);
+            bool bitwise_match = numeric::bitwise_equal(actual, expected);
 
             if (!bitwise_match) {
                 std::cout << std::setprecision(10);
@@ -244,7 +296,7 @@ void Inspector::find_first_bitwise_mismatch(
                 std::cout << "actual:     " << actual << '\n';
                 std::cout << "expected:   " << expected << '\n';
                 std::cout << "difference: "
-                          << std::fabs(actual - expected)
+                          << numeric::absolute_error(actual, expected)
                           << "\n\n";
 
                 trace_matmul(a, b, c, row, col);

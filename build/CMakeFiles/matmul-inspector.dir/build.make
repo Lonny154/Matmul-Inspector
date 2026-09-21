@@ -93,7 +93,9 @@ matmul__inspector_EXTERNAL_OBJECTS =
 matmul-inspector: CMakeFiles/matmul-inspector.dir/src/main.cpp.o
 matmul-inspector: CMakeFiles/matmul-inspector.dir/build.make
 matmul-inspector: libinspector.a
+matmul-inspector: libcuda_matmul.a
 matmul-inspector: libnumeric.a
+matmul-inspector: libmatrix.a
 matmul-inspector: CMakeFiles/matmul-inspector.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable matmul-inspector"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/matmul-inspector.dir/link.txt --verbose=$(VERBOSE)

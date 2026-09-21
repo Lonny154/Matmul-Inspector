@@ -22,6 +22,18 @@ std::bitset<32> float_bits(float value) {
     return std::bitset<32>(float_to_bits(value));
 }
 
+bool bitwise_equal(float actual, float expected) {
+    return float_to_bits(actual) == float_to_bits(expected);
+}
+
+float absolute_error(float actual, float expected) {
+    return std::fabs(actual - expected);
+}
+
+float relative_error(float actual, float expected) {
+    return expected != 0.0f ? absolute_error(actual, expected) / std::fabs(expected) : 0.0f;
+}
+
 std::uint32_t float_to_ordered(float value) {
     std::uint32_t bits = float_to_bits(value);
 
@@ -78,7 +90,7 @@ bool nearly_equal(
         return true;
     }
 
-    float difference = std::fabs(actual - expected);
+    float difference = absolute_error(actual, expected);
     float tolerance = comparison_tolerance(
         actual, expected, abs_tolerance, rel_tolerance
     );

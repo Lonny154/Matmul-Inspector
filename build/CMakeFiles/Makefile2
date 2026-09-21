@@ -64,10 +64,14 @@ CMAKE_BINARY_DIR = /home/daniel/projects/matmul-inspector/build
 
 # The main recursive "all" target.
 all: CMakeFiles/numeric.dir/all
+all: CMakeFiles/matrix.dir/all
 all: CMakeFiles/inspector.dir/all
+all: CMakeFiles/cuda_matmul.dir/all
 all: CMakeFiles/matmul-inspector.dir/all
 all: CMakeFiles/numeric-tests.dir/all
 all: CMakeFiles/matrix-tests.dir/all
+all: CMakeFiles/comparison-tests.dir/all
+all: CMakeFiles/cuda-matmul-tests.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -76,7 +80,9 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/numeric.dir/clean
+clean: CMakeFiles/matrix.dir/clean
 clean: CMakeFiles/inspector.dir/clean
+clean: CMakeFiles/cuda_matmul.dir/clean
 clean: CMakeFiles/matmul-inspector.dir/clean
 clean: CMakeFiles/Experimental.dir/clean
 clean: CMakeFiles/Nightly.dir/clean
@@ -108,6 +114,8 @@ clean: CMakeFiles/ContinuousMemCheck.dir/clean
 clean: CMakeFiles/ContinuousSubmit.dir/clean
 clean: CMakeFiles/numeric-tests.dir/clean
 clean: CMakeFiles/matrix-tests.dir/clean
+clean: CMakeFiles/comparison-tests.dir/clean
+clean: CMakeFiles/cuda-matmul-tests.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -117,7 +125,7 @@ clean: CMakeFiles/matrix-tests.dir/clean
 CMakeFiles/numeric.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/numeric.dir/build.make CMakeFiles/numeric.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/numeric.dir/build.make CMakeFiles/numeric.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=8,9 "Built target numeric"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=15,16 "Built target numeric"
 .PHONY : CMakeFiles/numeric.dir/all
 
 # Build rule for subdir invocation for target.
@@ -137,18 +145,45 @@ CMakeFiles/numeric.dir/clean:
 .PHONY : CMakeFiles/numeric.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/matrix.dir
+
+# All Build rule for target.
+CMakeFiles/matrix.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=11,12 "Built target matrix"
+.PHONY : CMakeFiles/matrix.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/matrix.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/matrix.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
+.PHONY : CMakeFiles/matrix.dir/rule
+
+# Convenience name for target.
+matrix: CMakeFiles/matrix.dir/rule
+.PHONY : matrix
+
+# clean rule for target.
+CMakeFiles/matrix.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/clean
+.PHONY : CMakeFiles/matrix.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/inspector.dir
 
 # All Build rule for target.
 CMakeFiles/inspector.dir/all: CMakeFiles/numeric.dir/all
+CMakeFiles/inspector.dir/all: CMakeFiles/matrix.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inspector.dir/build.make CMakeFiles/inspector.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=1,2,3 "Built target inspector"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=7,8 "Built target inspector"
 .PHONY : CMakeFiles/inspector.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/inspector.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 6
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/inspector.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
 .PHONY : CMakeFiles/inspector.dir/rule
@@ -163,19 +198,47 @@ CMakeFiles/inspector.dir/clean:
 .PHONY : CMakeFiles/inspector.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/cuda_matmul.dir
+
+# All Build rule for target.
+CMakeFiles/cuda_matmul.dir/all: CMakeFiles/matrix.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=5,6 "Built target cuda_matmul"
+.PHONY : CMakeFiles/cuda_matmul.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/cuda_matmul.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/cuda_matmul.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
+.PHONY : CMakeFiles/cuda_matmul.dir/rule
+
+# Convenience name for target.
+cuda_matmul: CMakeFiles/cuda_matmul.dir/rule
+.PHONY : cuda_matmul
+
+# clean rule for target.
+CMakeFiles/cuda_matmul.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda_matmul.dir/build.make CMakeFiles/cuda_matmul.dir/clean
+.PHONY : CMakeFiles/cuda_matmul.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/matmul-inspector.dir
 
 # All Build rule for target.
 CMakeFiles/matmul-inspector.dir/all: CMakeFiles/numeric.dir/all
+CMakeFiles/matmul-inspector.dir/all: CMakeFiles/matrix.dir/all
 CMakeFiles/matmul-inspector.dir/all: CMakeFiles/inspector.dir/all
+CMakeFiles/matmul-inspector.dir/all: CMakeFiles/cuda_matmul.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matmul-inspector.dir/build.make CMakeFiles/matmul-inspector.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matmul-inspector.dir/build.make CMakeFiles/matmul-inspector.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=4,5 "Built target matmul-inspector"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=9,10 "Built target matmul-inspector"
 .PHONY : CMakeFiles/matmul-inspector.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/matmul-inspector.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/matmul-inspector.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
 .PHONY : CMakeFiles/matmul-inspector.dir/rule
@@ -924,7 +987,7 @@ CMakeFiles/ContinuousSubmit.dir/clean:
 CMakeFiles/numeric-tests.dir/all: CMakeFiles/numeric.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/numeric-tests.dir/build.make CMakeFiles/numeric-tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/numeric-tests.dir/build.make CMakeFiles/numeric-tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=10,11 "Built target numeric-tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=17,18 "Built target numeric-tests"
 .PHONY : CMakeFiles/numeric-tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -948,15 +1011,16 @@ CMakeFiles/numeric-tests.dir/clean:
 
 # All Build rule for target.
 CMakeFiles/matrix-tests.dir/all: CMakeFiles/numeric.dir/all
+CMakeFiles/matrix-tests.dir/all: CMakeFiles/matrix.dir/all
 CMakeFiles/matrix-tests.dir/all: CMakeFiles/inspector.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix-tests.dir/build.make CMakeFiles/matrix-tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix-tests.dir/build.make CMakeFiles/matrix-tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=6,7 "Built target matrix-tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=13,14 "Built target matrix-tests"
 .PHONY : CMakeFiles/matrix-tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/matrix-tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/matrix-tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
 .PHONY : CMakeFiles/matrix-tests.dir/rule
@@ -969,6 +1033,62 @@ matrix-tests: CMakeFiles/matrix-tests.dir/rule
 CMakeFiles/matrix-tests.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix-tests.dir/build.make CMakeFiles/matrix-tests.dir/clean
 .PHONY : CMakeFiles/matrix-tests.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/comparison-tests.dir
+
+# All Build rule for target.
+CMakeFiles/comparison-tests.dir/all: CMakeFiles/numeric.dir/all
+CMakeFiles/comparison-tests.dir/all: CMakeFiles/matrix.dir/all
+CMakeFiles/comparison-tests.dir/all: CMakeFiles/inspector.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=1,2 "Built target comparison-tests"
+.PHONY : CMakeFiles/comparison-tests.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/comparison-tests.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/comparison-tests.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
+.PHONY : CMakeFiles/comparison-tests.dir/rule
+
+# Convenience name for target.
+comparison-tests: CMakeFiles/comparison-tests.dir/rule
+.PHONY : comparison-tests
+
+# clean rule for target.
+CMakeFiles/comparison-tests.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparison-tests.dir/build.make CMakeFiles/comparison-tests.dir/clean
+.PHONY : CMakeFiles/comparison-tests.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/cuda-matmul-tests.dir
+
+# All Build rule for target.
+CMakeFiles/cuda-matmul-tests.dir/all: CMakeFiles/numeric.dir/all
+CMakeFiles/cuda-matmul-tests.dir/all: CMakeFiles/matrix.dir/all
+CMakeFiles/cuda-matmul-tests.dir/all: CMakeFiles/cuda_matmul.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=3,4 "Built target cuda-matmul-tests"
+.PHONY : CMakeFiles/cuda-matmul-tests.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/cuda-matmul-tests.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/cuda-matmul-tests.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/projects/matmul-inspector/build/CMakeFiles 0
+.PHONY : CMakeFiles/cuda-matmul-tests.dir/rule
+
+# Convenience name for target.
+cuda-matmul-tests: CMakeFiles/cuda-matmul-tests.dir/rule
+.PHONY : cuda-matmul-tests
+
+# clean rule for target.
+CMakeFiles/cuda-matmul-tests.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cuda-matmul-tests.dir/build.make CMakeFiles/cuda-matmul-tests.dir/clean
+.PHONY : CMakeFiles/cuda-matmul-tests.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

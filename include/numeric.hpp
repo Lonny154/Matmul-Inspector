@@ -8,6 +8,11 @@ namespace numeric {
 // These helpers operate on IEEE-754 binary32 floats.
 std::uint32_t float_to_bits(float value);
 std::bitset<32> float_bits(float value);
+bool bitwise_equal(float actual, float expected);
+float absolute_error(float actual, float expected);
+// Uses the expected value as the reference; returns zero when expected is zero
+// to preserve Inspector's original reporting convention.
+float relative_error(float actual, float expected);
 
 // Monotonic bit ordering for non-NaN values; signed zeros have adjacent keys.
 std::uint32_t float_to_ordered(float value);

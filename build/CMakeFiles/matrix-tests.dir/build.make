@@ -93,6 +93,7 @@ matrix__tests_EXTERNAL_OBJECTS =
 matrix-tests: CMakeFiles/matrix-tests.dir/tests/matrix_test.cpp.o
 matrix-tests: CMakeFiles/matrix-tests.dir/build.make
 matrix-tests: libinspector.a
+matrix-tests: libmatrix.a
 matrix-tests: libnumeric.a
 matrix-tests: CMakeFiles/matrix-tests.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/daniel/projects/matmul-inspector/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable matrix-tests"
