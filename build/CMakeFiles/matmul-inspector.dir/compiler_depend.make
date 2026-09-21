@@ -7,8 +7,10 @@ CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o: /home/daniel/projects/matmu
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
+  /usr/include/c++/13/algorithm \
   /usr/include/c++/13/backward/binders.h \
   /usr/include/c++/13/bit \
+  /usr/include/c++/13/bits/algorithmfwd.h \
   /usr/include/c++/13/bits/alloc_traits.h \
   /usr/include/c++/13/bits/allocator.h \
   /usr/include/c++/13/bits/basic_ios.h \
@@ -56,20 +58,24 @@ CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o: /home/daniel/projects/matmu
   /usr/include/c++/13/bits/specfun.h \
   /usr/include/c++/13/bits/sstream.tcc \
   /usr/include/c++/13/bits/std_abs.h \
+  /usr/include/c++/13/bits/stl_algo.h \
   /usr/include/c++/13/bits/stl_algobase.h \
   /usr/include/c++/13/bits/stl_bvector.h \
   /usr/include/c++/13/bits/stl_construct.h \
   /usr/include/c++/13/bits/stl_function.h \
+  /usr/include/c++/13/bits/stl_heap.h \
   /usr/include/c++/13/bits/stl_iterator.h \
   /usr/include/c++/13/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/13/bits/stl_iterator_base_types.h \
   /usr/include/c++/13/bits/stl_pair.h \
+  /usr/include/c++/13/bits/stl_tempbuf.h \
   /usr/include/c++/13/bits/stl_uninitialized.h \
   /usr/include/c++/13/bits/stl_vector.h \
   /usr/include/c++/13/bits/streambuf.tcc \
   /usr/include/c++/13/bits/streambuf_iterator.h \
   /usr/include/c++/13/bits/string_view.tcc \
   /usr/include/c++/13/bits/stringfwd.h \
+  /usr/include/c++/13/bits/uniform_int_dist.h \
   /usr/include/c++/13/bits/uses_allocator.h \
   /usr/include/c++/13/bits/uses_allocator_args.h \
   /usr/include/c++/13/bits/utility.h \
@@ -105,6 +111,8 @@ CMakeFiles/matmul-inspector.dir/src/inspector.cpp.o: /home/daniel/projects/matmu
   /usr/include/c++/13/locale \
   /usr/include/c++/13/new \
   /usr/include/c++/13/ostream \
+  /usr/include/c++/13/pstl/execution_defs.h \
+  /usr/include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
   /usr/include/c++/13/sstream \
   /usr/include/c++/13/stdexcept \
@@ -646,8 +654,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
@@ -701,8 +707,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 /usr/include/x86_64-linux-gnu/bits/locale.h:
 
 /usr/include/x86_64-linux-gnu/bits/iscanonical.h:
-
-/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-fast.h:
 
@@ -760,6 +764,18 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/ctype.h:
 
+/usr/include/c++/13/vector:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+
+/usr/include/c++/13/tuple:
+
+/usr/include/stdc-predef.h:
+
+/usr/include/c++/13/tr1/special_function_util.h:
+
+/usr/include/c++/13/tr1/poly_hermite.tcc:
+
 /usr/include/c++/13/bits/stl_algobase.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
@@ -794,8 +810,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/invoke.h:
 
-/usr/include/c++/13/bits/stl_construct.h:
-
 /usr/include/c++/13/bits/locale_facets_nonio.h:
 
 /home/daniel/projects/matmul-inspector/src/inspector.cpp:
@@ -806,15 +820,7 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/locale_classes.tcc:
 
-/usr/include/c++/13/bits/stl_bvector.h:
-
-/usr/include/c++/13/bits/allocator.h:
-
 /usr/include/c++/13/sstream:
-
-/usr/include/stdc-predef.h:
-
-/usr/include/c++/13/tr1/special_function_util.h:
 
 /usr/include/c++/13/bits/quoted_string.h:
 
@@ -826,21 +832,29 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/char_traits.h:
 
-/usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h:
-
-/usr/include/c++/13/bits/basic_ios.tcc:
-
-/usr/include/c++/13/bits/nested_exception.h:
-
-/usr/include/c++/13/bits/codecvt.h:
-
-/usr/include/c++/13/bits/stl_vector.h:
-
 /usr/include/c++/13/bits/ostream.tcc:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h:
 
 /usr/include/c++/13/bits/ios_base.h:
+
+/usr/include/c++/13/bits/codecvt.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+
+/usr/include/c++/13/bits/stl_tempbuf.h:
+
+/usr/include/c++/13/bits/stl_vector.h:
+
+/usr/include/c++/13/bits/nested_exception.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/c++locale.h:
+
+/usr/include/c++/13/bits/ptr_traits.h:
+
+/usr/include/alloca.h:
 
 /usr/include/asm-generic/errno-base.h:
 
@@ -862,8 +876,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/cwchar:
 
-/usr/include/alloca.h:
-
 /usr/include/c++/13/bits/locale_facets.tcc:
 
 /usr/include/c++/13/bits/requires_hosted.h:
@@ -876,15 +888,15 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/backward/binders.h:
 
-/usr/include/c++/13/bits/stringfwd.h:
-
 /usr/include/errno.h:
 
 /usr/include/c++/13/bits/functional_hash.h:
 
-/usr/include/c++/13/ios:
+/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
-/usr/include/c++/13/bits/move.h:
+/usr/include/c++/13/bits/algorithmfwd.h:
+
+/usr/include/c++/13/ios:
 
 /usr/include/c++/13/bits/basic_string.tcc:
 
@@ -893,12 +905,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
 /usr/include/c++/13/bits/basic_ios.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/c++locale.h:
-
-/usr/include/c++/13/bits/ptr_traits.h:
 
 /usr/include/c++/13/bits/cxxabi_forced.h:
 
@@ -918,6 +924,8 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/locale_facets.h:
 
+/usr/include/c++/13/bits/move.h:
+
 /usr/include/x86_64-linux-gnu/bits/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
@@ -932,9 +940,27 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/exception.h:
 
+/usr/include/c++/13/typeinfo:
+
+/usr/include/c++/13/bits/cxxabi_init_exception.h:
+
+/usr/include/c++/13/algorithm:
+
 /usr/include/c++/13/bits/istream.tcc:
 
 /usr/include/c++/13/bits/exception_ptr.h:
+
+/usr/include/c++/13/bits/allocator.h:
+
+/usr/include/c++/13/bits/stl_bvector.h:
+
+/usr/include/c++/13/bits/stl_construct.h:
+
+/usr/include/c++/13/bits/stl_heap.h:
+
+/usr/include/c++/13/ext/alloc_traits.h:
+
+/usr/include/c++/13/new:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h:
 
@@ -962,6 +988,10 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/bits/streambuf.tcc:
 
+/usr/include/c++/13/bits/stringfwd.h:
+
+/usr/include/c++/13/bits/uniform_int_dist.h:
+
 /usr/include/x86_64-linux-gnu/bits/errno.h:
 
 /usr/include/wctype.h:
@@ -978,9 +1008,9 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/x86_64-linux-gnu/sys/single_threaded.h:
 
-/usr/include/c++/13/tr1/hypergeometric.tcc:
-
 /usr/include/c++/13/type_traits:
+
+/usr/include/c++/13/tr1/hypergeometric.tcc:
 
 /usr/include/c++/13/bitset:
 
@@ -1000,11 +1030,17 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/cmath:
 
+/usr/include/c++/13/tr1/riemann_zeta.tcc:
+
+/usr/include/c++/13/bits/streambuf_iterator.h:
+
+/usr/include/c++/13/ostream:
+
 /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
-/usr/include/c++/13/cstddef:
+/usr/include/c++/13/bits/stl_algo.h:
 
-/usr/include/c++/13/vector:
+/usr/include/c++/13/cstddef:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
 
@@ -1025,10 +1061,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 /usr/include/c++/13/ctime:
 
 /usr/include/c++/13/debug/assertions.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
-
-/usr/include/c++/13/tuple:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
@@ -1058,9 +1090,13 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 
 /usr/include/c++/13/limits:
 
-/usr/include/c++/13/ext/alloc_traits.h:
+/usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h:
 
-/usr/include/c++/13/new:
+/usr/include/c++/13/bits/basic_ios.tcc:
+
+/usr/include/c++/13/pstl/execution_defs.h:
+
+/usr/include/c++/13/pstl/glue_algorithm_defs.h:
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
@@ -1071,10 +1107,6 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 /usr/include/c++/13/bits/range_access.h:
 
 /usr/include/c++/13/system_error:
-
-/usr/include/c++/13/bits/cxxabi_init_exception.h:
-
-/usr/include/c++/13/typeinfo:
 
 /usr/include/c++/13/tr1/bessel_function.tcc:
 
@@ -1089,11 +1121,3 @@ CMakeFiles/matmul-inspector.dir/src/matrix.cpp.o: /home/daniel/projects/matmul-i
 /usr/include/c++/13/tr1/gamma.tcc:
 
 /usr/include/c++/13/tr1/legendre_function.tcc:
-
-/usr/include/c++/13/tr1/poly_hermite.tcc:
-
-/usr/include/c++/13/bits/streambuf_iterator.h:
-
-/usr/include/c++/13/ostream:
-
-/usr/include/c++/13/tr1/riemann_zeta.tcc:

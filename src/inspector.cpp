@@ -1,23 +1,13 @@
 #include "inspector.hpp"
+
+#include <algorithm>
+#include <bitset>
+#include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <cmath>
-#include <iomanip>
-#include <bitset>
-#include <cstdint>
-
-static std::bitset<32> float_bits(float value) {
-    std::uint32_t bits;
-    std::memcpy(&bits, &value, sizeof(float));
-    return std::bitset<32>(bits);
-}
-
-static std::uint32_t float_hex(float value) {
-    std::uint32_t bits;
-    std::memcpy(&bits, &value, sizeof(float));
-    return bits;
-}
+#include <limits>
 
 static std::uint32_t float_to_bits(float value) {
     std::uint32_t bits;
@@ -25,13 +15,65 @@ static std::uint32_t float_to_bits(float value) {
     return bits;
 }
 
-static std::uint32_t ulp_distance(float a, float b) {
-    std::uint32_t a_bits = float_to_bits(a);
-    std::uint32_t b_bits = float_to_bits(b);
+static std::bitset<32> float_bits(float value) {
+    return std::bitset<32>(float_to_bits(value));
+}
 
-    return a_bits > b_bits
-        ? a_bits - b_bits
-        : b_bits - a_bits;
+static std::uint32_t float_to_ordered(float value) {
+    std::uint32_t bits = float_to_bits(value);
+
+    if (bits & 0x80000000u) {
+        return ~bits;
+    }
+
+    return bits | 0x80000000u;
+}
+
+static std::uint32_t ulp_distance(float a, float b) {
+    if (std::isnan(a) || std::isnan(b)) {
+        return std::numeric_limits<std::uint32_t>::max();
+    }
+
+    // Treat +0.0f and -0.0f as numerically identical.
+    if (a == b) {
+        return 0;
+    }
+
+    std::uint32_t a_ordered = float_to_ordered(a);
+    std::uint32_t b_ordered = float_to_ordered(b);
+
+    return a_ordered > b_ordered
+        ? a_ordered - b_ordered
+        : b_ordered - a_ordered;
+}
+
+static bool nearly_equal(
+    float actual,
+    float expected,
+    float abs_tolerance,
+    float rel_tolerance
+) {
+    if (std::isnan(actual) || std::isnan(expected)) {
+        return false;
+    }
+
+    if (actual == expected) {
+        return true;
+    }
+
+    float difference = std::fabs(actual - expected);
+
+    float scale = std::max(
+        std::fabs(actual),
+        std::fabs(expected)
+    );
+
+    float tolerance = std::max(
+        abs_tolerance,
+        rel_tolerance * scale
+    );
+
+    return difference <= tolerance;
 }
 
 void Inspector::find_first_mismatch(
@@ -49,6 +91,9 @@ void Inspector::find_first_mismatch(
         return;
     }
 
+    constexpr float abs_tolerance = 1e-6f;
+    constexpr float rel_tolerance = 1e-5f;
+
     for (std::size_t row = 0; row < c.rows(); ++row) {
         for (std::size_t col = 0; col < c.cols(); ++col) {
             float expected = 0.0f;
@@ -59,13 +104,27 @@ void Inspector::find_first_mismatch(
 
             float actual = c(row, col);
 
-            float difference = std::fabs(actual - expected);
-            float tolerance = 1e-5f;
+            if (!nearly_equal(
+                    actual,
+                    expected,
+                    abs_tolerance,
+                    rel_tolerance
+                )) {
+                float difference = std::fabs(actual - expected);
 
-            if (difference > tolerance) {
+                float scale = std::max(
+                    std::fabs(actual),
+                    std::fabs(expected)
+                );
+
+                float tolerance = std::max(
+                    abs_tolerance,
+                    rel_tolerance * scale
+                );
+
                 std::cout << std::setprecision(10);
-                std::cout << "FIRST MISMATCH\n";
-                std::cout << "--------------\n";
+                std::cout << "FIRST NUMERIC MISMATCH\n";
+                std::cout << "----------------------\n";
                 std::cout << "C[" << row << "," << col << "]\n";
                 std::cout << "actual:     " << actual << '\n';
                 std::cout << "expected:   " << expected << '\n';
@@ -78,7 +137,7 @@ void Inspector::find_first_mismatch(
         }
     }
 
-    std::cout << "No mismatches found\n";
+    std::cout << "No numeric mismatches found\n";
 }
 
 void Inspector::trace_matmul(
@@ -123,9 +182,32 @@ void Inspector::trace_matmul(
             << '\n';
     }
 
-    std::cout << "\nresult = " << sum << '\n';
-
     const float* c_ptr = c.data() + (row * c.cols() + col);
+
+    float difference = std::fabs(*c_ptr - sum);
+
+    constexpr float abs_tolerance = 1e-6f;
+    constexpr float rel_tolerance = 1e-5f;
+
+    bool numeric_match = nearly_equal(
+        *c_ptr,
+        sum,
+        abs_tolerance,
+        rel_tolerance
+    );
+
+    bool bitwise_match =
+        std::memcmp(c_ptr, &sum, sizeof(float)) == 0;
+
+    float relative_error = 0.0f;
+
+    if (sum != 0.0f) {
+        relative_error = difference / std::fabs(sum);
+    }
+
+    std::cout << std::setprecision(10);
+
+    std::cout << "\nresult = " << sum << '\n';
 
     std::cout
         << "\nC[" << row << "," << col << "] "
@@ -135,46 +217,50 @@ void Inspector::trace_matmul(
 
     std::cout << "recomputed result = " << sum << '\n';
 
-    std::cout << "actual bits:     " << float_bits(*c_ptr) << '\n';
-    std::cout << "expected bits:   " << float_bits(sum) << '\n';
+    std::cout << "actual bits:     "
+              << float_bits(*c_ptr)
+              << '\n';
+
+    std::cout << "expected bits:   "
+              << float_bits(sum)
+              << '\n';
 
     std::cout
-    << "actual hex:      0x"
-    << std::hex
-    << std::setw(8)
-    << std::setfill('0')
-    << float_hex(*c_ptr)
-    << '\n';
+        << "actual hex:      0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << float_to_bits(*c_ptr)
+        << '\n';
 
     std::cout
         << "expected hex:    0x"
         << std::setw(8)
-        << float_hex(sum)
+        << float_to_bits(sum)
         << std::dec
         << std::setfill(' ')
         << '\n';
 
-    std::cout << "ULP distance:     "
-          << ulp_distance(*c_ptr, sum)
-          << '\n';
+    std::cout << "ULP distance:    "
+              << ulp_distance(*c_ptr, sum)
+              << '\n';
 
-    float difference = std::fabs(*c_ptr - sum);
-    float tolerance = 1e-5f;
+    std::cout << "absolute error:  "
+              << difference
+              << '\n';
 
-    bool numeric_match = difference <= tolerance;
-    bool bitwise_match = std::memcmp(c_ptr, &sum, sizeof(float)) == 0;
+    std::cout << "relative error:  "
+              << relative_error
+              << '\n';
 
-    std::cout << "numeric: "
-            << (numeric_match ? "MATCH" : "MISMATCH")
-            << '\n';
+    std::cout << "numeric:         "
+              << (numeric_match ? "MATCH" : "MISMATCH")
+              << '\n';
 
-    std::cout << "bitwise: "
-            << (bitwise_match ? "MATCH" : "MISMATCH")
-            << '\n';
-
-    std::cout << "difference = " << difference << '\n';
-    
-    }
+    std::cout << "bitwise:         "
+              << (bitwise_match ? "MATCH" : "MISMATCH")
+              << '\n';
+}
 
 void Inspector::dump_memory(const Matrix& matrix) {
     const float* ptr = matrix.data();
@@ -208,6 +294,11 @@ void Inspector::find_first_bitwise_mismatch(
         return;
     }
 
+    if (c.rows() != a.rows() || c.cols() != b.cols()) {
+        std::cerr << "Output matrix has incorrect dimensions\n";
+        return;
+    }
+
     for (std::size_t row = 0; row < c.rows(); ++row) {
         for (std::size_t col = 0; col < c.cols(); ++col) {
             float expected = 0.0f;
@@ -226,8 +317,8 @@ void Inspector::find_first_bitwise_mismatch(
                 std::cout << "FIRST BITWISE MISMATCH\n";
                 std::cout << "----------------------\n";
                 std::cout << "C[" << row << "," << col << "]\n";
-                std::cout << "actual:   " << actual << '\n';
-                std::cout << "expected: " << expected << '\n';
+                std::cout << "actual:     " << actual << '\n';
+                std::cout << "expected:   " << expected << '\n';
                 std::cout << "difference: "
                           << std::fabs(actual - expected)
                           << "\n\n";
