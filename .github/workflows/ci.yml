@@ -35,7 +35,7 @@ jobs:
         run: >-
           ./build/matmul-inspector compare --reference cpu --candidate cpu
           --sizes 4,17 --seed 42 --output results/ci-smoke
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: cpu-${{ matrix.compiler }}-${{ matrix.build_type }}
