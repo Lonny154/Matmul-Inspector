@@ -1,0 +1,154 @@
+benchmark: reference=naive candidate=cuda-naive-reordered input=random seed=42 seed_b=123
+atol=9.99999997e-07 rtol=9.99999975e-06
+WARNING: DIRTY SOURCE TREE OR BUILD. git_dirty=true; the commit alone cannot reproduce this run.
+FP instruction verification: true (cuobjdump --dump-ptx; FP32 fma vs separate mul/add; all embedded PTX images)
+reference: compiler_default, increasing_k; candidate: explicit_fma_rn, even_odd_partials
+WARNING: Both contraction setting and accumulation strategy differ; use cuda-naive-fma as the controlled reference.
+CUDA events; warmups=3 iterations=50; allocation/transfers/comparison excluded
+M=4 N=4 K=4
+naive CUDA kernel: mean=0.00811839996 ms median=0.003104 ms min=0.00288000004 ms stddev=0.0126945852 ms GFLOP/s=0.0157666536 speedup=1x
+cuda-naive-reordered CUDA kernel: mean=0.00620096004 ms median=0.00318399991 ms min=0.00294400007 ms stddev=0.00920295591 ms GFLOP/s=0.020641965 speedup=1.30921662x
+Post-timing comparison: bitwise=no divergent=6 tolerance=PASS
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 6
+numerical tolerance: PASS
+bitwise divergent percent: 37.5
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 4
+mean ULP (divergent finite pairs): 1.5
+max absolute error (finite pairs): 1.490116119e-08
+max relative error (finite pairs): 3.92135945e-07
+ULP bins [0,1,2,3-4,5-8,>8]: 0 5 0 1 0 0 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         0.04249999672
+expected:       0.04250000045
+actual bits:    00111101001011100001010001111010
+expected bits:  00111101001011100001010001111011
+ULP distance:   1
+absolute error: 3.725290298e-09
+relative error: 8.76538877e-08
+tolerance:      9.999999975e-07
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.
+M=256 N=256 K=256
+naive CUDA kernel: mean=0.0345804802 ms median=0.0326559991 ms min=0.0307199992 ms stddev=0.00740539134 ms GFLOP/s=970.328688 speedup=1x
+cuda-naive-reordered CUDA kernel: mean=0.0402227201 ms median=0.0361919999 ms min=0.0334080011 ms stddev=0.00907757548 ms GFLOP/s=834.215883 speedup=0.859725054x
+Post-timing comparison: bitwise=no divergent=59657 tolerance=FAIL
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 59657
+numerical tolerance: FAIL
+bitwise divergent percent: 91.02935791
+tolerance failures: 21 (0.03204345703%)
+max ULP (finite pairs): 1756159700
+mean ULP (divergent finite pairs): 29912.63471
+max absolute error (finite pairs): 4.768371582e-06
+max relative error (finite pairs): 1.538412213
+ULP bins [0,1,2,3-4,5-8,>8]: 0 11519 9558 13436 12093 13051 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[37,132]
+actual:         -0.1080011129
+expected:       -0.107999824
+actual bits:    10111101110111010010111110110000
+expected bits:  10111101110111010010111100000011
+ULP distance:   173
+absolute error: 1.288950443e-06
+relative error: 1.1934746e-05
+tolerance:      1.080011089e-06
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         -1.53489995
+expected:       -1.534899831
+actual bits:    10111111110001000111011110011010
+expected bits:  10111111110001000111011110011001
+ULP distance:   1
+absolute error: 1.192092896e-07
+relative error: 7.766584531e-08
+tolerance:      1.53489982e-05
+element tolerance: PASS
+M=257 N=257 K=257
+naive CUDA kernel: mean=0.0335513601 ms median=0.0334400013 ms min=0.0325120017 ms stddev=0.00111169019 ms GFLOP/s=1011.85722 speedup=1x
+cuda-naive-reordered CUDA kernel: mean=0.0341984002 ms median=0.0337920003 ms min=0.0327679999 ms stddev=0.00188952073 ms GFLOP/s=992.712693 speedup=0.981079812x
+Post-timing comparison: bitwise=no divergent=60131 tolerance=FAIL
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 60131
+numerical tolerance: FAIL
+bitwise divergent percent: 91.03998547
+tolerance failures: 20 (0.03028054929%)
+max ULP (finite pairs): 51900
+mean ULP (divergent finite pairs): 17.91141009
+max absolute error (finite pairs): 4.768371582e-06
+max relative error (finite pairs): 0.003768105526
+ULP bins [0,1,2,3-4,5-8,>8]: 0 11452 9655 13513 12297 13214 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[1,151]
+actual:         -0.04390096664
+expected:       -0.04389996082
+actual bits:    10111101001100111101000110000000
+expected bits:  10111101001100111101000001110010
+ULP distance:   270
+absolute error: 1.005828381e-06
+relative error: 2.291182864e-05
+tolerance:      9.999999975e-07
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         -0.9848001003
+expected:       -0.9847996831
+actual bits:    10111111011111000001101111011100
+expected bits:  10111111011111000001101111010101
+ULP distance:   7
+absolute error: 4.172325134e-07
+relative error: 4.236724749e-07
+tolerance:      9.848000445e-06
+element tolerance: PASS
+M=1024 N=1024 K=1024
+naive CUDA kernel: mean=2.39460033 ms median=2.26312006 ms min=2.20447993 ms stddev=0.285604616 ms GFLOP/s=896.802536 speedup=1x
+cuda-naive-reordered CUDA kernel: mean=2.71360065 ms median=2.57945609 ms min=2.50265598 ms stddev=0.328538761 ms GFLOP/s=791.377922 speedup=0.882443894x
+Post-timing comparison: bitwise=no divergent=999879 tolerance=FAIL
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 999879
+numerical tolerance: FAIL
+bitwise divergent percent: 95.35589218
+tolerance failures: 17839 (1.701259613%)
+max ULP (finite pairs): 1804999722
+mean ULP (divergent finite pairs): 24967.55102
+max absolute error (finite pairs): 1.71661377e-05
+max relative error (finite pairs): 62.4517746
+ULP bins [0,1,2,3-4,5-8,>8]: 0 95131 91157 162322 230801 420468 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[0,61]
+actual:         0.07689929008
+expected:       0.0769014731
+actual bits:    00111101100111010111110101100000
+expected bits:  00111101100111010111111010000101
+ULP distance:   293
+absolute error: 2.183020115e-06
+relative error: 2.838723412e-05
+tolerance:      9.999999975e-07
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         2.441598654
+expected:       2.441600084
+actual bits:    01000000000111000100001100100111
+expected bits:  01000000000111000100001100101101
+ULP distance:   6
+absolute error: 1.430511475e-06
+relative error: 5.858909731e-07
+tolerance:      2.441600009e-05
+element tolerance: PASS

@@ -1,0 +1,29 @@
+{
+  "verified": true,
+  "method": "cuobjdump --dump-ptx; FP32 fma vs separate mul/add; all embedded PTX images",
+  "binary_sha256": "431cb256cc14513f9039b969d1680eba4407e7f629b97d4e0194ee5f2eb775c8",
+  "images": [
+    {
+      "kernel": "mi_naive_fma",
+      "fma": 5,
+      "mul": 0,
+      "add": 0,
+      "mad": 0
+    },
+    {
+      "kernel": "mi_naive_no_fma",
+      "fma": 0,
+      "mul": 5,
+      "add": 5,
+      "mad": 0
+    },
+    {
+      "kernel": "mi_naive_reordered",
+      "fma": 2,
+      "mul": 0,
+      "add": 1,
+      "mad": 0
+    }
+  ],
+  "details": "[{\"add\": 0, \"fma\": 5, \"kernel\": \"mi_naive_fma\", \"mad\": 0, \"mul\": 0}, {\"add\": 5, \"fma\": 0, \"kernel\": \"mi_naive_no_fma\", \"mad\": 0, \"mul\": 5}, {\"add\": 1, \"fma\": 2, \"kernel\": \"mi_naive_reordered\", \"mad\": 0, \"mul\": 0}]"
+}

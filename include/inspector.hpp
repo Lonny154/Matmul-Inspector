@@ -1,13 +1,17 @@
 #pragma once
 
 #include "matrix.hpp"
+#include "comparison.hpp"
 
 class Inspector {
 public:
     // Compare logical output elements directly, independent of their strides.
     // Reports numerical agreement and bitwise agreement separately, including
-    // diagnostics for the first mismatch of each kind. Expected is the reference.
-    static void compare_results(const Matrix& expected, const Matrix& actual);
+    // diagnostics for the first mismatch of each kind and a total bitwise
+    // divergence count. Expected is the reference.
+    static void compare_results(const Matrix& expected, const Matrix& actual,
+                                float atol = 1e-6f, float rtol = 1e-5f);
+    static void report_comparison(const comparison::Result& result);
 
     static void dump_memory(const Matrix& matrix);
 

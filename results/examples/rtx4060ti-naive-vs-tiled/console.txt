@@ -1,0 +1,20 @@
+benchmark: reference=naive candidate=tiled seed=42 seed_b=123
+atol=9.99999997e-07 rtol=9.99999975e-06
+WARNING: DIRTY SOURCE TREE OR BUILD. git_dirty=true; the commit alone cannot reproduce this run.
+CUDA events; warmups=3 iterations=50; allocation/transfers/comparison excluded
+M=4 N=4 K=4
+naive CUDA kernel: mean=0.00490176009 ms median=0.0031519999 ms min=0.00297600008 ms stddev=0.00600843345 ms GFLOP/s=0.0261130691 speedup=1x
+tiled CUDA kernel: mean=0.00402944005 ms median=0.0037280001 ms min=0.00307200011 ms stddev=0.00146956095 ms GFLOP/s=0.0317662004 speedup=1.21648667x
+Post-timing comparison: bitwise=yes divergent=0 tolerance=PASS
+M=256 N=256 K=256
+naive CUDA kernel: mean=0.0351488002 ms median=0.0348160006 ms min=0.0327679999 ms stddev=0.00148946821 ms GFLOP/s=954.639471 speedup=1x
+tiled CUDA kernel: mean=0.0269644799 ms median=0.0266239997 ms min=0.0262400005 ms stddev=0.00104887318 ms GFLOP/s=1244.39381 speedup=1.30352227x
+Post-timing comparison: bitwise=yes divergent=0 tolerance=PASS
+M=257 N=257 K=257
+naive CUDA kernel: mean=0.0358611202 ms median=0.035840001 ms min=0.0347840004 ms stddev=0.000884719872 ms GFLOP/s=946.685039 speedup=1x
+tiled CUDA kernel: mean=0.0356249602 ms median=0.0299840001 ms min=0.0286720004 ms stddev=0.00773123177 ms GFLOP/s=952.960672 speedup=1.00662906x
+Post-timing comparison: bitwise=yes divergent=0 tolerance=PASS
+M=1024 N=1024 K=1024
+naive CUDA kernel: mean=2.55336 ms median=2.4266721 ms min=2.37363195 ms stddev=0.316558292 ms GFLOP/s=841.042252 speedup=1x
+tiled CUDA kernel: mean=1.31002369 ms median=1.25542402 ms min=1.17145598 ms stddev=0.222405167 ms GFLOP/s=1639.27085 speedup=1.94909452x
+Post-timing comparison: bitwise=yes divergent=0 tolerance=PASS

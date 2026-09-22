@@ -44,7 +44,7 @@ void test_diagnostics() {
     }
     cpu.data()[2] = 123.0f;
     gpu.data()[2] = -456.0f;
-    check(report(cpu, gpu) == "numeric: MATCH\nbitwise: MATCH\nNo numeric mismatches found\nNo bitwise mismatches found\n",
+    check(contains(report(cpu, gpu), "numeric: MATCH\nbitwise: MATCH\nbitwise equal: yes\ndivergent elements: 0\nnumerical tolerance: PASS\n"),
           "comparison ignores different strides and padding");
 
     gpu(0, 1) = std::nextafter(1.0f, 2.0f);
@@ -52,6 +52,9 @@ void test_diagnostics() {
     check(contains(text, "numeric: MATCH\nbitwise: MISMATCH\n"), "one ULP need not be a numerical mismatch");
     check(contains(text, "FIRST BITWISE MISMATCH\nC[0,1]\n"), "first bitwise coordinate");
     check(contains(text, "ULP distance:   1\n"), "ULP diagnostic");
+    check(contains(text, "bitwise equal: no\ndivergent elements: 1\nnumerical tolerance: PASS\n"),
+          "count bitwise divergence independently of tolerance");
+    check(contains(text, "element tolerance: PASS\n"), "first divergent element tolerance passes");
     check(contains(text, "Bitwise differences are within numerical tolerance."), "rounding distinction explained");
     check(contains(text, "absolute error:") && contains(text, "relative error:")
           && contains(text, "tolerance:") && contains(text, "actual bits:"), "numeric diagnostics present");
@@ -60,6 +63,8 @@ void test_diagnostics() {
     gpu(1, 1) = 3.0f;
     text = report(cpu, gpu);
     check(contains(text, "numeric: MISMATCH\nbitwise: MISMATCH\n"), "numerical mismatch summary");
+    check(contains(text, "divergent elements: 3\nnumerical tolerance: FAIL\n"), "count all divergent elements");
+    check(contains(text, "element tolerance: FAIL\n"), "first numerical mismatch fails tolerance");
     check(contains(text, "FIRST NUMERIC MISMATCH\nC[1,0]\n"), "first numerical coordinate independent of bitwise");
     check(contains(text, "FIRST BITWISE MISMATCH\nC[0,1]\n"), "first bitwise coordinate retained");
     check(contains(text, "absolute error: 0.25\n") && contains(text, "relative error: 0.25\n"),

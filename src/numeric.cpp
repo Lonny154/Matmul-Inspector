@@ -90,6 +90,8 @@ bool nearly_equal(
         return true;
     }
 
+    if (!std::isfinite(actual) || !std::isfinite(expected)) return false;
+
     float difference = absolute_error(actual, expected);
     float tolerance = comparison_tolerance(
         actual, expected, abs_tolerance, rel_tolerance

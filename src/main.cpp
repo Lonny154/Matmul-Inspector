@@ -1,8 +1,13 @@
 #include <iostream>
 #include <exception>
+#include <cstdint>
+#include <iomanip>
+#include <stdexcept>
+#include <string>
 
 #include "inspector.hpp"
 #include "matrix.hpp"
+#include "experiment.hpp"
 
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 #include "cuda_matmul.hpp"
@@ -23,7 +28,9 @@ void print_matrix(const char* label, const Matrix& matrix) {
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc > 1) return experiment::run_cli(std::vector<std::string>(argv + 1, argv + argc));
+
     Matrix a(2, 3);
     Matrix b(3, 2);
 

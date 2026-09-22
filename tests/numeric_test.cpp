@@ -97,8 +97,8 @@ void test_tolerances() {
 
     const float infinity = std::numeric_limits<float>::infinity();
     check(numeric::nearly_equal(infinity, infinity, 0.0f, 0.0f), "equal infinities match");
-    // Retain the existing arithmetic for unequal infinities as well.
-    check(numeric::nearly_equal(infinity, 1.0f, 0.0f, 0.125f), "infinite relative tolerance");
+    // Nonfinite unequal values cannot pass through an infinite tolerance.
+    check(!numeric::nearly_equal(infinity, 1.0f, 0.0f, 0.125f), "unequal infinity fails relative tolerance");
     check(!numeric::nearly_equal(infinity, 1.0f, 0.0f, 0.0f), "infinite absolute difference");
 }
 

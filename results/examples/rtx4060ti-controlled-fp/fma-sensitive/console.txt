@@ -1,0 +1,113 @@
+compare: reference=cuda-naive-fma candidate=cuda-naive-no-fma input=fma-sensitive seed=42 seed_b=123
+atol=9.99999997e-07 rtol=9.99999975e-06
+WARNING: DIRTY SOURCE TREE OR BUILD. git_dirty=true; the commit alone cannot reproduce this run.
+FP instruction verification: true (cuobjdump --dump-ptx; FP32 fma vs separate mul/add; all embedded PTX images)
+reference: explicit_fma_rn, increasing_k; candidate: separate_rn_mul_add, increasing_k
+M=4 N=4 K=4
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 16
+numerical tolerance: PASS
+bitwise divergent percent: 100
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 679477249
+mean ULP (divergent finite pairs): 679477249
+max absolute error (finite pairs): 1.421085472e-14
+max relative error (finite pairs): 1
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 16 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         0
+expected:       -1.421085472e-14
+actual bits:    00000000000000000000000000000000
+expected bits:  10101000100000000000000000000000
+ULP distance:   679477249
+absolute error: 1.421085472e-14
+relative error: 1
+tolerance:      9.999999975e-07
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.
+M=256 N=256 K=256
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 65536
+numerical tolerance: PASS
+bitwise divergent percent: 100
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 679477249
+mean ULP (divergent finite pairs): 679477249
+max absolute error (finite pairs): 1.421085472e-14
+max relative error (finite pairs): 1
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 65536 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         0
+expected:       -1.421085472e-14
+actual bits:    00000000000000000000000000000000
+expected bits:  10101000100000000000000000000000
+ULP distance:   679477249
+absolute error: 1.421085472e-14
+relative error: 1
+tolerance:      9.999999975e-07
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.
+M=257 N=257 K=257
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 66049
+numerical tolerance: PASS
+bitwise divergent percent: 100
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 679477249
+mean ULP (divergent finite pairs): 679477249
+max absolute error (finite pairs): 1.421085472e-14
+max relative error (finite pairs): 1
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 66049 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         0
+expected:       -1.421085472e-14
+actual bits:    00000000000000000000000000000000
+expected bits:  10101000100000000000000000000000
+ULP distance:   679477249
+absolute error: 1.421085472e-14
+relative error: 1
+tolerance:      9.999999975e-07
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.
+M=1024 N=1024 K=1024
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 1048576
+numerical tolerance: PASS
+bitwise divergent percent: 100
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 679477249
+mean ULP (divergent finite pairs): 679477249
+max absolute error (finite pairs): 1.421085472e-14
+max relative error (finite pairs): 1
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 1048576 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         0
+expected:       -1.421085472e-14
+actual bits:    00000000000000000000000000000000
+expected bits:  10101000100000000000000000000000
+ULP distance:   679477249
+absolute error: 1.421085472e-14
+relative error: 1
+tolerance:      9.999999975e-07
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.

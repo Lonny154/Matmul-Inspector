@@ -1,0 +1,140 @@
+compare: reference=cuda-naive-fma candidate=cuda-naive-reordered input=cancellation seed=42 seed_b=123
+atol=9.99999997e-07 rtol=9.99999975e-06
+WARNING: DIRTY SOURCE TREE OR BUILD. git_dirty=true; the commit alone cannot reproduce this run.
+FP instruction verification: true (cuobjdump --dump-ptx; FP32 fma vs separate mul/add; all embedded PTX images)
+reference: explicit_fma_rn, increasing_k; candidate: explicit_fma_rn, even_odd_partials
+M=4 N=4 K=4
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 16
+numerical tolerance: FAIL
+bitwise divergent percent: 100
+tolerance failures: 16 (100%)
+max ULP (finite pairs): 8388608
+mean ULP (divergent finite pairs): 8388608
+max absolute error (finite pairs): 1
+max relative error (finite pairs): 1
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 16 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[0,0]
+actual:         2
+expected:       1
+actual bits:    01000000000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   8388608
+absolute error: 1
+relative error: 1
+tolerance:      1.999999949e-05
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         2
+expected:       1
+actual bits:    01000000000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   8388608
+absolute error: 1
+relative error: 1
+tolerance:      1.999999949e-05
+element tolerance: FAIL
+M=256 N=256 K=256
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 65536
+numerical tolerance: FAIL
+bitwise divergent percent: 100
+tolerance failures: 65536 (100%)
+max ULP (finite pairs): 58720256
+mean ULP (divergent finite pairs): 58720256
+max absolute error (finite pairs): 127
+max relative error (finite pairs): 127
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 65536 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[0,0]
+actual:         128
+expected:       1
+actual bits:    01000011000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   58720256
+absolute error: 127
+relative error: 127
+tolerance:      0.001279999968
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         128
+expected:       1
+actual bits:    01000011000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   58720256
+absolute error: 127
+relative error: 127
+tolerance:      0.001279999968
+element tolerance: FAIL
+M=257 N=257 K=257
+numeric: MATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 66049
+numerical tolerance: PASS
+bitwise divergent percent: 100
+tolerance failures: 0 (0%)
+max ULP (finite pairs): 64
+mean ULP (divergent finite pairs): 64
+max absolute error (finite pairs): 128
+max relative error (finite pairs): 7.629394531e-06
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 66049 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+No numeric mismatches found
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         16777344
+expected:       16777216
+actual bits:    01001011100000000000000001000000
+expected bits:  01001011100000000000000000000000
+ULP distance:   64
+absolute error: 128
+relative error: 7.629394531e-06
+tolerance:      167.7734375
+element tolerance: PASS
+Bitwise differences are within numerical tolerance.
+M=1024 N=1024 K=1024
+numeric: MISMATCH
+bitwise: MISMATCH
+bitwise equal: no
+divergent elements: 1048576
+numerical tolerance: FAIL
+bitwise divergent percent: 100
+tolerance failures: 1048576 (100%)
+max ULP (finite pairs): 75497472
+mean ULP (divergent finite pairs): 75497472
+max absolute error (finite pairs): 511
+max relative error (finite pairs): 511
+ULP bins [0,1,2,3-4,5-8,>8]: 0 0 0 0 0 1048576 
+NaN pairs: 0; infinity pairs: 0; zero-reference/nonzero-candidate pairs: 0
+FIRST NUMERIC MISMATCH
+C[0,0]
+actual:         512
+expected:       1
+actual bits:    01000100000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   75497472
+absolute error: 511
+relative error: 511
+tolerance:      0.005119999871
+element tolerance: FAIL
+FIRST BITWISE MISMATCH
+C[0,0]
+actual:         512
+expected:       1
+actual bits:    01000100000000000000000000000000
+expected bits:  00111111100000000000000000000000
+ULP distance:   75497472
+absolute error: 511
+relative error: 511
+tolerance:      0.005119999871
+element tolerance: FAIL

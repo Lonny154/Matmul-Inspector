@@ -4,39 +4,38 @@
 #include <iomanip>
 #include <iostream>
 
-void Inspector::compare_results(const Matrix& expected, const Matrix& actual) {
+void Inspector::compare_results(const Matrix& expected, const Matrix& actual, float atol, float rtol) {
     if (actual.rows() != expected.rows() || actual.cols() != expected.cols()) {
         std::cerr << "Cannot compare results with different dimensions\n";
         return;
     }
 
-    constexpr float abs_tolerance = 1e-6f;
-    constexpr float rel_tolerance = 1e-5f;
-    bool numeric_match = true;
-    bool bitwise_match = true;
-    std::size_t numeric_row = 0, numeric_col = 0;
-    std::size_t bitwise_row = 0, bitwise_col = 0;
-    for (std::size_t row = 0; row < expected.rows(); ++row) {
-        for (std::size_t col = 0; col < expected.cols(); ++col) {
-            if (numeric_match && !numeric::nearly_equal(
-                    actual(row, col), expected(row, col), abs_tolerance, rel_tolerance)) {
-                numeric_match = false;
-                numeric_row = row;
-                numeric_col = col;
-            }
-            if (bitwise_match && !numeric::bitwise_equal(actual(row, col), expected(row, col))) {
-                bitwise_match = false;
-                bitwise_row = row;
-                bitwise_col = col;
-            }
-        }
-    }
+    report_comparison(comparison::compare(expected, actual, atol, rtol));
+}
 
+void Inspector::report_comparison(const comparison::Result& result) {
+    const bool numeric_match = result.tolerance_pass;
+    const bool bitwise_match = result.divergent_count == 0;
+    const float abs_tolerance = result.atol, rel_tolerance = result.rtol;
     std::cout << "numeric: " << (numeric_match ? "MATCH" : "MISMATCH") << '\n';
     std::cout << "bitwise: " << (bitwise_match ? "MATCH" : "MISMATCH") << '\n';
-    auto report = [&](const char* heading, std::size_t row, std::size_t col) {
-        float a = actual(row, col);
-        float e = expected(row, col);
+    std::cout << "bitwise equal: " << (bitwise_match ? "yes" : "no") << '\n';
+    std::cout << "divergent elements: " << result.divergent_count << '\n';
+    std::cout << "numerical tolerance: " << (numeric_match ? "PASS" : "FAIL") << '\n';
+    std::cout << std::setprecision(10)
+              << "bitwise divergent percent: " << result.divergent_percent << '\n'
+              << "tolerance failures: " << result.tolerance_failures << " (" << result.tolerance_failure_percent << "%)\n"
+              << "max ULP (finite pairs): " << result.max_ulp << '\n'
+              << "mean ULP (divergent finite pairs): " << result.mean_divergent_ulp << '\n'
+              << "max absolute error (finite pairs): " << result.max_absolute_error << '\n'
+              << "max relative error (finite pairs): " << result.max_relative_error << '\n'
+              << "ULP bins [0,1,2,3-4,5-8,>8]: ";
+    for (auto count : result.ulp_bins) std::cout << count << ' ';
+    std::cout << "\nNaN pairs: " << result.nan_pairs << "; infinity pairs: " << result.infinity_pairs
+              << "; zero-reference/nonzero-candidate pairs: " << result.zero_reference_nonzero << '\n';
+    auto report = [&](const char* heading, const comparison::Divergence& point) {
+        const auto row = point.row, col = point.col;
+        float a = point.candidate, e = point.reference;
         std::cout << std::setprecision(10)
                   << heading << "\nC[" << row << ',' << col << "]\n"
                   << "actual:         " << a << '\n'
@@ -47,17 +46,19 @@ void Inspector::compare_results(const Matrix& expected, const Matrix& actual) {
                   << "absolute error: " << numeric::absolute_error(a, e) << '\n'
                   << "relative error: " << numeric::relative_error(a, e) << '\n'
                   << "tolerance:      " << numeric::comparison_tolerance(a, e, abs_tolerance, rel_tolerance)
-                  << '\n';
+                  << '\n'
+                  << "element tolerance: "
+                  << (numeric::nearly_equal(a, e, abs_tolerance, rel_tolerance) ? "PASS" : "FAIL") << '\n';
     };
     if (numeric_match) {
         std::cout << "No numeric mismatches found\n";
     } else {
-        report("FIRST NUMERIC MISMATCH", numeric_row, numeric_col);
+        report("FIRST NUMERIC MISMATCH", *result.first_numeric);
     }
     if (bitwise_match) {
         std::cout << "No bitwise mismatches found\n";
     } else {
-        report("FIRST BITWISE MISMATCH", bitwise_row, bitwise_col);
+        report("FIRST BITWISE MISMATCH", *result.first_bitwise);
         if (numeric_match) {
             std::cout << "Bitwise differences are within numerical tolerance.\n";
         }
