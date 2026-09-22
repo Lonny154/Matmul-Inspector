@@ -1,5 +1,7 @@
 #include "experiment.hpp"
 #include "inspector.hpp"
+#include "output.hpp"
+#include <fstream>
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 #include "cuda_matmul.hpp"
 #endif
@@ -50,6 +52,32 @@ CudaMatmulKernel cuda_kernel(const std::string& name) {
     throw std::invalid_argument("Unknown CUDA kernel: " + name);
 }
 #endif
+
+std::string capture_output(const Matrix& matrix, const Config& config, const Shape& shape,
+                           const std::string& kernel, const std::string& hash, const std::string& id) {
+    if (!config.save_output) return "";
+    const std::string filename = "output-" + id + ".bin";
+    output::save(matrix, config.output / filename);
+    std::ofstream sidecar(config.output / (filename + ".json"));
+    sidecar.exceptions(std::ios::failbit | std::ios::badbit);
+    sidecar << "{\"format\":\"mifp32le-v1\",\"dtype\":\"float32\",\"byte_order\":\"little\",\"rows\":"
+        << matrix.rows() << ",\"cols\":" << matrix.cols() << ",\"M\":" << shape.m << ",\"N\":" << shape.n
+        << ",\"K\":" << shape.k << ",\"kernel\":" << json_string(kernel)
+        << ",\"seed\":" << config.seed << ",\"seed_b\":" << config.seed_b
+        << ",\"generator\":" << json_string(config.input == "random" ? "lcg32-v1" : config.input + "-v1")
+        << ",\"contraction_mode\":" << json_string(contraction_mode(kernel))
+        << ",\"accumulation_mode\":" << json_string(accumulation_mode(kernel))
+        << ",\"output_sha256\":" << json_string(hash) << "}\n";
+    sidecar.close();
+    return filename;
+}
+void capture_pair(Row& row, const Matrix& ref, const Matrix& actual, const Config& config, std::size_t id) {
+    row.reference_sha256 = output::fingerprint(ref);
+    row.output_sha256 = output::fingerprint(actual);
+    row.reference_output_file = capture_output(ref, config, row.shape, row.reference, row.reference_sha256, std::to_string(id)+"-reference");
+    row.output_file = capture_output(actual, config, row.shape, row.kernel, row.output_sha256, std::to_string(id)+"-candidate");
+    std::cout << "reference SHA-256: " << row.reference_sha256 << "\ncandidate SHA-256: " << row.output_sha256 << '\n';
+}
 
 Matrix execute(const Matrix& a, const Matrix& b, const std::string& kernel) {
     if (kernel == "cpu") return matmul(a, b);
@@ -154,19 +182,23 @@ int run_cli(const std::vector<std::string>& arguments) {
                     if (config.mode == "compare") {
                         Matrix reference = execute(a, b, config.reference);
                         Matrix actual = execute(a, b, config.candidate);
+                        capture_pair(candidate, reference, actual, config, rows.size());
                         candidate.comparison = comparison::compare(reference, actual, config.atol, config.rtol, config.max_mismatches);
                         Inspector::report_comparison(candidate.comparison);
                     } else {
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
                         auto ref = benchmark_cuda_kernel(a, b, cuda_kernel(config.reference), config.iterations, config.warmups);
                         auto actual = benchmark_cuda_kernel(a, b, cuda_kernel(config.candidate), config.iterations, config.warmups);
-                        // No analysis or file/console output occurs until all timing is done.
+                        // Hashing, capture and all analysis occur after both timed executions.
+                        capture_pair(candidate, ref.output, actual.output, config, rows.size());
                         candidate.comparison = comparison::compare(ref.output, actual.output, config.atol, config.rtol, config.max_mismatches);
                         candidate.timed = true;
                         candidate.timing = actual.timing;
                         candidate.speedup = actual.timing.mean_ms > 0 ? ref.timing.mean_ms / actual.timing.mean_ms : 0;
                         Row reference = candidate;
                         reference.kernel = config.reference;
+                        reference.output_sha256 = candidate.reference_sha256;
+                        reference.output_file = candidate.reference_output_file;
                         reference.tile_size = config.reference == "tiled" ? 16 : 0;
                         reference.timing = ref.timing;
                         reference.speedup = reference.timing.mean_ms > 0 ? 1 : 0;

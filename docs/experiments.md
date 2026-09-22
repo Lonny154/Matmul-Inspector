@@ -5,7 +5,7 @@ machine and timing method. Matching input seeds does not promise matching elapse
 times or floating-point bits across toolchains. The C++17 code and artifacts have
 no third-party dependencies; Python 3 is used for replay, integration tests and controlled-kernel PTX verification.
 
-## Artifacts (schema version 2; replay also accepts version 1)
+## Artifacts (schema version 3; replay also accepts versions 1 and 2)
 
 `--output PATH` reserves a **new** directory. Existing paths are refused, even if
 empty. Each file is written through a temporary file; `metadata.json` is written
@@ -140,3 +140,14 @@ can overflow to `inf` in CSV. Relative error is zero for an exactly zero referen
 nonzero references can yield large relative errors and ULP distances even when
 absolute error passes. See [the controlled experiment report](floating_point_experiments.md)
 for the versioned cancellation and FMA-sensitive generators and actual measurements.
+
+## Logical output fingerprints (schema 3)
+
+Compare and benchmark now print reference/candidate SHA-256 values. The summary
+adds `output_sha256`, `reference_sha256`, `output_file` and
+`reference_output_file`. Metadata records encoding/hash identifiers and
+`config.save_output`. With `--save-output`, deterministic little-endian binary32
+matrices and contextual JSON sidecars are saved after timing; padding is excluded.
+Without it, filename cells are empty and no matrices are stored. Replay preserves
+this choice. See [cross-hardware collection and comparison](cross_hardware.md) for
+the binary layout, compatibility checks, aggregator and C++ diagnostic helper.

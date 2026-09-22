@@ -149,6 +149,28 @@ compute capability, CPU/OS, dimensions, dtype, kernel/tile, seeds, counts,
 tolerances and timing methodology. See [artifact/provenance details](docs/experiments.md)
 for exact semantics, unknown values, exit codes and remaining limitations.
 
+## Compare collected runs across machines
+
+Every compare/benchmark output now has a SHA-256 fingerprint of its logical FP32
+bits (little-endian, excluding padding). Use `--save-output` to retain optional
+binary matrices for detailed comparison later; hashing/capture is outside timing.
+
+```sh
+./build-cuda/matmul-inspector benchmark --reference naive --candidate cuda-naive-fma --sizes 4,256,257,1024 --seed 42 --save-output --output results/cross-hardware/baseline
+# After replaying and collecting a second machine's result directory:
+python3 scripts/compare_hardware.py results/cross-hardware/baseline results/cross-hardware/second-machine --comparator build-cpu/matmul-compare-outputs --output results/cross-hardware/aggregate
+```
+
+The first run is the baseline unless `--baseline` selects another supplied run.
+The tool reads hardware identity from metadata, validates configuration/source
+compatibility, keeps within-run naive speedups separate from cross-run ratios,
+and calls the existing C++ diagnostics for saved outputs. Missing hashes/matrices
+are reported explicitly. Dirty or different source is flagged and suppresses
+cross-run timing ratios. There is no remote execution or automatic hardware ranking.
+See the [cross-hardware workflow and binary format](docs/cross_hardware.md) for
+CPU-only validation, exact second-machine replay commands, compatibility rules,
+aggregate artifacts and interpretation limits.
+
 ## Replay the example
 
 The small [RTX 4060 Ti example](results/examples/rtx4060ti-naive-vs-tiled/README.md)

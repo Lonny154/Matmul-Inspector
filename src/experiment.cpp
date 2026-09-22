@@ -56,6 +56,7 @@ std::string usage() {
            "  --seed-b UINT32        Explicit B seed (default 123 with seed 42)\n"
            "  --atol FLOAT --rtol FLOAT  Nonnegative tolerances (defaults 1e-6, 1e-5)\n"
            "  --warmups INT --iterations INT  Benchmark only (defaults 3, 20)\n"
+           "  --save-output          Save logical outputs (requires --output)\n"
            "  --output DIRECTORY     Save artifacts in a new directory\n"
            "  --help                 Show this help\n"
            "No arguments: original CPU/GPU demo. Legacy: --benchmark-cuda [iterations].\n";
@@ -77,11 +78,12 @@ Config parse(const std::vector<std::string>& args) {
     if (config.mode == "benchmark") config.shapes = {{4,4,4}, {256,256,256}, {257,257,257}, {1024,1024,1024}};
     std::set<std::string> seen;
     Shape shape{0,0,0};
-    for (std::size_t i = 1; i < args.size(); i += 2) {
+    for (std::size_t i = 1; i < args.size(); ++i) {
         const auto& option = args[i];
-        if (i + 1 == args.size()) throw std::invalid_argument("Missing value for " + option);
         if (!seen.insert(option).second) throw std::invalid_argument("Duplicate option: " + option);
-        const auto& value = args[i + 1];
+        if (option == "--save-output") { config.save_output = true; continue; }
+        if (i + 1 == args.size()) throw std::invalid_argument("Missing value for " + option);
+        const auto& value = args[++i];
         if (option == "--sizes") {
             config.shapes.clear();
             std::size_t begin = 0;
@@ -127,6 +129,7 @@ Config parse(const std::vector<std::string>& args) {
         if (seen.count("--sizes") || !shape.m || !shape.n || !shape.k) throw std::invalid_argument("Specify either --sizes or all of --m, --n, --k");
         config.shapes = {shape};
     }
+    if (config.save_output && config.output.empty()) throw std::invalid_argument("--save-output requires --output");
     if (config.mode == "benchmark" && (config.reference == "cpu" || config.candidate == "cpu"))
         throw std::invalid_argument("Benchmark requires CUDA kernels");
     for (const auto& dimensions : config.shapes) {
@@ -195,7 +198,7 @@ std::string metadata_json(const Config& config, const Metadata& values) {
     std::ostringstream out;
     out.imbue(std::locale::classic());
     out << std::setprecision(std::numeric_limits<double>::max_digits10);
-    out << "{\n  \"schema_version\": 2";
+    out << "{\n  \"schema_version\": 3";
     for (const auto& [key, value] : values) {
         out << ",\n  " << json_string(key) << ": ";
         if ((key.find("dirty") != std::string::npos || key.find("fast_math") != std::string::npos || key == "cuda_support" || key == "fp_verified" || key == "mismatches_truncated")
@@ -210,6 +213,8 @@ std::string metadata_json(const Config& config, const Metadata& values) {
         << ", \"generator\": " << json_string(config.input == "random" ? "lcg32-v1" : config.input + "-v1")
         << ", \"input\": " << json_string(config.input)
         << ", \"max_mismatches\": " << config.max_mismatches
+        << ", \"save_output\": " << (config.save_output ? "true" : "false")
+        << ", \"output_encoding\": \"fp32-le-row-major-v1\", \"output_hash\": \"sha256\""
         << ",\n    \"reference_contraction\": " << json_string(contraction_mode(config.reference))
         << ", \"candidate_contraction\": " << json_string(contraction_mode(config.candidate))
         << ",\n    \"reference_accumulation\": " << json_string(accumulation_mode(config.reference))
@@ -240,7 +245,7 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
     summary.imbue(std::locale::classic()); mismatches.imbue(std::locale::classic());
     summary << std::setprecision(17) << std::boolalpha;
     mismatches << std::setprecision(17) << std::boolalpha;
-    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated\n";
+    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file\n";
     mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass\n";
     bool any_mismatch = false;
     for (const auto& row : rows) {
@@ -261,7 +266,9 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
         for (auto bin : c.ulp_bins) summary << ',' << bin;
         summary << ',' << c.finite_pairs << ',' << c.finite_divergent_count << ',' << c.nan_pairs
             << ',' << c.infinity_pairs << ',' << c.zero_reference_nonzero << ',' << c.mismatch_count
-            << ',' << c.mismatches.size() << ',' << c.mismatches_truncated << '\n';
+            << ',' << c.mismatches.size() << ',' << c.mismatches_truncated
+            << ',' << row.output_sha256 << ',' << row.reference_sha256
+            << ',' << csv_field(row.output_file) << ',' << csv_field(row.reference_output_file) << '\n';
         auto mismatch = [&](const std::optional<comparison::Divergence>& point, const char* kind) {
             if (!point) return;
             any_mismatch = true;

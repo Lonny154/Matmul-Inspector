@@ -20,6 +20,7 @@ struct Config {
     float atol = 1e-6f, rtol = 1e-5f;
     std::filesystem::path output;
     bool legacy = false;
+    bool save_output = false;
     std::string input = "random";
     std::size_t max_mismatches = 100;
 };
@@ -44,6 +45,8 @@ struct Row {
     benchmark::Statistics timing;
     double speedup = 0;
     comparison::Result comparison;
+    std::string output_sha256, reference_sha256;
+    std::string output_file, reference_output_file;
 };
 
 std::string json_string(const std::string& value);

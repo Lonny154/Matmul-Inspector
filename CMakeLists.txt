@@ -40,6 +40,9 @@ target_include_directories(numeric PUBLIC include)
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
+add_library(output src/output.cpp)
+target_link_libraries(output PUBLIC matrix numeric)
+
 add_library(comparison src/comparison.cpp)
 target_link_libraries(comparison PUBLIC matrix numeric)
 add_library(benchmark src/benchmark.cpp)
@@ -91,13 +94,16 @@ add_custom_target(build-provenance
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/git_provenance.hpp"
     VERBATIM)
 add_library(experiment src/experiment.cpp src/metadata.cpp)
-target_link_libraries(experiment PUBLIC comparison benchmark)
+target_link_libraries(experiment PUBLIC comparison benchmark output)
 target_include_directories(experiment PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>")
 add_dependencies(experiment build-provenance)
 if(TARGET verify-fp)
     add_dependencies(experiment verify-fp)
 endif()
+
+add_executable(matmul-compare-outputs src/compare_outputs.cpp)
+target_link_libraries(matmul-compare-outputs PRIVATE experiment)
 
 add_executable(matmul-inspector src/main.cpp src/cli.cpp)
 target_link_libraries(matmul-inspector PRIVATE inspector experiment)
@@ -107,6 +113,11 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(output-tests tests/output_test.cpp)
+    target_link_libraries(output-tests PRIVATE output)
+    add_test(NAME output-tests COMMAND output-tests)
+    set_tests_properties(output-tests PROPERTIES LABELS "cpu")
+
     add_executable(numeric-tests tests/numeric_test.cpp)
     target_link_libraries(numeric-tests PRIVATE numeric)
     add_test(NAME numeric-tests COMMAND numeric-tests)
@@ -131,6 +142,10 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME hardware-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/hardware_test.py" $<TARGET_FILE:matmul-inspector>
+            $<TARGET_FILE:matmul-compare-outputs> $<TARGET_FILE:output-tests> "${CMAKE_CURRENT_SOURCE_DIR}")
+        set_tests_properties(hardware-tests PROPERTIES LABELS "cpu")
         add_test(NAME artifact-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/artifact_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:experiment-tests> "${CMAKE_CURRENT_SOURCE_DIR}")

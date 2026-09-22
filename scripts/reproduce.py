@@ -8,7 +8,7 @@ import subprocess
 
 
 def command(metadata, executable, output):
-    if metadata.get('schema_version') not in (1, 2):
+    if metadata.get('schema_version') not in (1, 2, 3):
         raise ValueError('Unsupported metadata schema')
     config = metadata['config']
     generators = {'random': 'lcg32-v1', 'cancellation': 'cancellation-v1', 'fma-sensitive': 'fma-sensitive-v1'}
@@ -30,10 +30,12 @@ def command(metadata, executable, output):
     for flag, key in (('--seed', 'seed'), ('--seed-b', 'seed_b'), ('--atol', 'atol'), ('--rtol', 'rtol')):
         args += [flag, str(config[key])]
     args += ['--reference', config['reference'], '--candidate', config['candidate']]
-    if metadata['schema_version'] == 2:
+    if metadata['schema_version'] >= 2:
         args += ['--input', input_mode, '--max-mismatches', str(config['max_mismatches'])]
     if mode == 'benchmark':
         args += ['--warmups', str(config['warmups']), '--iterations', str(config['iterations'])]
+    if config.get('save_output', False):
+        args += ['--save-output']
     return args + ['--output', str(output)]
 
 
