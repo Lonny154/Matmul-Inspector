@@ -45,7 +45,7 @@ def load_report(run):
             if identity in seen:
                 raise ValueError(f'Ambiguous duplicate kernel/reference/shape at line {line}')
             seen.add(identity)
-            row = dict(row_id=raw.get('row_id', str(line-2)), kernel=identity[0], reference=identity[1], shape=shape, timing_mode=identity[3],
+            row = dict(source_fields=dict(raw), row_id=raw.get('row_id', str(line-2)), kernel=identity[0], reference=identity[1], shape=shape, timing_mode=identity[3],
                        tolerance_pass={'true': True, 'false': False}.get(raw.get('tolerance_pass')))
             for field in METRICS:
                 try:

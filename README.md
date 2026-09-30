@@ -55,6 +55,24 @@ disables tests; `MATMUL_INSPECTOR_GPU_TESTS=OFF` omits GPU test registration whi
 still compiling CUDA. GPU tests have the `gpu` label and return skip code 77 when
 hardware/runtime is unavailable. Normal CI never requires an NVIDIA GPU.
 
+## Roofline analysis of existing results
+
+Supply explicit ordinary-FP32 compute and memory-bandwidth ceilings; the tool never
+infers specifications from a GPU name. This example uses illustrative assumptions:
+
+```sh
+python3 scripts/roofline.py --input results/reliability-smoke \
+  --peak-fp32-tflops 10 --memory-bandwidth-gbps 100 \
+  --source-note "Illustrative limits, not GPU specifications" \
+  --output results/roofline-smoke --report
+```
+
+Outputs are `roofline.csv`, `roofline_metadata.json`, and optionally a roofline plot
+and Markdown report. Only CUDA kernel-only timings are eligible; median latency
+is the default. The traffic model is `4*(MK+KN+MN)` bytes, **not measured DRAM
+traffic**. Source results, numerical diagnostics, and provenance are preserved.
+See [roofline methodology and units](docs/roofline.md) for assumptions and caveats.
+
 ## Benchmark reliability
 
 Benchmark and crossover modes retain raw warmup/measurement samples and support

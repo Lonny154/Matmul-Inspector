@@ -153,6 +153,9 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME roofline-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/roofline_test.py")
+        set_tests_properties(roofline-tests PROPERTIES LABELS "cpu")
         add_test(NAME reliability-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/reliability_test.py" $<TARGET_FILE:benchmark-statistics-tests>)
         set_tests_properties(reliability-tests PROPERTIES LABELS "cpu")
