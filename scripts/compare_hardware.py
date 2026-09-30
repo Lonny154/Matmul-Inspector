@@ -11,13 +11,14 @@ import re
 import shutil
 import struct
 import subprocess
+from operations import identity as operation_identity
 
 ENVIRONMENT = ('gpu_name', 'gpu_compute_capability', 'cpu_model', 'cuda_runtime_version',
                'cuda_driver_api_version', 'nvidia_driver_version', 'cxx_compiler', 'cuda_compiler',
                'cuda_architectures', 'cxx_flags', 'cuda_flags', 'fast_math', 'os')
 TOOLCHAIN = ('cuda_runtime_version', 'cuda_driver_api_version', 'nvidia_driver_version',
              'cxx_compiler', 'cuda_compiler', 'cuda_architectures', 'cxx_flags', 'cuda_flags', 'fast_math')
-INPUT_FIELDS = ('seed', 'seed_b', 'dtype', 'generator', 'input')
+INPUT_FIELDS = ('operation', 'seed', 'seed_b', 'dtype', 'generator', 'input')
 METRICS = ('divergent_count', 'divergent_percent', 'max_ulp', 'mean_divergent_ulp',
            'max_absolute_error', 'max_relative_error', 'tolerance_failures',
            'tolerance_failure_percent', 'nan_pairs', 'infinity_pairs', 'zero_reference_nonzero',
@@ -59,7 +60,7 @@ def semantics(row):
 
 
 def input_config(config):
-    return {field: config.get(field, 'random' if field == 'input' else 'unknown') for field in INPUT_FIELDS}
+    return {field: config.get(field, 'matmul' if field == 'operation' else 'random' if field == 'input' else 'unknown') for field in INPUT_FIELDS}
 
 
 def clean_source(meta):
@@ -100,7 +101,10 @@ def read_run(path):
         raise ValueError(f'{path}: empty summary')
     indexed = {}
     shapes = {(s['M'], s['N'], s['K']) for s in config['shapes']}
+    operation_identity(config)
     for row in rows:
+        operation = operation_identity(config,row)
+        row['operation'] = operation
         if None in row or None in row.values():
             raise ValueError(f'{path}: malformed summary CSV')
         identity = key(row)
@@ -139,6 +143,8 @@ def binary(run, row):
                     seed=run['config']['seed'], seed_b=run['config']['seed_b'],
                     generator=run['config']['generator'], contraction_mode=semantics(row)[1],
                     accumulation_mode=semantics(row)[2], output_sha256=row.get('output_sha256'))
+    if row.get('operation', 'matmul') != 'matmul':
+        expected['operation'] = row['operation']
     if run['config']['dtype'] != 'float32' or any(context.get(k) != v for k, v in expected.items()):
         raise ValueError(f'{path}: binary sidecar incompatible with summary/configuration')
     h = hashlib.sha256()
@@ -165,7 +171,9 @@ def compatibility(run, baseline, row, ref):
         if a[field] != b[field] or a[field] in (None, '', 'unknown'):
             warnings.append('incompatible_' + field)
             numerical = False
-    if semantics(row) != semantics(ref):
+    if (semantics(row) != semantics(ref)
+        or row.get('reduction_block_size', '') != ref.get('reduction_block_size', '')
+        or row.get('reduction_stages', '') != ref.get('reduction_stages', '')):
         warnings.append('incompatible_kernel_semantics')
         numerical = False
     ma, mb = run['metadata'], baseline['metadata']
@@ -212,6 +220,7 @@ def aggregate(runs, baseline, comparator=None):
             info = dict(source_directory=str(run['path']), baseline_directory=str(baseline['path']),
                         hardware_label=run['hardware'], **{k: run['metadata'].get(k, 'unknown') for k in ENVIRONMENT},
                         git_commit=run['metadata'].get('git_commit', 'unknown'), git_dirty=run['metadata'].get('git_dirty', 'unknown'),
+                        operation=row.get('operation', 'matmul'), length=row.get('length', ''),
                         kernel=row['kernel'], M=int(row['M']), N=int(row['N']), K=int(row['K']),
                         seed=run['config']['seed'], seed_b=run['config']['seed_b'], tile_size=row['tile_size'],
                         contraction_mode=semantics(row)[1], accumulation_mode=semantics(row)[2],
@@ -223,7 +232,7 @@ def aggregate(runs, baseline, comparator=None):
             info['within_run_naive_speedup'] = naive_mean / mean if naive_mean and mean else None
             info['baseline_performance_ratio'] = None
             numerical = dict(source_directory=str(run['path']), baseline_directory=str(baseline['path']),
-                             hardware_label=run['hardware'], kernel=row['kernel'], M=info['M'], N=info['N'], K=info['K'],
+                             hardware_label=run['hardware'], operation=row.get('operation', 'matmul'), length=row.get('length', ''), kernel=row['kernel'], M=info['M'], N=info['N'], K=info['K'],
                              output_sha256=row.get('output_sha256', ''), baseline_sha256=ref.get('output_sha256', '') if ref else '',
                              atol=baseline['config']['atol'], rtol=baseline['config']['rtol'],
                              **{field: None for field in METRICS})
@@ -298,7 +307,8 @@ def main():
         def rate(value):
             return f'{value:.6g}' if value is not None else 'n/a'
         for info, numeric in zip(summaries, numerics):
-            print(f"{info['hardware_label']} | {info['kernel']} {info['M']}x{info['N']} K={info['K']} | "
+            shape = f"{info['M']}x{info['N']} K={info['K']}" if info['operation'] == 'matmul' else 'length=' + str(info['K'])
+            print(f"{info['hardware_label']} | {info['operation']} {info['kernel']} {shape} | "
                   f"{info['output_sha256'][:12] or 'no hash'} | {numeric['status']} | "
                   f"mean={info['mean_ms'] or 'untimed'} ms GFLOP/s={info['gflops'] or 'n/a'} | "
                   f"naive speedup={rate(info['within_run_naive_speedup'])} baseline ratio={rate(info['baseline_performance_ratio'])}")
@@ -314,7 +324,7 @@ def main():
         write_csv(args.output / 'cross_hardware_numerics.csv', numerics)
         metadata = dict(schema_version=1, timestamp_utc=datetime.now(timezone.utc).isoformat(),
                         baseline=str(baseline_path), baseline_selection='explicit' if args.baseline else 'first_input',
-                        aggregator_sha256=digest(Path(__file__)), comparator=str(comparator) if comparator else None,
+                        aggregator_sha256=digest(Path(__file__)), operations_sha256=digest(Path(__file__).with_name('operations.py')), comparator=str(comparator) if comparator else None,
                         comparator_sha256=digest(Path(comparator)) if comparator else None,
                         numerical_tolerances='baseline config', ratio_definition='baseline mean / candidate mean; only eligible configurations',
                         sources=[dict(directory=str(run['path']), hardware_label=run['hardware'], metadata=run['metadata'],

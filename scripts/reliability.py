@@ -1,6 +1,7 @@
 """Read native timing artifacts and visualize them without recomputing CIs."""
 import csv
 import math
+import operations
 from collections import defaultdict
 from pathlib import Path
 
@@ -33,7 +34,8 @@ def load(run, summary):
     measured = set()
     for row in read_csv(path):
         identity = identities[row['row_id']]
-        if (row['kernel'] != identity['kernel'] or row['timing_mode'] != identity['timing_mode']
+        if (row.get('operation', 'matmul') != identity.get('operation', 'matmul')
+                or row['kernel'] != identity['kernel'] or row['timing_mode'] != identity['timing_mode']
                 or tuple(int(row[key]) for key in ('M','N','K')) != identity['shape']):
             raise ValueError('Timing sample identity disagrees with summary')
         trial, iteration = int(row['trial']), int(row['iteration'])
@@ -76,7 +78,7 @@ def load(run, summary):
 
 def label(data, identity):
     row = data['identities'][identity]
-    return f"{row['kernel']} / {row['timing_mode']}\n" + '×'.join(map(str,row['shape']))
+    return f"{row['kernel']} / {row['timing_mode']}\n" + operations.label(row)
 
 
 def selected(data, limit=6):

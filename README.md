@@ -355,3 +355,23 @@ artifact replay. CPU tests also check aggregate/special-value statistics and
 instruction-verifier rejection paths.
 GitHub Actions tests GCC/Clang Debug/Release CPU builds and has a separate CUDA
 container job that compiles kernels and runs CPU tests without assuming a GPU.
+
+### Dot product and sum reduction
+
+Select `--operation dot` or `--operation reduction_sum` with `--size LENGTH`
+(or several `--sizes`). Matmul remains the default. Both operations share the
+existing diagnostics, seeded inputs, timing statistics, artifacts and replay.
+
+```bash
+build/matmul-inspector benchmark --operation dot --size 1000000 --seed 42 \
+  --atol 0.01 --rtol 0.001 --save-output --output results/dot-run
+build/matmul-inspector benchmark --operation reduction_sum --size 1000003 --seed 42 \
+  --atol 0.01 --rtol 0.001 --save-output --output results/sum-run
+python3 scripts/report.py results/dot-run
+```
+
+The serial CPU reference and deterministic CUDA tree can differ numerically.
+These example tolerances are explicit exploratory settings, not guarantees;
+CPU host versus GPU kernel-only speedup is not end-to-end offload speedup.
+See [supported operations](docs/operations.md) for semantics, timing boundaries,
+scalar output encoding, replay and operation-specific roofline models.

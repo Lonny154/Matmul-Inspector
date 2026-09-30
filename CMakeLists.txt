@@ -40,6 +40,9 @@ target_include_directories(numeric PUBLIC include)
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
+add_library(operation src/operation.cpp)
+target_link_libraries(operation PUBLIC matrix)
+
 add_library(output src/output.cpp)
 target_link_libraries(output PUBLIC matrix numeric)
 
@@ -57,7 +60,7 @@ if(MATMUL_INSPECTOR_ENABLE_CUDA AND CMAKE_CUDA_COMPILER)
     set(MATMUL_INSPECTOR_CUDA_BUILT ON)
     add_library(cuda_matmul src/cuda_matmul.cu)
     set_target_properties(cuda_matmul PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON)
-    target_link_libraries(cuda_matmul PUBLIC matrix benchmark)
+    target_link_libraries(cuda_matmul PUBLIC matrix benchmark operation)
     target_compile_definitions(cuda_matmul PUBLIC MATMUL_INSPECTOR_HAS_CUDA=1)
     if(MATMUL_INSPECTOR_WARNINGS AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
         if(MSVC)
@@ -95,7 +98,7 @@ add_custom_target(build-provenance
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/git_provenance.hpp"
     VERBATIM)
 add_library(experiment src/experiment.cpp src/metadata.cpp src/timing_artifacts.cpp)
-target_link_libraries(experiment PUBLIC comparison benchmark output)
+target_link_libraries(experiment PUBLIC comparison benchmark output operation)
 target_include_directories(experiment PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>")
 add_dependencies(experiment build-provenance)
@@ -114,6 +117,10 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(operation-tests tests/operation_test.cpp)
+    target_link_libraries(operation-tests PRIVATE experiment)
+    add_test(NAME operation-tests COMMAND operation-tests)
+    set_tests_properties(operation-tests PROPERTIES LABELS "cpu")
     add_executable(benchmark-statistics-tests tests/benchmark_statistics_test.cpp)
     target_link_libraries(benchmark-statistics-tests PRIVATE experiment)
     add_test(NAME benchmark-statistics-tests COMMAND benchmark-statistics-tests)
@@ -153,6 +160,10 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME operation-artifact-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/operation_test.py" $<TARGET_FILE:matmul-inspector>
+            $<TARGET_FILE:matmul-compare-outputs>)
+        set_tests_properties(operation-artifact-tests PROPERTIES LABELS "cpu")
         add_test(NAME roofline-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/roofline_test.py")
         set_tests_properties(roofline-tests PROPERTIES LABELS "cpu")
@@ -177,7 +188,15 @@ if(BUILD_TESTING)
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
+        add_executable(cuda-vector-tests tests/cuda_vector_test.cpp)
+        target_link_libraries(cuda-vector-tests PRIVATE cuda_matmul experiment)
+        add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
+        set_tests_properties(cuda-vector-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
         if(Python3_Interpreter_FOUND)
+            add_test(NAME operation-gpu-artifact-tests COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/operation_test.py" $<TARGET_FILE:matmul-inspector>
+                $<TARGET_FILE:matmul-compare-outputs> --gpu)
+            set_tests_properties(operation-gpu-artifact-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
             add_test(NAME crossover-gpu-tests COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/crossover_gpu_test.py" $<TARGET_FILE:matmul-inspector>)
             set_tests_properties(crossover-gpu-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")

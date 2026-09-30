@@ -1,6 +1,7 @@
 #pragma once
 
 #include "benchmark.hpp"
+#include "operation.hpp"
 #include "comparison.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -12,6 +13,7 @@ namespace experiment {
 
 struct Shape { std::size_t m, n, k; };
 struct Config {
+    operation::Kind operation = operation::Kind::matmul;
     std::string mode = "compare";
     std::vector<Shape> shapes{{4, 4, 4}};
     std::string reference = "naive", candidate = "tiled";
@@ -31,7 +33,7 @@ std::string usage();
 void fill(Matrix& matrix, std::uint32_t seed);
 void fill_inputs(Matrix& a, Matrix& b, const Config& config);
 std::string contraction_mode(const std::string& kernel);
-std::string accumulation_mode(const std::string& kernel);
+std::string accumulation_mode(const std::string& kernel, operation::Kind kind = operation::Kind::matmul);
 
 using Metadata = std::map<std::string, std::string>;
 // Optional metadata uses "unknown"; git/fast_math bool strings serialize as booleans.

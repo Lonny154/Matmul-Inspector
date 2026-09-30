@@ -17,11 +17,11 @@ std::string warnings(const benchmark::Statistics& stats) {
 std::map<std::string,std::string> timing_artifacts(const Config& config, const std::vector<Row>& rows) {
     std::ostringstream samples, stats, pairs;
     for (auto* out : {&samples,&stats,&pairs}) { out->imbue(std::locale::classic()); *out << std::setprecision(17); }
-    samples << "row_id,M,N,K,backend,kernel,reference_kernel,timing_mode,timer,trial,iteration,phase,latency_ms,seed\n";
-    stats << "row_id,M,N,K,kernel,timing_mode,scope,trial,measurement_count,warmup_count,trial_count,min_ms,max_ms,mean_ms,median_ms,stddev_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,bootstrap_method,stability_warnings";
+    samples << "row_id,M,N,K,backend,kernel,reference_kernel,timing_mode,timer,trial,iteration,phase,latency_ms,seed,operation\n";
+    stats << "row_id,M,N,K,kernel,timing_mode,scope,trial,measurement_count,warmup_count,trial_count,min_ms,max_ms,mean_ms,median_ms,stddev_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,bootstrap_method,stability_warnings,operation";
     for (int p : config.analysis.percentiles) stats << ",p" << p << "_ms";
     stats << '\n';
-    pairs << "reference_row_id,candidate_row_id,M,N,K,reference_kernel,candidate_kernel,reference_timing_mode,candidate_timing_mode,reference_median_ms,candidate_median_ms,latency_ratio,percent_difference,speedup,median_ci_overlap,tolerance_pass\n";
+    pairs << "reference_row_id,candidate_row_id,M,N,K,reference_kernel,candidate_kernel,reference_timing_mode,candidate_timing_mode,reference_median_ms,candidate_median_ms,latency_ratio,percent_difference,speedup,median_ci_overlap,tolerance_pass,operation\n";
     bool any = false;
     for (std::size_t id=0; id<rows.size(); ++id) {
         const auto& row = rows[id];
@@ -33,7 +33,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
                 << ',' << (row.kernel == "cpu" ? "cpu" : "cuda") << ',' << csv_field(row.kernel) << ',' << csv_field(row.reference)
                 << ',' << csv_field(row.timing_mode) << ',' << (row.timing_mode == "kernel_only" ? "cuda_event" : "steady_clock")
                 << ',' << sample.trial << ',' << sample.iteration << ',' << (sample.warmup ? "warmup" : "measurement")
-                << ',' << sample.latency_ms << ',' << config.seed << '\n';
+                << ',' << sample.latency_ms << ',' << config.seed << ',' << operation::name(config.operation) << '\n';
             trials[sample.trial].push_back(sample);
         }
         auto record = [&](const benchmark::Statistics& s, const char* scope, int trial) {
@@ -47,7 +47,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
                 << ',' << s.min_ms << ',' << s.max_ms << ',' << s.mean_ms << ',' << s.median_ms << ',' << s.stddev_ms
                 << ',' << s.iqr_ms << ',' << s.mad_ms << ',';
             optional(stats,s.cv); stats << ','; optional(stats,s.median_ci_low_ms); stats << ','; optional(stats,s.median_ci_high_ms);
-            stats << ',' << (s.median_ci_low_ms ? (ids.size()>1 ? "whole_trial" : "iid_measurement") : "unavailable") << ',' << csv_field(warnings(s));
+            stats << ',' << (s.median_ci_low_ms ? (ids.size()>1 ? "whole_trial" : "iid_measurement") : "unavailable") << ',' << csv_field(warnings(s)) << ',' << operation::name(config.operation);
             for (int p : config.analysis.percentiles) {
                 stats << ',';
                 auto found=s.percentiles.find(p); if (found!=s.percentiles.end()) stats << found->second;
@@ -61,7 +61,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
             const auto& ref = rows[ref_id];
             if (!ref.timed || ref.kernel != row.reference || ref.shape.m != row.shape.m
                 || ref.shape.n != row.shape.n || ref.shape.k != row.shape.k
-                || ref.timing_mode != (row.reference == "cpu" ? "host_matmul" : row.timing_mode)) continue;
+                || ref.timing_mode != (row.reference == "cpu" ? (config.operation == operation::Kind::matmul ? "host_matmul" : "host_serial") : row.timing_mode)) continue;
             const auto& a=ref.timing; const auto& b=row.timing;
             pairs << ref_id << ',' << id << ',' << row.shape.m << ',' << row.shape.n << ',' << row.shape.k
                 << ',' << csv_field(ref.kernel) << ',' << csv_field(row.kernel)
@@ -73,7 +73,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
             pairs << ',';
             if (a.median_ci_low_ms && a.median_ci_high_ms && b.median_ci_low_ms && b.median_ci_high_ms)
                 pairs << (std::max(*a.median_ci_low_ms,*b.median_ci_low_ms) <= std::min(*a.median_ci_high_ms,*b.median_ci_high_ms) ? "true" : "false");
-            pairs << ',' << (row.comparison.tolerance_pass ? "true" : "false") << '\n';
+            pairs << ',' << (row.comparison.tolerance_pass ? "true" : "false") << ',' << operation::name(config.operation) << '\n';
             break;
         }
     }

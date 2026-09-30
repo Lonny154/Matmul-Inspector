@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shlex
 import subprocess
+from operations import identity
 
 
 def command(metadata, executable, output):
@@ -20,7 +21,14 @@ def command(metadata, executable, output):
         raise ValueError('Unsupported mode')
     args = [str(executable), mode]
     shapes = config['shapes']
-    if shapes and all(s['M'] == s['N'] == s['K'] for s in shapes):
+    operation = identity(config)
+    if operation != 'matmul':
+        if config.get('reduction_block_size') != 256:
+            raise ValueError('Unsupported reduction block size')
+        if not shapes or any(s['M'] != 1 or s['N'] != 1 or s['K'] <= 0 for s in shapes):
+            raise ValueError('Invalid vector shapes')
+        args += ['--operation', operation, '--sizes', ','.join(str(s['K']) for s in shapes)]
+    elif shapes and all(s['M'] == s['N'] == s['K'] for s in shapes):
         args += ['--sizes', ','.join(str(s['M']) for s in shapes)]
     elif len(shapes) == 1:
         for key in ('M', 'N', 'K'):

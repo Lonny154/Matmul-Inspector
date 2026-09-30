@@ -47,6 +47,9 @@ void write_file(const std::filesystem::path& path, const std::string& text) {
 
 std::string usage() {
     return "Usage: matmul-inspector [compare|benchmark|crossover] [options]\n"
+           "  --operation matmul|dot|reduction_sum (default matmul)\n"
+           "  --size LENGTH          Vector length; --sizes accepts multiple lengths\n"
+           "  Vectors: reference cpu, candidate cuda-tree (or cpu); random inputs only.\n"
            "  --sizes 4,256,257,1024   Square sizes (compare default: 4)\n"
            "  --m M --n N --k K      One rectangular configuration; exclusive with --sizes\n"
            "  --reference KERNEL --candidate KERNEL (defaults naive, tiled)\n"
@@ -98,7 +101,11 @@ Config parse(const std::vector<std::string>& args) {
         if (option == "--save-output") { config.save_output = true; continue; }
         if (i + 1 == args.size()) throw std::invalid_argument("Missing value for " + option);
         const auto& value = args[++i];
-        if (option == "--sizes") {
+        if (option == "--operation") config.operation = operation::parse(value);
+        else if (option == "--size") {
+            auto length = static_cast<std::size_t>(integer(value,std::numeric_limits<std::size_t>::max()));
+            config.shapes = {{length,length,length}};
+        } else if (option == "--sizes") {
             config.shapes.clear();
             std::size_t begin = 0;
             do {
@@ -153,7 +160,7 @@ Config parse(const std::vector<std::string>& args) {
             if (value.empty()) throw std::invalid_argument("Empty output path");
             config.output = value;
         } else if (option == "--reference" || option == "--candidate") {
-            if (value != "cpu" && value != "naive" && value != "tiled"
+            if (value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled"
                 && value != "cuda-naive-fma" && value != "cuda-naive-no-fma" && value != "cuda-naive-reordered") throw std::invalid_argument("Unknown kernel: " + value);
             if (option == "--reference") config.reference = value;
             else config.candidate = value;
@@ -168,6 +175,18 @@ Config parse(const std::vector<std::string>& args) {
         if (seen.count("--sizes") || !shape.m || !shape.n || !shape.k) throw std::invalid_argument("Specify either --sizes or all of --m, --n, --k");
         config.shapes = {shape};
     }
+    if (seen.count("--size") && seen.count("--sizes")) throw std::invalid_argument("Use --size or --sizes");
+    if (config.operation != operation::Kind::matmul) {
+        if (config.mode == "crossover" || shape.m || shape.n || shape.k)
+            throw std::invalid_argument("Vector operations use compare/benchmark and --size or --sizes");
+        if (config.input != "random") throw std::invalid_argument("Vector operations currently use random inputs");
+        if (!seen.count("--reference")) config.reference = "cpu";
+        if (!seen.count("--candidate")) config.candidate = "cuda-tree";
+        for (const auto& kernel : {config.reference,config.candidate})
+            if (kernel != "cpu" && kernel != "cuda-tree") throw std::invalid_argument("Vector kernel must be cpu or cuda-tree");
+        for (auto& dimensions : config.shapes) dimensions = {1,1,dimensions.m};
+    } else if (seen.count("--size") || config.reference == "cuda-tree" || config.candidate == "cuda-tree")
+        throw std::invalid_argument("--size and cuda-tree require a vector operation");
     if (config.mode == "crossover") {
         if (config.output.empty()) throw std::invalid_argument("Crossover requires --output");
         if (config.reference != "cpu" || config.candidate == "cpu")
@@ -179,7 +198,7 @@ Config parse(const std::vector<std::string>& args) {
             if (config.shapes[i-1].m == config.shapes[i].m) throw std::invalid_argument("Duplicate crossover size");
     }
     if (config.save_output && config.output.empty()) throw std::invalid_argument("--save-output requires --output");
-    if (config.mode == "benchmark" && (config.reference == "cpu" || config.candidate == "cpu"))
+    if (config.operation == operation::Kind::matmul && config.mode == "benchmark" && (config.reference == "cpu" || config.candidate == "cpu"))
         throw std::invalid_argument("Benchmark requires CUDA kernels");
     for (const auto& dimensions : config.shapes) {
         if ((config.input == "cancellation" && dimensions.k < 4) || (config.input == "fma-sensitive" && dimensions.k < 2))
@@ -200,18 +219,22 @@ void fill(Matrix& matrix, std::uint32_t seed) {
 }
 
 std::string contraction_mode(const std::string& kernel) {
+    if (kernel == "cuda-tree") return "separate_rn_mul_add";
     if (kernel == "cuda-naive-no-fma") return "separate_rn_mul_add";
     if (kernel == "cuda-naive-fma" || kernel == "cuda-naive-reordered") return "explicit_fma_rn";
     return "compiler_default";
 }
 
-std::string accumulation_mode(const std::string& kernel) {
+std::string accumulation_mode(const std::string& kernel, operation::Kind kind) {
+    if (kind != operation::Kind::matmul && kernel == "cpu") return "serial_increasing_index";
+    if (kernel == "cuda-tree") return "block_tree_256_multistage";
     if (kernel == "cuda-naive-reordered") return "even_odd_partials";
     if (kernel == "tiled") return "increasing_k_zero_padded_tiles";
     return "increasing_k";
 }
 
 void fill_inputs(Matrix& a, Matrix& b, const Config& config) {
+    if (config.operation == operation::Kind::reduction_sum) { fill(a,config.seed); return; }
     if (a.cols() != b.rows()) throw std::invalid_argument("Input dimensions do not agree");
     if (config.input == "random") { fill(a, config.seed); fill(b, config.seed_b); return; }
     if (config.input != "cancellation" && config.input != "fma-sensitive")
@@ -256,9 +279,11 @@ std::string metadata_json(const Config& config, const Metadata& values) {
         else out << json_string(value);
     }
     out << ",\n  \"config\": {\n    \"mode\": " << json_string(config.mode)
+        << ", \"operation\": " << json_string(operation::name(config.operation))
         << ", \"dtype\": \"float32\", \"layout\": \"row_major_packed\""
         << ",\n    \"reference\": " << json_string(config.reference) << ", \"candidate\": " << json_string(config.candidate)
-        << ", \"tile_size\": " << cuda_matmul_tile_size
+        << ", \"tile_size\": " << (config.operation == operation::Kind::matmul ? cuda_matmul_tile_size : 0)
+        << ", \"reduction_block_size\": " << (config.operation == operation::Kind::matmul ? 0 : operation::block_size)
         << ",\n    \"seed\": " << config.seed << ", \"seed_b\": " << config.seed_b
         << ", \"generator\": " << json_string(config.input == "random" ? "lcg32-v1" : config.input + "-v1")
         << ", \"input\": " << json_string(config.input)
@@ -267,8 +292,8 @@ std::string metadata_json(const Config& config, const Metadata& values) {
         << ", \"output_encoding\": \"fp32-le-row-major-v1\", \"output_hash\": \"sha256\""
         << ",\n    \"reference_contraction\": " << json_string(contraction_mode(config.reference))
         << ", \"candidate_contraction\": " << json_string(contraction_mode(config.candidate))
-        << ",\n    \"reference_accumulation\": " << json_string(accumulation_mode(config.reference))
-        << ", \"candidate_accumulation\": " << json_string(accumulation_mode(config.candidate))
+        << ",\n    \"reference_accumulation\": " << json_string(accumulation_mode(config.reference,config.operation))
+        << ", \"candidate_accumulation\": " << json_string(accumulation_mode(config.candidate,config.operation))
         << ",\n    \"warmups\": " << (config.mode != "compare" ? config.warmups : 0)
         << ", \"iterations\": " << (config.mode != "compare" ? config.iterations : 0)
         << ", \"atol\": " << config.atol << ", \"rtol\": " << config.rtol
@@ -304,22 +329,22 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
     summary.imbue(std::locale::classic()); mismatches.imbue(std::locale::classic());
     summary << std::setprecision(17) << std::boolalpha;
     mismatches << std::setprecision(17) << std::boolalpha;
-    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file,backend,timing_mode,row_id,max_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,median_speedup,stability_warnings\n";
-    mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass,timing_mode\n";
+    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file,backend,timing_mode,row_id,max_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,median_speedup,stability_warnings,operation,length,flop_count,model_bytes,reduction_block_size,reduction_stages\n";
+    mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass,timing_mode,operation\n";
     bool any_mismatch = false;
     std::size_t row_id = 0;
     for (const auto& row : rows) {
         summary << row.shape.m << ',' << row.shape.n << ',' << row.shape.k << ',' << csv_field(row.kernel) << ',' << row.tile_size << ',';
         if (row.timed) {
             summary << row.timing.mean_ms << ',' << row.timing.median_ms << ',' << row.timing.min_ms << ',' << row.timing.stddev_ms << ',';
-            if (row.timing.mean_ms > 0) summary << 2.0 * row.shape.m * row.shape.n * row.shape.k / (row.timing.mean_ms * 1e6);
+            if (row.timing.mean_ms > 0) summary << operation::flops(config.operation,row.shape.m,row.shape.n,row.shape.k) / (row.timing.mean_ms * 1e6);
         } else summary << ",,,,";
         summary << ',' << csv_field(row.reference) << ',';
         if (row.timed && row.speedup > 0) summary << row.speedup;
         summary << ',' << (row.comparison.divergent_count == 0) << ',' << row.comparison.divergent_count << ',' << row.comparison.tolerance_pass;
         const auto& c = row.comparison;
-        summary << ',' << csv_field(contraction_mode(row.kernel)) << ',' << csv_field(accumulation_mode(row.kernel))
-            << ',' << csv_field(contraction_mode(row.reference)) << ',' << csv_field(accumulation_mode(row.reference))
+        summary << ',' << csv_field(contraction_mode(row.kernel)) << ',' << csv_field(accumulation_mode(row.kernel,config.operation))
+            << ',' << csv_field(contraction_mode(row.reference)) << ',' << csv_field(accumulation_mode(row.reference,config.operation))
             << ',' << c.divergent_percent << ',' << c.max_ulp << ',' << c.mean_divergent_ulp
             << ',' << c.max_absolute_error << ',' << c.max_relative_error << ',' << c.tolerance_failures
             << ',' << c.tolerance_failure_percent;
@@ -341,6 +366,13 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
             for (const auto& flag : t.warnings) { if (!flags.empty()) flags += ';'; flags += flag; }
             summary << ',' << csv_field(flags);
         } else summary << ",,,,,,,,";
+        summary << ',' << operation::name(config.operation) << ',';
+        if (config.operation != operation::Kind::matmul) summary << row.shape.k;
+        summary << ',' << operation::flops(config.operation,row.shape.m,row.shape.n,row.shape.k)
+            << ',' << operation::bytes(config.operation,row.shape.m,row.shape.n,row.shape.k) << ',';
+        if (row.kernel == "cuda-tree") summary << operation::block_size;
+        summary << ',';
+        if (row.kernel == "cuda-tree") summary << operation::stages(row.shape.k);
         summary << '\n';
         auto mismatch = [&](const std::optional<comparison::Divergence>& point, const char* kind) {
             if (!point) return;
@@ -351,7 +383,7 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
                 << e << ',' << a << ',' << csv_field(numeric::float_bits(e).to_string()) << ',' << csv_field(numeric::float_bits(a).to_string()) << ','
                 << numeric::ulp_distance(a, e) << ',' << numeric::absolute_error(a, e) << ',' << numeric::relative_error(a, e) << ','
                 << numeric::comparison_tolerance(a, e, row.comparison.atol, row.comparison.rtol) << ','
-                << numeric::nearly_equal(a, e, row.comparison.atol, row.comparison.rtol) << ',' << csv_field(row.timing_mode) << '\n';
+                << numeric::nearly_equal(a, e, row.comparison.atol, row.comparison.rtol) << ',' << csv_field(row.timing_mode) << ',' << operation::name(config.operation) << '\n';
         };
         for (const auto& point : c.mismatches) {
             const char* kind = "sample";

@@ -374,3 +374,77 @@ std::map<std::string, std::string> cuda_metadata() {
     }
     return values;
 }
+
+namespace {
+// One input term per lane, followed by a fixed left-plus-right binary tree.
+// Every lane reaches every barrier. Missing terms are positive zero.
+__global__ void vector_stage(const float* a, const float* b, float* out,
+                             std::size_t length, std::size_t b_stride, bool dot) {
+    __shared__ float partial[operation::block_size];
+    const unsigned lane = threadIdx.x;
+    const std::size_t i = std::size_t(blockIdx.x)*operation::block_size + lane;
+    partial[lane] = i < length ? (dot ? __fmul_rn(a[i],b[i*b_stride]) : a[i]) : 0.0f;
+    __syncthreads();
+    for (unsigned offset=operation::block_size/2; offset; offset/=2) {
+        if (lane < offset) partial[lane] = __fadd_rn(partial[lane],partial[lane+offset]);
+        __syncthreads();
+    }
+    if (lane == 0) out[blockIdx.x]=partial[0];
+}
+}
+
+CudaKernelMeasurement cuda_vector(operation::Kind kind, const Matrix& a, const Matrix& b,
+                                  int repetitions, int warmups) {
+    operation::validate_vectors(kind,a,b);
+    if (repetitions <= 0 || warmups < 0) throw std::invalid_argument("Invalid benchmark counts");
+    const auto length=a.cols();
+    const auto blocks=length/operation::block_size+(length%operation::block_size != 0);
+    int device;
+    check_cuda(cudaGetDevice(&device),"cudaGetDevice");
+    cudaDeviceProp props{};
+    check_cuda(cudaGetDeviceProperties(&props,device),"cudaGetDeviceProperties");
+    if (blocks > static_cast<std::size_t>(props.maxGridSize[0])) throw std::length_error("Vector exceeds CUDA grid limit");
+    DeviceBuffer da(storage_bytes(a)), db(kind == operation::Kind::dot ? storage_bytes(b) : sizeof(float));
+    DeviceBuffer first(blocks*sizeof(float)), second(blocks*sizeof(float));
+    check_cuda(cudaMemcpy(da.data(),a.data(),storage_bytes(a),cudaMemcpyHostToDevice),"copy vector A");
+    if (kind == operation::Kind::dot)
+        check_cuda(cudaMemcpy(db.data(),b.data(),storage_bytes(b),cudaMemcpyHostToDevice),"copy vector B");
+    auto launch = [&]() {
+        vector_stage<<<static_cast<unsigned>(blocks),operation::block_size>>>(
+            da.data(),db.data(),first.data(),length,b.row_stride(),kind == operation::Kind::dot);
+        check_cuda(cudaGetLastError(),"vector first stage");
+        float* input=first.data();
+        float* output=second.data();
+        auto count=blocks;
+        while (count > 1) {
+            const auto next=count/operation::block_size+(count%operation::block_size != 0);
+            vector_stage<<<static_cast<unsigned>(next),operation::block_size>>>(input,nullptr,output,count,0,false);
+            check_cuda(cudaGetLastError(),"vector partial reduction");
+            std::swap(input,output);
+            count=next;
+        }
+        return input;
+    };
+    // Prime all stages before configured warmups, outside event measurements.
+    float* final=launch();
+    check_cuda(cudaDeviceSynchronize(),"vector priming synchronize");
+    CudaEvent start,stop;
+    std::vector<float> samples,warmup_samples;
+    samples.reserve(repetitions); warmup_samples.reserve(warmups);
+    for (int phase=0; phase<2; ++phase) {
+        const int count=phase == 0 ? warmups : repetitions;
+        for (int i=0; i<count; ++i) {
+            check_cuda(cudaEventRecord(start.get()),"vector start event");
+            final=launch();
+            check_cuda(cudaEventRecord(stop.get()),"vector stop event");
+            check_cuda(cudaEventSynchronize(stop.get()),"vector synchronize");
+            float ms;
+            check_cuda(cudaEventElapsedTime(&ms,start.get(),stop.get()),"vector elapsed time");
+            (phase == 0 ? warmup_samples : samples).push_back(ms);
+        }
+    }
+    Matrix result(1,1);
+    check_cuda(cudaMemcpy(result.data(),final,sizeof(float),cudaMemcpyDeviceToHost),"copy scalar result");
+    start.release(); stop.release(); da.release(); db.release(); first.release(); second.release();
+    return {std::move(result),benchmark::statistics(samples,warmup_samples)};
+}

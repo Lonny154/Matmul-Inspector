@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 from compare_hardware import load_json, finite_number
+import operations
 
 
 METRICS = ('median_speedup', 'median_ms', 'mean_ms', 'gflops', 'speedup', 'divergent_count', 'divergent_percent',
@@ -26,6 +27,9 @@ def load_report(run):
     except (OSError, ValueError) as error:
         warnings.append(f'Metadata unavailable: {error}')
         metadata = {}
+    config = metadata.get('config', {})
+    if not isinstance(config, dict):
+        config = {}
     rows = []
     with (run / 'summary.csv').open(newline='', encoding='utf-8') as stream:
         reader = csv.DictReader(stream)
@@ -34,6 +38,7 @@ def load_report(run):
         seen = set()
         for line, raw in enumerate(reader, 2):
             try:
+                operation = operations.identity(config,raw)
                 shape = tuple(int(raw[field]) for field in ('M', 'N', 'K'))
                 if min(shape) <= 0 or not raw['kernel'] or None in raw:
                     raise ValueError('invalid dimensions/kernel or malformed CSV')
@@ -45,7 +50,7 @@ def load_report(run):
             if identity in seen:
                 raise ValueError(f'Ambiguous duplicate kernel/reference/shape at line {line}')
             seen.add(identity)
-            row = dict(source_fields=dict(raw), row_id=raw.get('row_id', str(line-2)), kernel=identity[0], reference=identity[1], shape=shape, timing_mode=identity[3],
+            row = dict(operation=operation, source_fields=dict(raw), row_id=raw.get('row_id', str(line-2)), kernel=identity[0], reference=identity[1], shape=shape, timing_mode=identity[3],
                        tolerance_pass={'true': True, 'false': False}.get(raw.get('tolerance_pass')))
             for field in METRICS:
                 try:
@@ -103,7 +108,8 @@ def render_plots(rows, destination, warnings):
 
     shapes = sorted({r['shape'] for r in rows}, key=lambda s: (math.prod(s), s))
     positions = {shape: i for i, shape in enumerate(shapes)}
-    labels = ['×'.join(map(str, shape)) for shape in shapes]
+    vector = bool(rows) and all(r.get('operation', 'matmul') != 'matmul' for r in rows)
+    labels = [str(s[2]) if vector else '×'.join(map(str, s)) for s in shapes]
     figures = []
 
     def finish(fig, ax, filename, title, ylabel, description, series):
@@ -111,7 +117,7 @@ def render_plots(rows, destination, warnings):
             plt.close(fig)
             warnings.append(f'Skipped {filename}: no supported measurements.')
             return
-        ax.set(title=title, xlabel='Matrix shape M×N×K (categorical; ordered by MNK)', ylabel=ylabel)
+        ax.set(title=title, xlabel='Vector length (elements; categorical)' if vector else 'Matrix shape M×N×K (categorical; ordered by MNK)', ylabel=ylabel)
         ax.set_xticks(range(len(shapes)), labels, rotation=35, ha='right')
         ax.grid(axis='y', alpha=0.25)
         ax.legend(fontsize='small')
@@ -125,8 +131,8 @@ def render_plots(rows, destination, warnings):
     if primary == 'mean_ms':
         warnings.append('Median unavailable: latency plot falls back to recorded means.')
     for field, filename, title, ylabel in (
-        (primary, 'latency.png', 'Kernel latency by shape', ('Median' if primary == 'median_ms' else 'Mean') + ' kernel latency (ms)'),
-        ('gflops', 'throughput.png', 'Kernel throughput by shape', 'Throughput (GFLOP/s)'),
+        (primary, 'latency.png', 'Implementation latency by size', ('Median' if primary == 'median_ms' else 'Mean') + ' latency (ms)'),
+        ('gflops', 'throughput.png', 'Implementation throughput by size', 'Throughput (GFLOP/s)'),
     ):
         fig, ax = plt.subplots(figsize=(width, 4.8))
         series = 0
@@ -172,8 +178,9 @@ def render_plots(rows, destination, warnings):
     ax.set_ylim(-1, 101)
     finish(fig, ax, 'numerics.png', 'Numerical behavior against recorded reference',
            'Output elements (%)',
-           'Solid lines show bitwise divergence; dashed lines show tolerance failures when recorded. '
-           'Older divergence counts are divided by M×N. Self-comparisons are excluded. '
+           'Solid lines show bitwise divergence; dashed lines show tolerance failures when recorded. ' +
+           ('Counts use the scalar output count (one). ' if vector else 'Older divergence counts are divided by M×N. ') +
+           'Self-comparisons are excluded. '
            'No distribution is inferred from the bounded mismatches.csv samples.', series)
     return figures
 
@@ -185,18 +192,36 @@ def markdown(run, metadata, rows, figures, warnings):
     config = metadata.get('config', {})
     if not isinstance(config, dict):
         config = {}
+    config = dict(config)
+    if rows and 'operation' not in config:
+        config['operation'] = rows[0].get('operation', 'matmul')
     lines = ['# Matmul-Inspector experiment report', '', f'Run: `{safe(run)}`', '',
              '| Metadata | Value |', '|---|---|']
     for name in ('timestamp_utc', 'status', 'gpu_name', 'gpu_compute_capability', 'git_commit',
                  'git_dirty', 'build_type', 'cpu_model', 'cxx_compiler', 'cuda_compiler', 'cuda_runtime_version'):
         lines.append(f'| {name} | {safe(metadata.get(name, "unknown"))} |')
-    for name in ('mode', 'seed', 'seed_b', 'input', 'warmups', 'iterations', 'atol', 'rtol'):
+    for name in ('operation', 'mode', 'seed', 'seed_b', 'input', 'warmups', 'iterations', 'atol', 'rtol'):
         lines.append(f'| {name} | {safe(config.get(name, "unknown"))} |')
     lines += ['', f'Rows: {len(rows)}. Kernels: {safe(", ".join(sorted(group_rows(rows))))}.', '',
               'Timing methodology: ' + safe(metadata.get('timing_methodology', 'unknown')) + '.', '',
               'These figures describe this capture only. Hardware/software, clocks, load and '
               'measurement variability limit broader conclusions. Bitwise divergence is distinct '
               'from a numerical tolerance failure.', '']
+    if config.get('operation', 'matmul') != 'matmul':
+        lines += ['## Vector implementation and diagnostics', '',
+                  'CPU: ' + safe(metadata.get('cpu_implementation', 'unknown')) + '.',
+                  'CUDA: ' + safe(metadata.get('cuda_implementation', 'unknown')) + '.', '',
+                  'CPU host_serial includes scalar output allocation; GPU kernel_only excludes transfers and allocations. '
+                  'Their ratio is not an end-to-end offload speedup. Tree association can change FP32 results.', '',
+                  '| Length | Implementation | Block / stages | Max ULP | Absolute error | Relative error | Tolerance |',
+                  '|---:|---|---|---:|---:|---:|---|']
+        for row in rows:
+            raw = row['source_fields']
+            lines.append('| ' + ' | '.join(safe(v) for v in (row['shape'][2], row['kernel'],
+                raw.get('reduction_block_size', '') + ' / ' + raw.get('reduction_stages', ''),
+                raw.get('max_ulp', 'unknown'), raw.get('max_absolute_error', 'unknown'),
+                raw.get('max_relative_error', 'unknown'), raw.get('tolerance_pass', 'unknown'))) + ' |')
+        lines += ['']
     if config.get('mode') == 'crossover':
         from crossover import section
         lines += [section(metadata, rows)]

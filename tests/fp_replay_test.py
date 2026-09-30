@@ -8,6 +8,7 @@ import sys
 import tempfile
 
 exe, source = sys.argv[1:]
+sys.path.insert(0, str(Path(source) / 'scripts'))
 spec = importlib.util.spec_from_file_location('reproduce', Path(source) / 'scripts/reproduce.py')
 replay = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(replay)

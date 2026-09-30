@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from compare_hardware import digest
 from report import load_report
+import operations
 
 MODEL = 'fp32-compulsory-read-A-read-B-write-C-v1'
 SOURCES = ('user-supplied', 'documented-vendor-spec', 'measured-separately')
@@ -45,13 +46,14 @@ def ceilings(peak_fp32_tflops, memory_bandwidth_gbps, compute_source='user-suppl
                 source_note=source_note, units='decimal: TFLOP/s=1e12 FLOP/s; GB/s=1e9 bytes/s (not gigabits/s)')
 
 
-def metrics(m, n, k, latency_ms, hardware):
+def metrics(m, n, k, latency_ms, hardware, operation="matmul"):
     """Nominal math operations and compulsory bytes; never measured DRAM traffic."""
     if any(isinstance(v, bool) or not isinstance(v, int) or v <= 0 for v in (m,n,k)):
         raise ValueError('Matrix dimensions must be positive integers')
     latency_ms = positive(latency_ms)
-    flop_count = 2*m*n*k
-    model_bytes = 4*(m*k+k*n+m*n)
+    flop_count, model_bytes = operations.model(operation,m,n,k)
+    if flop_count == 0:
+        raise ValueError("Zero nominal FLOPs (sum length 1): roofline efficiency undefined; timing remains valid")
     intensity = positive(flop_count / model_bytes)
     achieved = positive(flop_count / (latency_ms*1e6))
     compute = positive(hardware['peak_compute_gflops'])
@@ -104,7 +106,7 @@ def prepare(run, hardware, statistic='median'):
         mode=row['timing_mode']
         inferred=False
         # Before per-row modes existed, benchmark schema 1–3 was CUDA kernel-only.
-        if not mode and config['mode']=='benchmark' and row['kernel']!='cpu':
+        if not mode and config.get('operation', 'matmul') == 'matmul' and config['mode']=='benchmark' and row['kernel']!='cpu':
             mode='kernel_only'
             inferred=True
         reason=None
@@ -123,9 +125,10 @@ def prepare(run, hardware, statistic='median'):
         point=dict(raw)
         point.update(row_id=row['row_id'], backend='cuda', timing_mode=mode,
                      timing_mode_inferred=inferred, latency_statistic=statistic,
-                     model_name=MODEL)
+                     operation=row.get('operation', 'matmul'),
+                     model_name=MODEL if row.get('operation', 'matmul') == 'matmul' else 'fp32-compulsory-' + row['operation'] + '-v1')
         try:
-            point.update(metrics(*row['shape'],latency,hardware))
+            point.update(metrics(*row['shape'],latency,hardware,row.get('operation', 'matmul')))
         except (ValueError, OverflowError) as error:
             excluded.append(dict(row_id=row['row_id'],kernel=row['kernel'],shape=row['shape'],reason=str(error)))
             continue
@@ -184,11 +187,11 @@ def plot(points, hardware, destination):
     ordered=sorted(shapes.values(),key=lambda p:p['flop_count'])
     selected=ordered if len(ordered)<=10 else [ordered[round(i*(len(ordered)-1)/9)] for i in range(10)]
     for p in selected:
-        ax.annotate('×'.join(str(p[k]) for k in ('M','N','K')),
+        ax.annotate(('length ' + str(p['K'])) if p.get('operation', 'matmul') != 'matmul' else '×'.join(str(p[k]) for k in ('M','N','K')),
                     (p['arithmetic_intensity_flop_per_byte'],p['achieved_gflops']),
                     xytext=(5,6),textcoords='offset points',fontsize=7)
     ax.set(xlabel='Compulsory-model arithmetic intensity (FLOP/byte)',ylabel='Performance (GFLOP/s)',
-           title='Simple FP32 matmul roofline — CUDA kernel-only timing',xlim=(lo,hi))
+           title='Simple FP32 ' + points[0].get('operation', 'matmul') + ' roofline — CUDA kernel-only timing',xlim=(lo,hi))
     ax.grid(which='both',alpha=.2)
     ax.legend(fontsize=8,loc='best')
     fig.tight_layout()
@@ -202,6 +205,20 @@ def markdown(run, destination, meta, points, hardware, statistic, warnings):
     def link(filename):
         path=os.path.relpath(Path(run)/filename,destination)
         return quote(Path(path).as_posix(),safe='/.' )
+    operation = meta.get('config', {}).get('operation', 'matmul')
+    model_description = (
+        '**Model:** nominal FLOPs = `2*M*N*K`, counting multiply and add as two operations. '
+        'Model bytes = `4*(M*K + K*N + M*N)`: read A once, read B once, write C once. '
+        'This is logical FP32 compulsory traffic, excluding row padding, rereads, output initialization and transfers; C is not read.'
+    )
+    if operation != 'matmul':
+        formula = '`2*length`' if operation == 'dot' else '`length-1`'
+        byte_formula = '`4*(2*length+1)`' if operation == 'dot' else '`4*(length+1)`'
+        model_description = ('**Model:** nominal FLOPs = ' + formula + '. Model bytes = ' + byte_formula
+            + ': read the FP32 input(s) once and write one scalar. These are mathematical work and compulsory-byte '
+            'conventions, not instruction counts or measured DRAM traffic. Tree padding, partial-buffer traffic, '
+            'stage launches and synchronization overhead are not captured by this model.')
+    shape_kind = 'M×N×K shapes' if operation == 'matmul' else 'vector lengths'
     lines=['# Matmul-Inspector performance report','', '## Roofline Analysis','',
            f"Source run: `{safe(Path(run).resolve())}`",'',
            f"GPU: {safe(meta.get('gpu_name','unknown'))}; compute capability: {safe(meta.get('gpu_compute_capability','unknown'))}. "
@@ -210,9 +227,7 @@ def markdown(run, destination, meta, points, hardware, statistic, warnings):
            f"| FP32 compute | {hardware['peak_fp32_tflops']:.6g} TFLOP/s | {hardware['compute_source']} |",
            f"| Memory bandwidth | {hardware['peak_memory_bandwidth_gbps']:.6g} GB/s | {hardware['bandwidth_source']} |", '',
            'Ceiling source note: '+safe(hardware['source_note'] or 'none supplied')+'.', '',
-           '**Model:** nominal FLOPs = `2*M*N*K`, counting multiply and add as two operations. '
-           'Model bytes = `4*(M*K + K*N + M*N)`: read A once, read B once, write C once. '
-           'This is logical FP32 compulsory traffic, excluding row padding, rereads, output initialization and transfers; C is not read.', '',
+           model_description, '',
            f"Arithmetic intensity = FLOPs/model bytes. Ridge point = compute/bandwidth = {hardware['ridge_point_flop_per_byte']:.6g} FLOP/byte. "
            'Attainable GFLOP/s = min(compute GFLOP/s, intensity × bandwidth GB/s). '
            'Below the ridge is model memory-bound; at or above it is model compute-bound.', '',
@@ -220,12 +235,12 @@ def markdown(run, destination, meta, points, hardware, statistic, warnings):
            'Decimal units: TFLOP/s = 10¹² FLOP/s; GB/s = 10⁹ bytes/s, not gigabits/s.', '',
            'Timing methodology: '+safe(meta.get('timing_methodology','unknown'))+'.', '',
            '![Simple roofline](roofline.png)', '',
-           'Markers preserve kernel variants; annotations show up to ten distinct M×N×K shapes. '
+           f'Markers preserve kernel variants; annotations show up to ten distinct {shape_kind}. '
            'All analyzed configurations are in [roofline.csv](roofline.csv).', '',
-           '| Kernel / M×N×K | AI FLOP/byte | Achieved GFLOP/s | Model bound | Attainable efficiency | Compute peak % | Model bandwidth % |',
+           '| Kernel / size | AI FLOP/byte | Achieved GFLOP/s | Model bound | Attainable efficiency | Compute peak % | Model bandwidth % |',
            '|---|---:|---:|---|---:|---:|---:|']
     for p in points[:20]:
-        shape='×'.join(str(p[k]) for k in ('M','N','K'))
+        shape='×'.join(str(p[k]) for k in ('M','N','K')) if operation == 'matmul' else str(p['K'])
         lines.append(f"| {safe(p['kernel'])} / {shape} | {p['arithmetic_intensity_flop_per_byte']:.4g} | "
                      f"{p['achieved_gflops']:.5g} | {p['roofline_bound']} | {100*p['efficiency_vs_attainable']:.3g}% | "
                      f"{p['compute_peak_percent']:.3g}% | {p['model_bandwidth_peak_percent']:.3g}% |")
@@ -286,6 +301,13 @@ def main(argv=None):
                         measured_memory_traffic=None,excluded_rows=excluded,warnings=warnings,
                         analysis_python=platform.python_version(),
                         analysis_tool_sha256={p.name:digest(p) for p in (Path(__file__),Path(__file__).with_name('report.py'),Path(__file__).with_name('compare_hardware.py'))})
+        operation = meta.get('config', {}).get('operation', 'matmul')
+        provenance['operation'] = operation
+        if operation != 'matmul':
+            provenance['model'] = 'fp32-compulsory-' + operation + '-v1'
+            provenance['flop_count_formula'] = '2*length' if operation == 'dot' else 'length-1'
+            provenance['model_bytes_formula'] = '4*(2*length+1)' if operation == 'dot' else '4*(length+1)'
+        provenance['analysis_tool_sha256']['operations.py'] = digest(Path(__file__).with_name('operations.py'))
         if args.report:
             provenance['matplotlib_version']=matplotlib.__version__
         destination.mkdir(parents=True)

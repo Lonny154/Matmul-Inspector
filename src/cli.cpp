@@ -62,11 +62,11 @@ std::string capture_output(const Matrix& matrix, const Config& config, const Sha
     sidecar.exceptions(std::ios::failbit | std::ios::badbit);
     sidecar << "{\"format\":\"mifp32le-v1\",\"dtype\":\"float32\",\"byte_order\":\"little\",\"rows\":"
         << matrix.rows() << ",\"cols\":" << matrix.cols() << ",\"M\":" << shape.m << ",\"N\":" << shape.n
-        << ",\"K\":" << shape.k << ",\"kernel\":" << json_string(kernel)
+        << ",\"K\":" << shape.k << ",\"operation\":" << json_string(operation::name(config.operation)) << ",\"kernel\":" << json_string(kernel)
         << ",\"seed\":" << config.seed << ",\"seed_b\":" << config.seed_b
         << ",\"generator\":" << json_string(config.input == "random" ? "lcg32-v1" : config.input + "-v1")
         << ",\"contraction_mode\":" << json_string(contraction_mode(kernel))
-        << ",\"accumulation_mode\":" << json_string(accumulation_mode(kernel))
+        << ",\"accumulation_mode\":" << json_string(accumulation_mode(kernel,config.operation))
         << ",\"output_sha256\":" << json_string(hash) << "}\n";
     sidecar.close();
     return filename;
@@ -79,9 +79,10 @@ void capture_pair(Row& row, const Matrix& ref, const Matrix& actual, const Confi
     std::cout << "reference SHA-256: " << row.reference_sha256 << "\ncandidate SHA-256: " << row.output_sha256 << '\n';
 }
 
-Matrix execute(const Matrix& a, const Matrix& b, const std::string& kernel) {
-    if (kernel == "cpu") return matmul(a, b);
+Matrix execute(const Matrix& a, const Matrix& b, const std::string& kernel, operation::Kind kind) {
+    if (kernel == "cpu") return operation::cpu(kind,a,b);
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
+    if (kind != operation::Kind::matmul) return cuda_vector(kind,a,b).output;
     return cuda_matmul(a, b, cuda_kernel(kernel));
 #else
     throw std::runtime_error("CUDA support was not built");
@@ -106,10 +107,10 @@ auto repeated(Operation operation, const Config& config) {
 }
 
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
-void timing_line(const Row& row) {
+void timing_line(const Row& row, operation::Kind kind = operation::Kind::matmul) {
     const double gflops = row.timing.mean_ms > 0
-        ? 2.0 * row.shape.m * row.shape.n * row.shape.k / (row.timing.mean_ms * 1e6) : 0;
-    std::cout << std::setprecision(9) << row.kernel << " CUDA kernel: median=" << row.timing.median_ms
+        ? operation::flops(kind,row.shape.m,row.shape.n,row.shape.k) / (row.timing.mean_ms * 1e6) : 0;
+    std::cout << std::setprecision(9) << row.kernel << " " << row.timing_mode << ": median=" << row.timing.median_ms
         << " ms mean=" << row.timing.mean_ms << " ms min=" << row.timing.min_ms
         << " ms stddev=" << row.timing.stddev_ms << " ms GFLOP/s=" << gflops
         << " mean_speedup=" << row.speedup << "x median_speedup=" << row.median_speedup << "x";
@@ -165,9 +166,18 @@ int run_cli(const std::vector<std::string>& arguments) {
                 values["trial_method"] = "sequential blocks in one process, not independent process restarts; all reference trials precede candidate trials; crossover CPU then kernel_only then end_to_end; warmups repeated for every trial; inter-trial analysis/fingerprinting untimed";
                 values["stability_thresholds"] = "heuristics only: CV>0.20; max/min>3; IQR/median>0.25; first vs remaining median deviation>50% (n>=5); last vs first quarter median deviation>20% (n>=8); n<10 or trials<5 limited evidence; zero latency timer resolution";
             }
+            if (config.operation != operation::Kind::matmul) {
+                values["operation_extension"] = "1";
+                values["cpu_implementation"] = "serial FP32 increasing index; compiler-default contraction";
+                values["cuda_implementation"] = "256-thread shared-memory binary tree; fixed multi-stage reduction; explicit RN multiply and add; no atomics";
+                values["reduction_block_size"] = "256";
+                values["reduction_stages"] = "ceil-divide length by 256 repeatedly until one partial remains; at least one stage; see summary rows";
+                if (config.mode == "benchmark") values["timing_methodology"] =
+                    "CPU: steady_clock including scalar output allocation; CUDA: event pair around all reduction stages, synchronized each sample; inputs, allocation, transfers, priming, analysis excluded from CUDA timing; configured warmups excluded from statistics; sequential trials";
+            }
             create_run_directory(config.output);
             owns_directory = !config.output.empty();
-            std::cout << config.mode << ": reference=" << config.reference << " candidate=" << config.candidate
+            std::cout << config.mode << " operation=" << operation::name(config.operation) << ": reference=" << config.reference << " candidate=" << config.candidate
                 << " input=" << config.input << " seed=" << config.seed << " seed_b=" << config.seed_b << '\n'
                 << std::setprecision(9) << "atol=" << config.atol << " rtol=" << config.rtol << '\n';
             if (values["git_dirty"] == "true") {
@@ -209,7 +219,9 @@ int run_cli(const std::vector<std::string>& arguments) {
             } else {
                 if (controlled && values["fp_verified"] != "true")
                     throw std::runtime_error("Controlled kernels are unverified. Build with Python3, cuobjdump and embedded PTX; inspect fp_verification.json.");
-                if (config.mode == "benchmark") std::cout << "CUDA events; warmups=" << config.warmups << " iterations=" << config.iterations
+                if (config.mode == "benchmark" && config.operation != operation::Kind::matmul)
+                    std::cout << "CPU host_serial: steady_clock including scalar allocation; GPU kernel_only: CUDA events around all stages, allocation/transfers excluded\n";
+                if (config.mode == "benchmark" && config.operation == operation::Kind::matmul) std::cout << "CUDA events; warmups=" << config.warmups << " iterations=" << config.iterations
                     << "; allocation/transfers/comparison excluded\n";
                 if (config.mode == "crossover") std::cout << "CPU host_matmul: steady_clock; GPU kernel_only: CUDA events; "
                     << "GPU end_to_end: steady_clock including allocation/transfers; warmups=" << config.warmups
@@ -219,9 +231,11 @@ int run_cli(const std::vector<std::string>& arguments) {
                     << "; primary statistic=median; reliability flags are heuristics\n";
                 std::map<std::string, std::size_t> first_crossover;
                 for (const auto shape : config.shapes) {
-                    Matrix a(shape.m, shape.k), b(shape.k, shape.n);
+                    Matrix a(shape.m, shape.k), b(config.operation == operation::Kind::reduction_sum ? 0 : shape.k, shape.n);
                     fill_inputs(a, b, config);
-                    std::cout << "M=" << shape.m << " N=" << shape.n << " K=" << shape.k << '\n';
+                    if (config.operation == operation::Kind::matmul)
+                        std::cout << "M=" << shape.m << " N=" << shape.n << " K=" << shape.k << '\n';
+                    else std::cout << "length=" << shape.k << '\n';
                     Row candidate;
                     candidate.shape = shape;
                     candidate.kernel = config.candidate;
@@ -275,9 +289,47 @@ int run_cli(const std::vector<std::string>& arguments) {
 #endif
                         continue;
                     }
+                    if (config.operation != operation::Kind::matmul && config.mode == "benchmark") {
+                        auto measure = [&](const std::string& kernel) -> benchmark::HostMeasurement {
+                            if (kernel == "cpu") return benchmark::measure_host(
+                                [&] { return operation::cpu(config.operation,a,b); }, config.iterations,config.warmups);
+#ifdef MATMUL_INSPECTOR_HAS_CUDA
+                            auto result = cuda_vector(config.operation,a,b,config.iterations,config.warmups);
+                            return {std::move(result.output),std::move(result.timing)};
+#else
+                            throw std::runtime_error("CUDA support was not built");
+#endif
+                        };
+                        auto ref = repeated([&] { return measure(config.reference); },config);
+                        auto actual = repeated([&] { return measure(config.candidate); },config);
+                        capture_pair(candidate,ref.output,actual.output,config,rows.size());
+                        candidate.comparison = comparison::compare(ref.output,actual.output,config.atol,config.rtol,config.max_mismatches);
+                        candidate.timed = true;
+                        candidate.timing_mode = config.candidate == "cpu" ? "host_serial" : "kernel_only";
+                        candidate.timing = actual.timing;
+                        candidate.speedup = actual.timing.mean_ms > 0 ? ref.timing.mean_ms/actual.timing.mean_ms : 0;
+                        candidate.median_speedup = actual.timing.median_ms > 0 ? ref.timing.median_ms/actual.timing.median_ms : 0;
+                        Row reference = candidate;
+                        reference.kernel = config.reference;
+                        reference.timing_mode = config.reference == "cpu" ? "host_serial" : "kernel_only";
+                        reference.timing = ref.timing;
+                        reference.speedup = reference.median_speedup = 1;
+                        reference.output_sha256 = candidate.reference_sha256;
+                        reference.output_file = candidate.reference_output_file;
+                        reference.comparison = comparison::compare(ref.output,ref.output,config.atol,config.rtol,config.max_mismatches);
+                        if (config.reference != config.candidate) rows.push_back(reference);
+                        std::cout << "reference scalar=" << ref.output(0,0) << " candidate scalar=" << actual.output(0,0)
+                            << " reference median=" << ref.timing.median_ms << " ms candidate median=" << actual.timing.median_ms << " ms\n";
+                        Inspector::report_comparison(candidate.comparison);
+                        if (!candidate.comparison.tolerance_pass) exit_code = 1;
+                        rows.push_back(candidate);
+                        continue;
+                    }
                     if (config.mode == "compare") {
-                        Matrix reference = execute(a, b, config.reference);
-                        Matrix actual = execute(a, b, config.candidate);
+                        Matrix reference = execute(a, b, config.reference, config.operation);
+                        Matrix actual = execute(a, b, config.candidate, config.operation);
+                        if (config.operation != operation::Kind::matmul)
+                            std::cout << "reference scalar=" << reference(0,0) << " candidate scalar=" << actual(0,0) << '\n';
                         capture_pair(candidate, reference, actual, config, rows.size());
                         candidate.comparison = comparison::compare(reference, actual, config.atol, config.rtol, config.max_mismatches);
                         Inspector::report_comparison(candidate.comparison);
@@ -323,6 +375,7 @@ int run_cli(const std::vector<std::string>& arguments) {
                 }
                 for (const auto& row : rows) if (row.timed && !row.timing.warnings.empty())
                     std::cout << "Reliability " << row.kernel << " " << row.timing_mode << " M=" << row.shape.m
+                        << (config.operation == operation::Kind::matmul ? "" : " length=" + std::to_string(row.shape.k))
                         << ": " << row.timing.warnings.size() << " heuristic flag(s); see timing_statistics.csv\n";
                 values["status"] = exit_code == 0 ? "complete" : "tolerance_failed";
             }
