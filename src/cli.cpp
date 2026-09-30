@@ -88,20 +88,41 @@ Matrix execute(const Matrix& a, const Matrix& b, const std::string& kernel) {
 #endif
 }
 
+template<class Operation>
+auto repeated(Operation operation, const Config& config) {
+    auto result = operation();
+    const std::string first_hash = output::fingerprint(result.output);
+    auto samples = result.timing.samples;
+    for (int trial = 1; trial < config.trials; ++trial) {
+        auto next = operation();
+        // Outside every timer: ensure later-trial outputs preserve the checked result.
+        if (output::fingerprint(next.output) != first_hash)
+            throw std::runtime_error("Output changed bitwise across benchmark trials");
+        for (auto sample : next.timing.samples) { sample.trial = trial; samples.push_back(sample); }
+        result = std::move(next);
+    }
+    result.timing = benchmark::analyze(samples,config.analysis);
+    return result;
+}
+
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 void timing_line(const Row& row) {
     const double gflops = row.timing.mean_ms > 0
         ? 2.0 * row.shape.m * row.shape.n * row.shape.k / (row.timing.mean_ms * 1e6) : 0;
-    std::cout << std::setprecision(9) << row.kernel << " CUDA kernel: mean=" << row.timing.mean_ms
-        << " ms median=" << row.timing.median_ms << " ms min=" << row.timing.min_ms
-        << " ms stddev=" << row.timing.stddev_ms << " ms GFLOP/s=" << gflops << " speedup=" << row.speedup << "x\n";
+    std::cout << std::setprecision(9) << row.kernel << " CUDA kernel: median=" << row.timing.median_ms
+        << " ms mean=" << row.timing.mean_ms << " ms min=" << row.timing.min_ms
+        << " ms stddev=" << row.timing.stddev_ms << " ms GFLOP/s=" << gflops
+        << " mean_speedup=" << row.speedup << "x median_speedup=" << row.median_speedup << "x";
+    if (row.timing.median_ci_low_ms && row.timing.median_ci_high_ms)
+        std::cout << " median_CI=[" << *row.timing.median_ci_low_ms << ',' << *row.timing.median_ci_high_ms << "] ms";
+    std::cout << '\n';
 }
 #endif
 }  // namespace
 
 int run_cli(const std::vector<std::string>& arguments) {
     if (arguments == std::vector<std::string>{"--help"}
-        || (arguments.size() == 2 && (arguments[0] == "compare" || arguments[0] == "benchmark") && arguments[1] == "--help")) {
+        || (arguments.size() == 2 && (arguments[0] == "compare" || arguments[0] == "benchmark" || arguments[0] == "crossover") && arguments[1] == "--help")) {
         std::cout << usage();
         return 0;
     }
@@ -124,6 +145,26 @@ int run_cli(const std::vector<std::string>& arguments) {
             for (const auto& arg : arguments) command += " " + json_string(arg);
             values["command"] = command;
             values["timing_methodology"] = config.mode == "compare" ? "untimed correctness comparison" : values["timing_methodology"];
+            if (config.mode == "crossover") {
+                values["cpu_implementation"] = "single-threaded FP32 row/column/K matmul; compiler-default contraction; no BLAS";
+                values["cpu_timing_methodology"] = "steady_clock; existing matmul call including host output allocation/zero initialization; input generation, prior output destruction and analysis excluded";
+                values["kernel_only_timing_methodology"] = "CUDA events; allocations, transfers, warmups and host analysis excluded";
+                values["end_to_end_timing_methodology"] = "steady_clock around synchronous cuda_matmul: validation/device queries, host output allocation/initialization, cudaMalloc, pageable H2D A/B, cudaMemset C, launch, synchronization, D2H C, cudaFree; context/module priming and analysis excluded";
+                values["crossover_statistic"] = "median_ms; speedup = CPU median / GPU median; strict GPU < CPU; first sampled win, no interpolation or sustained-win assumption";
+                values["crossover_execution_order"] = "ascending sizes; CPU then kernel_only then end_to_end; one untimed GPU priming call per timing mode per trial in addition to configured warmups";
+                values["timing_methodology"] = "CPU host_matmul and GPU end_to_end use steady_clock; GPU kernel_only uses CUDA events; see per-mode timing methodology fields";
+            }
+            if (config.mode != "compare") {
+                values["timing_methodology"] += "; timing extension v1: individually timed/synchronized warmups; one GPU priming call per trial; raw trial boundaries retained";
+                values["gpu_priming"] = "one untimed synchronous call per GPU kernel/timing mode/trial before configured warmups; not a measured warmup sample";
+                values["timing_schema_version"] = "1";
+                values["primary_latency_statistic"] = "median_ms";
+                values["bootstrap_method"] = "percentile CI of pooled measurement median; whole-trial resampling with replacement when trials>1; IID measurement resampling within a single trial otherwise; mt19937 rejection mapping; linear quantiles (n-1)*p";
+                values["statistics_method"] = "pooled measured samples only; population stddev; IQR=p75-p25; MAD=median absolute deviation (unscaled); CV=stddev/mean (undefined at zero mean)";
+                values["warmup_method"] = "each trial repeats configured warmups; warmups timed separately by the same timer with per-launch synchronization on CUDA; excluded from summaries and bootstrap; no adaptive warmup";
+                values["trial_method"] = "sequential blocks in one process, not independent process restarts; all reference trials precede candidate trials; crossover CPU then kernel_only then end_to_end; warmups repeated for every trial; inter-trial analysis/fingerprinting untimed";
+                values["stability_thresholds"] = "heuristics only: CV>0.20; max/min>3; IQR/median>0.25; first vs remaining median deviation>50% (n>=5); last vs first quarter median deviation>20% (n>=8); n<10 or trials<5 limited evidence; zero latency timer resolution";
+            }
             create_run_directory(config.output);
             owns_directory = !config.output.empty();
             std::cout << config.mode << ": reference=" << config.reference << " candidate=" << config.candidate
@@ -170,6 +211,13 @@ int run_cli(const std::vector<std::string>& arguments) {
                     throw std::runtime_error("Controlled kernels are unverified. Build with Python3, cuobjdump and embedded PTX; inspect fp_verification.json.");
                 if (config.mode == "benchmark") std::cout << "CUDA events; warmups=" << config.warmups << " iterations=" << config.iterations
                     << "; allocation/transfers/comparison excluded\n";
+                if (config.mode == "crossover") std::cout << "CPU host_matmul: steady_clock; GPU kernel_only: CUDA events; "
+                    << "GPU end_to_end: steady_clock including allocation/transfers; warmups=" << config.warmups
+                    << " iterations=" << config.iterations << "; plus one untimed GPU priming call per mode/trial\n";
+                if (config.mode != "compare") std::cout << "trials=" << config.trials << " bootstrap_samples="
+                    << config.analysis.bootstrap_samples << " confidence_level=" << config.analysis.confidence_level
+                    << "; primary statistic=median; reliability flags are heuristics\n";
+                std::map<std::string, std::size_t> first_crossover;
                 for (const auto shape : config.shapes) {
                     Matrix a(shape.m, shape.k), b(shape.k, shape.n);
                     fill_inputs(a, b, config);
@@ -179,6 +227,54 @@ int run_cli(const std::vector<std::string>& arguments) {
                     candidate.kernel = config.candidate;
                     candidate.reference = config.reference;
                     candidate.tile_size = config.candidate == "tiled" ? 16 : 0;
+                    if (config.mode == "crossover") {
+#ifdef MATMUL_INSPECTOR_HAS_CUDA
+                        auto cpu = repeated([&] { return benchmark::cpu_matmul(a, b, config.iterations, config.warmups); }, config);
+                        Row reference;
+                        reference.shape = shape;
+                        reference.kernel = reference.reference = "cpu";
+                        reference.timed = true;
+                        reference.timing_mode = "host_matmul";
+                        reference.timing = cpu.timing;
+                        reference.speedup = cpu.timing.mean_ms > 0 ? 1 : 0;
+                        reference.median_speedup = cpu.timing.median_ms > 0 ? 1 : 0;
+                        reference.comparison = comparison::compare(cpu.output, cpu.output, config.atol, config.rtol, config.max_mismatches);
+                        reference.output_sha256 = reference.reference_sha256 = output::fingerprint(cpu.output);
+                        reference.output_file = reference.reference_output_file = capture_output(cpu.output, config, shape, "cpu",
+                            reference.output_sha256, std::to_string(rows.size()) + "-cpu");
+                        rows.push_back(reference);
+                        const auto kernel = cuda_kernel(config.candidate);
+                        for (const std::string mode : {"kernel_only", "end_to_end"}) {
+                            auto actual = repeated([&] {
+                                if (mode == "kernel_only") cuda_matmul(a,b,kernel);
+                                return mode == "kernel_only"
+                                ? benchmark_cuda_kernel(a, b, kernel, config.iterations, config.warmups)
+                                : benchmark_cuda_end_to_end(a, b, kernel, config.iterations, config.warmups); }, config);
+                            Row measured = candidate;
+                            measured.timed = true;
+                            measured.timing_mode = mode;
+                            measured.timing = actual.timing;
+                            measured.speedup = actual.timing.mean_ms > 0 ? cpu.timing.mean_ms / actual.timing.mean_ms : 0;
+                            measured.median_speedup = actual.timing.median_ms > 0 ? cpu.timing.median_ms / actual.timing.median_ms : 0;
+                            measured.reference_sha256 = reference.output_sha256;
+                            measured.reference_output_file = reference.output_file;
+                            measured.output_sha256 = output::fingerprint(actual.output);
+                            measured.output_file = capture_output(actual.output, config, shape, measured.kernel,
+                                measured.output_sha256, std::to_string(rows.size()) + "-" + mode);
+                            measured.comparison = comparison::compare(cpu.output, actual.output, config.atol, config.rtol, config.max_mismatches);
+                            if (!measured.comparison.tolerance_pass) exit_code = 1;
+                            const double cpu_ms = cpu.timing.median_ms, gpu_ms = actual.timing.median_ms;
+                            std::cout << measured.kernel << ' ' << mode << " CPU median=" << cpu_ms << " ms GPU median=" << gpu_ms << " ms";
+                            if (gpu_ms > 0 && cpu_ms > 0) {
+                                std::cout << " speedup=" << cpu_ms / gpu_ms << "x";
+                                if (gpu_ms < cpu_ms && !first_crossover.count(mode)) first_crossover[mode] = shape.m;
+                            } else std::cout << " speedup=unavailable";
+                            std::cout << " tolerance=" << (measured.comparison.tolerance_pass ? "PASS" : "FAIL") << '\n';
+                            rows.push_back(std::move(measured));
+                        }
+#endif
+                        continue;
+                    }
                     if (config.mode == "compare") {
                         Matrix reference = execute(a, b, config.reference);
                         Matrix actual = execute(a, b, config.candidate);
@@ -187,14 +283,16 @@ int run_cli(const std::vector<std::string>& arguments) {
                         Inspector::report_comparison(candidate.comparison);
                     } else {
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
-                        auto ref = benchmark_cuda_kernel(a, b, cuda_kernel(config.reference), config.iterations, config.warmups);
-                        auto actual = benchmark_cuda_kernel(a, b, cuda_kernel(config.candidate), config.iterations, config.warmups);
+                        auto ref = repeated([&] { cuda_matmul(a,b,cuda_kernel(config.reference)); return benchmark_cuda_kernel(a, b, cuda_kernel(config.reference), config.iterations, config.warmups); }, config);
+                        auto actual = repeated([&] { cuda_matmul(a,b,cuda_kernel(config.candidate)); return benchmark_cuda_kernel(a, b, cuda_kernel(config.candidate), config.iterations, config.warmups); }, config);
                         // Hashing, capture and all analysis occur after both timed executions.
                         capture_pair(candidate, ref.output, actual.output, config, rows.size());
                         candidate.comparison = comparison::compare(ref.output, actual.output, config.atol, config.rtol, config.max_mismatches);
                         candidate.timed = true;
+                        candidate.timing_mode = "kernel_only";
                         candidate.timing = actual.timing;
                         candidate.speedup = actual.timing.mean_ms > 0 ? ref.timing.mean_ms / actual.timing.mean_ms : 0;
+                        candidate.median_speedup = actual.timing.median_ms > 0 ? ref.timing.median_ms / actual.timing.median_ms : 0;
                         Row reference = candidate;
                         reference.kernel = config.reference;
                         reference.output_sha256 = candidate.reference_sha256;
@@ -202,6 +300,7 @@ int run_cli(const std::vector<std::string>& arguments) {
                         reference.tile_size = config.reference == "tiled" ? 16 : 0;
                         reference.timing = ref.timing;
                         reference.speedup = reference.timing.mean_ms > 0 ? 1 : 0;
+                        reference.median_speedup = reference.timing.median_ms > 0 ? 1 : 0;
                         reference.comparison = comparison::compare(ref.output, ref.output, config.atol, config.rtol, config.max_mismatches);
                         timing_line(reference); timing_line(candidate);
                         rows.push_back(reference);
@@ -214,6 +313,17 @@ int run_cli(const std::vector<std::string>& arguments) {
                     if (!candidate.comparison.tolerance_pass) exit_code = 1;
                     rows.push_back(candidate);
                 }
+                if (config.mode == "crossover") {
+                    for (const std::string mode : {"kernel_only", "end_to_end"}) {
+                        std::cout << mode << " first sampled GPU win: ";
+                        if (first_crossover.count(mode)) std::cout << "N=" << first_crossover[mode];
+                        else std::cout << "none observed";
+                        std::cout << " (median; no interpolation)\n";
+                    }
+                }
+                for (const auto& row : rows) if (row.timed && !row.timing.warnings.empty())
+                    std::cout << "Reliability " << row.kernel << " " << row.timing_mode << " M=" << row.shape.m
+                        << ": " << row.timing.warnings.size() << " heuristic flag(s); see timing_statistics.csv\n";
                 values["status"] = exit_code == 0 ? "complete" : "tolerance_failed";
             }
         } catch (const std::exception& error) {

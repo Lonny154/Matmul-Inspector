@@ -16,7 +16,7 @@ def command(metadata, executable, output):
     if config['generator'] != generators.get(input_mode) or config['dtype'] != 'float32':
         raise ValueError('Unsupported generator or dtype')
     mode = config['mode']
-    if mode not in ('compare', 'benchmark'):
+    if mode not in ('compare', 'benchmark', 'crossover'):
         raise ValueError('Unsupported mode')
     args = [str(executable), mode]
     shapes = config['shapes']
@@ -32,8 +32,14 @@ def command(metadata, executable, output):
     args += ['--reference', config['reference'], '--candidate', config['candidate']]
     if metadata['schema_version'] >= 2:
         args += ['--input', input_mode, '--max-mismatches', str(config['max_mismatches'])]
-    if mode == 'benchmark':
+    if mode in ('benchmark', 'crossover'):
         args += ['--warmups', str(config['warmups']), '--iterations', str(config['iterations'])]
+    if mode in ('benchmark', 'crossover'):
+        for field in ('trials', 'bootstrap_samples', 'confidence_level', 'bootstrap_seed'):
+            if field in config:
+                args += ['--' + field.replace('_', '-'), str(config[field])]
+        if 'percentiles' in config:
+            args += ['--percentiles', ','.join(map(str, config['percentiles']))]
     if config.get('save_output', False):
         args += ['--save-output']
     return args + ['--output', str(output)]

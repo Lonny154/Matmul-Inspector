@@ -40,5 +40,11 @@ struct CudaKernelMeasurement { Matrix output; benchmark::Statistics timing; };
 CudaKernelMeasurement benchmark_cuda_kernel(const Matrix& a, const Matrix& b,
     CudaMatmulKernel kernel, int repetitions = 20, int warmups = 3);
 
+// Synchronous host-clock workflow: output/device allocation, pageable H2D,
+// initialization, launch, synchronization, D2H and device frees. Context/module
+// priming runs once outside samples, even with zero requested warmups.
+CudaKernelMeasurement benchmark_cuda_end_to_end(const Matrix& a, const Matrix& b,
+    CudaMatmulKernel kernel, int repetitions = 20, int warmups = 3);
+
 // Best-effort device/runtime metadata; unavailable fields are "unknown".
 std::map<std::string, std::string> cuda_metadata();

@@ -247,6 +247,16 @@ CudaKernelMeasurement benchmark_cuda_kernel(const Matrix& a, const Matrix& b,
     return {std::move(output), timing};
 }
 
+CudaKernelMeasurement benchmark_cuda_end_to_end(const Matrix& a, const Matrix& b,
+    CudaMatmulKernel kernel, int repetitions, int warmups) {
+    if (repetitions <= 0 || warmups < 0) throw std::invalid_argument("Invalid benchmark counts");
+    // Complete a real call to remove first context/module/allocator initialization.
+    // This is one mandatory priming call, additional to the configured warmups.
+    cuda_matmul(a, b, kernel);
+    auto measured = benchmark::measure_host([&] { return cuda_matmul(a, b, kernel); }, repetitions, warmups);
+    return {std::move(measured.output), measured.timing};
+}
+
 namespace {
 
 Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
@@ -317,23 +327,23 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
         check_cuda(cudaGetLastError(), "matmul kernel launch");
     };
     if (stats) {
-        for (int i = 0; i < warmups; ++i) {
-            launch();
-        }
-        check_cuda(cudaDeviceSynchronize(), "matmul warmup synchronization");
         CudaEvent start, stop;
-        std::vector<float> samples;
+        std::vector<float> samples, warmup_samples;
         samples.reserve(static_cast<std::size_t>(repetitions));
-        for (int i = 0; i < repetitions; ++i) {
-            check_cuda(cudaEventRecord(start.get()), "cudaEventRecord start");
-            launch();
-            check_cuda(cudaEventRecord(stop.get()), "cudaEventRecord stop");
-            check_cuda(cudaEventSynchronize(stop.get()), "cudaEventSynchronize");
-            float ms = 0.0f;
-            check_cuda(cudaEventElapsedTime(&ms, start.get(), stop.get()), "cudaEventElapsedTime");
-            samples.push_back(ms);
+        warmup_samples.reserve(static_cast<std::size_t>(warmups));
+        for (int phase = 0; phase < 2; ++phase) {
+            const int count = phase == 0 ? warmups : repetitions;
+            for (int i = 0; i < count; ++i) {
+                check_cuda(cudaEventRecord(start.get()), "cudaEventRecord start");
+                launch();
+                check_cuda(cudaEventRecord(stop.get()), "cudaEventRecord stop");
+                check_cuda(cudaEventSynchronize(stop.get()), "cudaEventSynchronize");
+                float ms = 0.0f;
+                check_cuda(cudaEventElapsedTime(&ms, start.get(), stop.get()), "cudaEventElapsedTime");
+                (phase == 0 ? warmup_samples : samples).push_back(ms);
+            }
         }
-        *stats = benchmark::statistics(samples);
+        *stats = benchmark::statistics(samples, warmup_samples);
         stop.release();
         start.release();
     } else {

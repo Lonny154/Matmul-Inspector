@@ -214,6 +214,11 @@ void test_controlled() {
     check(fused(0,0) == -0x1p-46f && separate(0,0) == 0, "FMA single rounding residual");
     auto timed = benchmark_cuda_kernel(a,b,CudaMatmulKernel::naive_reordered,2,1);
     check(timed.timing.mean_ms > 0 && timed.timing.stddev_ms >= 0, "controlled event timing");
+    auto end_to_end = benchmark_cuda_end_to_end(a,b,CudaMatmulKernel::naive_reordered,2,0);
+    check(end_to_end.timing.median_ms > 0, "end-to-end host timing");
+    check(comparison::compare(timed.output,end_to_end.output).divergent_count == 0,
+          "timing modes preserve output");
+    check_invalid([&] { benchmark_cuda_end_to_end(a,b,CudaMatmulKernel::naive,0,0); }, "end-to-end count validation");
 }
 
 }  // namespace

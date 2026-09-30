@@ -55,6 +55,75 @@ disables tests; `MATMUL_INSPECTOR_GPU_TESTS=OFF` omits GPU test registration whi
 still compiling CUDA. GPU tests have the `gpu` label and return skip code 77 when
 hardware/runtime is unavailable. Normal CI never requires an NVIDIA GPU.
 
+## Benchmark reliability
+
+Benchmark and crossover modes retain raw warmup/measurement samples and support
+`--trials`, `--bootstrap-samples`, `--confidence-level`, `--bootstrap-seed`, and
+`--percentiles`. Medians are primary; legacy mean-based columns remain available.
+
+```sh
+./build-cuda/matmul-inspector benchmark --sizes 4,64,256 \
+  --warmups 3 --iterations 50 --trials 5 --seed 42 \
+  --bootstrap-samples 2000 --confidence-level 0.95 --output results/reliability
+python3 scripts/report.py results/reliability
+```
+
+Reports include distributions, per-iteration traces, median bootstrap intervals,
+trial variation and heuristic stability flags. `timing_samples.csv`,
+`timing_statistics.csv`, and `pairwise.csv` extend existing artifacts. CI overlap
+is **not** a significance test. See [benchmark methodology](docs/benchmarking.md)
+for bootstrap assumptions, thresholds, timing boundaries and practical pitfalls.
+
+## CPU/GPU crossover
+
+```sh
+./build-cuda/matmul-inspector crossover --candidate tiled \
+  --sizes 1,2,4,8,16,32,64,128,256 --seed 42 \
+  --warmups 3 --iterations 20 --output results/crossover-tiled
+python3 scripts/report.py results/crossover-tiled
+
+# Same sweep and optional report in one command (requires matplotlib):
+python3 scripts/crossover.py --executable build-cuda/matmul-inspector \
+  --candidate naive --sizes 2,4,8,16,32,64,128,256 --seed 42 \
+  --warmups 3 --iterations 20 --output results/crossover-naive --report
+```
+
+The baseline is the existing **single-threaded FP32 CPU matmul**, not a tuned BLAS.
+Each run tests one existing CUDA candidate; repeat with another candidate in a new
+run directory. Square sizes are configurable, sorted, and must be unique. CPU,
+GPU kernel-only, and GPU end-to-end use the same inputs and sample counts.
+
+- `host_matmul`: steady-clock timing of CPU matmul, including host output allocation
+  and zero initialization; input generation and comparison are excluded.
+- `kernel_only`: existing CUDA-event timing, excluding allocation and transfers.
+  This assumes inputs already on device and is not a host-to-host comparison.
+- `end_to_end`: steady-clock timing of the synchronous CUDA wrapper, including its
+  validation/device queries, host output allocation, device allocations, pageable
+  H2D copies, output initialization, launch, synchronization, D2H copy and device
+  frees. No pinned memory, transfer overlap or buffer reuse is introduced.
+
+An extra untimed GPU priming call precedes each GPU timing mode in each trial, even with zero
+warmups, to exclude initial context/module setup. Previous host-output destruction,
+statistics, hashing, saved-output capture and numerical comparison are outside all
+samples. Sizes run ascending; CPU then kernel-only then end-to-end, without order
+randomization. Very small CPU timings can approach timer overhead.
+
+`summary.csv` adds `backend` and `timing_mode`; its existing speedup remains
+mean-based. **`crossover.csv` uses CPU median / GPU median** and marks the first
+sampled size with strictly lower GPU latency separately for each mode. Ties are
+not wins; missing/zero medians are unavailable. No interpolation, exact crossover,
+or sustained win beyond that point is claimed. `metadata.json`, `console.txt`,
+numerical diagnostics and optional `--save-output` retain the existing conventions.
+Numerical tolerance failures remain failures even when GPU execution is faster.
+
+Reports include logarithmic CPU/GPU latency and speedup plots, a 1× parity line,
+first sampled wins and largest-size speedups. Crossover depends on CPU/GPU,
+implementation, compiler, clocks/load, tested sizes and transfer assumptions.
+Replay supports crossover metadata through `scripts/reproduce.py`; current
+cross-hardware aggregation deliberately rejects crossover runs rather than mixing
+timing modes. CUDA-unavailable runs record a skip and return 77. Optional plotting
+dependencies and report output rules are described below.
+
 ## Reports from saved results
 
 Generate plots without running benchmarks or requiring a GPU:

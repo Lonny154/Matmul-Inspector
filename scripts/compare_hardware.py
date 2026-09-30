@@ -85,6 +85,8 @@ def read_run(path):
     if metadata.get('status') not in ('complete', 'tolerance_failed'):
         raise ValueError(f'{path}: incomplete/failed/skipped run cannot be aggregated')
     config = metadata['config']
+    if config.get('mode') == 'crossover':
+        raise ValueError('Crossover timing modes require scripts/report.py; cross-hardware aggregation is not yet supported')
     for name in ('seed', 'seed_b', 'dtype', 'generator', 'mode', 'atol', 'rtol', 'shapes', 'warmups', 'iterations', 'reference', 'candidate'):
         if name not in config:
             raise ValueError(f'{path}: missing config {name}')
@@ -178,8 +180,8 @@ def compatibility(run, baseline, row, ref):
         if ma.get(field, 'unknown') != mb.get(field, 'unknown') or ma.get(field, 'unknown') in (None, '', 'unknown'):
             warnings.append('different_or_unknown_' + field)
             performance = False
-    for field in ('mode', 'warmups', 'iterations', 'atol', 'rtol', 'reference', 'candidate'):
-        if run['config'][field] != baseline['config'][field]:
+    for field in ('mode', 'warmups', 'iterations', 'trials', 'atol', 'rtol', 'reference', 'candidate'):
+        if run['config'].get(field, 0 if run['config']['mode'] == 'compare' else 1) != baseline['config'].get(field, 0 if baseline['config']['mode'] == 'compare' else 1):
             warnings.append('different_' + field)
             performance = False
     if run['config']['atol'] != baseline['config']['atol'] or run['config']['rtol'] != baseline['config']['rtol']:

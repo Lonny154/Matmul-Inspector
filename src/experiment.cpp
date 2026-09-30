@@ -3,6 +3,8 @@
 #include "cuda_matmul.hpp"
 
 #include <charconv>
+#include <algorithm>
+#include <map>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -44,20 +46,27 @@ void write_file(const std::filesystem::path& path, const std::string& text) {
 }  // namespace
 
 std::string usage() {
-    return "Usage: matmul-inspector [compare|benchmark] [options]\n"
+    return "Usage: matmul-inspector [compare|benchmark|crossover] [options]\n"
            "  --sizes 4,256,257,1024   Square sizes (compare default: 4)\n"
            "  --m M --n N --k K      One rectangular configuration; exclusive with --sizes\n"
            "  --reference KERNEL --candidate KERNEL (defaults naive, tiled)\n"
-           "    Kernels: cpu (compare only), naive, tiled, cuda-naive-fma,\n"
+           "    Kernels: cpu (compare or crossover reference), naive, tiled, cuda-naive-fma,\n"
            "             cuda-naive-no-fma, cuda-naive-reordered\n"
            "  --input random|cancellation|fma-sensitive (default random)\n"
            "  --max-mismatches 0..1000  Saved samples per configuration (default 100)\n"
            "  --seed UINT32          A seed (default 42); B defaults to seed + 81 modulo 2^32\n"
            "  --seed-b UINT32        Explicit B seed (default 123 with seed 42)\n"
            "  --atol FLOAT --rtol FLOAT  Nonnegative tolerances (defaults 1e-6, 1e-5)\n"
-           "  --warmups INT --iterations INT  Benchmark only (defaults 3, 20)\n"
+           "  --warmups INT --iterations INT  Benchmark/crossover (defaults 3, 20)\n"
+           "  --trials INT           Independent warmup/measurement blocks (default 1)\n"
+           "  --bootstrap-samples INT  Median CI resamples (default 1000; 0 disables)\n"
+           "  --confidence-level FLOAT  CI level between 0 and 1 (default .95)\n"
+           "  --bootstrap-seed UINT32  Defaults to input seed\n"
+           "  --percentiles 5,25,75,95  Integer percentiles 0..100\n"
            "  --save-output          Save logical outputs (requires --output)\n"
            "  --output DIRECTORY     Save artifacts in a new directory\n"
+           "Crossover: CPU reference, one CUDA --candidate (default tiled), both timing modes.\n"
+           "  Default sizes: 1,2,4,8,16,32,64,128,256; requires --output; sorted unique squares.\n"
            "  --help                 Show this help\n"
            "No arguments: original CPU/GPU demo. Legacy: --benchmark-cuda [iterations].\n";
 }
@@ -74,8 +83,13 @@ Config parse(const std::vector<std::string>& args) {
         return config;
     }
     config.mode = args[0];
-    if (config.mode != "compare" && config.mode != "benchmark") throw std::invalid_argument("Unknown command: " + args[0]);
+    if (config.mode != "compare" && config.mode != "benchmark" && config.mode != "crossover") throw std::invalid_argument("Unknown command: " + args[0]);
     if (config.mode == "benchmark") config.shapes = {{4,4,4}, {256,256,256}, {257,257,257}, {1024,1024,1024}};
+    if (config.mode == "crossover") {
+        config.reference = "cpu";
+        config.shapes.clear();
+        for (std::size_t n = 1; n <= 256; n *= 2) config.shapes.push_back({n,n,n});
+    }
     std::set<std::string> seen;
     Shape shape{0,0,0};
     for (std::size_t i = 1; i < args.size(); ++i) {
@@ -104,10 +118,35 @@ Config parse(const std::vector<std::string>& args) {
             if (option == "--seed") config.seed = seed;
             else config.seed_b = seed;
         } else if (option == "--iterations" || option == "--warmups") {
-            if (config.mode != "benchmark") throw std::invalid_argument(option + " requires benchmark mode");
+            if (config.mode == "compare") throw std::invalid_argument(option + " requires benchmark or crossover mode");
             auto count = static_cast<int>(integer(value, std::numeric_limits<int>::max(), option == "--warmups"));
             if (option == "--iterations") config.iterations = count;
             else config.warmups = count;
+        } else if (option == "--trials" || option == "--bootstrap-samples" || option == "--confidence-level"
+                   || option == "--bootstrap-seed" || option == "--percentiles") {
+            if (config.mode == "compare") throw std::invalid_argument(option + " requires timed mode");
+            if (option == "--trials") config.trials = static_cast<int>(integer(value,1000));
+            if (option == "--bootstrap-samples") config.analysis.bootstrap_samples = static_cast<int>(integer(value,100000,true));
+            if (option == "--bootstrap-seed") config.analysis.seed = static_cast<std::uint32_t>(integer(value,UINT32_MAX,true));
+            if (option == "--confidence-level") {
+                std::istringstream stream(value); stream.imbue(std::locale::classic());
+                if (!(stream >> config.analysis.confidence_level) || !stream.eof()
+                    || !std::isfinite(config.analysis.confidence_level) || config.analysis.confidence_level <= 0 || config.analysis.confidence_level >= 1)
+                    throw std::invalid_argument("Confidence level must be between 0 and 1");
+            }
+            if (option == "--percentiles") {
+                config.analysis.percentiles.clear();
+                std::size_t begin = 0;
+                do {
+                    auto end = value.find(',',begin);
+                    config.analysis.percentiles.push_back(static_cast<int>(integer(value.substr(begin,end-begin),100,true)));
+                    if (end == std::string::npos) break;
+                    begin = end+1;
+                } while (true);
+                std::sort(config.analysis.percentiles.begin(),config.analysis.percentiles.end());
+                if (std::adjacent_find(config.analysis.percentiles.begin(),config.analysis.percentiles.end()) != config.analysis.percentiles.end())
+                    throw std::invalid_argument("Duplicate percentile");
+            }
         } else if (option == "--atol") config.atol = tolerance(value);
         else if (option == "--rtol") config.rtol = tolerance(value);
         else if (option == "--output") {
@@ -129,6 +168,16 @@ Config parse(const std::vector<std::string>& args) {
         if (seen.count("--sizes") || !shape.m || !shape.n || !shape.k) throw std::invalid_argument("Specify either --sizes or all of --m, --n, --k");
         config.shapes = {shape};
     }
+    if (config.mode == "crossover") {
+        if (config.output.empty()) throw std::invalid_argument("Crossover requires --output");
+        if (config.reference != "cpu" || config.candidate == "cpu")
+            throw std::invalid_argument("Crossover requires CPU reference and CUDA candidate");
+        if (seen.count("--m") || seen.count("--n") || seen.count("--k"))
+            throw std::invalid_argument("Crossover uses square --sizes");
+        std::sort(config.shapes.begin(), config.shapes.end(), [](Shape a, Shape b) { return a.m < b.m; });
+        for (std::size_t i = 1; i < config.shapes.size(); ++i)
+            if (config.shapes[i-1].m == config.shapes[i].m) throw std::invalid_argument("Duplicate crossover size");
+    }
     if (config.save_output && config.output.empty()) throw std::invalid_argument("--save-output requires --output");
     if (config.mode == "benchmark" && (config.reference == "cpu" || config.candidate == "cpu"))
         throw std::invalid_argument("Benchmark requires CUDA kernels");
@@ -136,6 +185,7 @@ Config parse(const std::vector<std::string>& args) {
         if ((config.input == "cancellation" && dimensions.k < 4) || (config.input == "fma-sensitive" && dimensions.k < 2))
             throw std::invalid_argument("Sensitive input requires K >= 4 (cancellation) or K >= 2 (fma-sensitive)");
     }
+    if (!seen.count("--bootstrap-seed")) config.analysis.seed = config.seed;
     if (!seen.count("--seed-b")) config.seed_b = config.seed + std::uint32_t{81};
     return config;
 }
@@ -219,10 +269,19 @@ std::string metadata_json(const Config& config, const Metadata& values) {
         << ", \"candidate_contraction\": " << json_string(contraction_mode(config.candidate))
         << ",\n    \"reference_accumulation\": " << json_string(accumulation_mode(config.reference))
         << ", \"candidate_accumulation\": " << json_string(accumulation_mode(config.candidate))
-        << ",\n    \"warmups\": " << (config.mode == "benchmark" ? config.warmups : 0)
-        << ", \"iterations\": " << (config.mode == "benchmark" ? config.iterations : 0)
+        << ",\n    \"warmups\": " << (config.mode != "compare" ? config.warmups : 0)
+        << ", \"iterations\": " << (config.mode != "compare" ? config.iterations : 0)
         << ", \"atol\": " << config.atol << ", \"rtol\": " << config.rtol
-        << ",\n    \"shapes\": [";
+        << ",\n    \"trials\": " << (config.mode == "compare" ? 0 : config.trials)
+        << ", \"bootstrap_samples\": " << config.analysis.bootstrap_samples
+        << ", \"confidence_level\": " << config.analysis.confidence_level
+        << ", \"bootstrap_seed\": " << config.analysis.seed
+        << ", \"percentiles\": [";
+    for (std::size_t i=0; i<config.analysis.percentiles.size(); ++i) {
+        if (i) out << ',';
+        out << config.analysis.percentiles[i];
+    }
+    out << "],\n    \"shapes\": [";
     for (std::size_t i = 0; i < config.shapes.size(); ++i) {
         const auto shape = config.shapes[i];
         if (i) out << ',';
@@ -245,9 +304,10 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
     summary.imbue(std::locale::classic()); mismatches.imbue(std::locale::classic());
     summary << std::setprecision(17) << std::boolalpha;
     mismatches << std::setprecision(17) << std::boolalpha;
-    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file\n";
-    mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass\n";
+    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file,backend,timing_mode,row_id,max_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,median_speedup,stability_warnings\n";
+    mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass,timing_mode\n";
     bool any_mismatch = false;
+    std::size_t row_id = 0;
     for (const auto& row : rows) {
         summary << row.shape.m << ',' << row.shape.n << ',' << row.shape.k << ',' << csv_field(row.kernel) << ',' << row.tile_size << ',';
         if (row.timed) {
@@ -268,7 +328,20 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
             << ',' << c.infinity_pairs << ',' << c.zero_reference_nonzero << ',' << c.mismatch_count
             << ',' << c.mismatches.size() << ',' << c.mismatches_truncated
             << ',' << row.output_sha256 << ',' << row.reference_sha256
-            << ',' << csv_field(row.output_file) << ',' << csv_field(row.reference_output_file) << '\n';
+            << ',' << csv_field(row.output_file) << ',' << csv_field(row.reference_output_file)
+            << ',' << (row.kernel == "cpu" ? "cpu" : "cuda") << ',' << csv_field(row.timing_mode) << ',' << row_id++;
+        if (row.timed) {
+            const auto& t=row.timing;
+            summary << ',' << t.max_ms << ',' << t.iqr_ms << ',' << t.mad_ms << ',';
+            if (t.cv) summary << *t.cv;
+            summary << ','; if (t.median_ci_low_ms) summary << *t.median_ci_low_ms;
+            summary << ','; if (t.median_ci_high_ms) summary << *t.median_ci_high_ms;
+            summary << ','; if (row.median_speedup>0) summary << row.median_speedup;
+            std::string flags;
+            for (const auto& flag : t.warnings) { if (!flags.empty()) flags += ';'; flags += flag; }
+            summary << ',' << csv_field(flags);
+        } else summary << ",,,,,,,,";
+        summary << '\n';
         auto mismatch = [&](const std::optional<comparison::Divergence>& point, const char* kind) {
             if (!point) return;
             any_mismatch = true;
@@ -278,7 +351,7 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
                 << e << ',' << a << ',' << csv_field(numeric::float_bits(e).to_string()) << ',' << csv_field(numeric::float_bits(a).to_string()) << ','
                 << numeric::ulp_distance(a, e) << ',' << numeric::absolute_error(a, e) << ',' << numeric::relative_error(a, e) << ','
                 << numeric::comparison_tolerance(a, e, row.comparison.atol, row.comparison.rtol) << ','
-                << numeric::nearly_equal(a, e, row.comparison.atol, row.comparison.rtol) << '\n';
+                << numeric::nearly_equal(a, e, row.comparison.atol, row.comparison.rtol) << ',' << csv_field(row.timing_mode) << '\n';
         };
         for (const auto& point : c.mismatches) {
             const char* kind = "sample";
@@ -287,9 +360,40 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
             mismatch(point, kind);
         }
     }
+    if (config.mode == "crossover") {
+        std::ostringstream cross;
+        cross.imbue(std::locale::classic());
+        cross << std::setprecision(17) << std::boolalpha;
+        cross << "M,N,K,backend,kernel,timing_mode,cpu_median_ms,gpu_median_ms,speedup,crossover_status,tolerance_pass\n";
+        std::map<std::size_t, double> cpu;
+        for (const auto& row : rows) if (row.kernel == "cpu" && row.timed) cpu[row.shape.m] = row.timing.median_ms;
+        std::map<std::pair<std::string,std::string>, bool> crossed;
+        // The CLI sorts square sizes before measurement; also sort here for fixture/API callers.
+        auto ordered = rows;
+        std::stable_sort(ordered.begin(), ordered.end(), [](const Row& a, const Row& b) { return a.shape.m < b.shape.m; });
+        for (const auto& row : ordered) {
+            if (row.kernel == "cpu" || !row.timed) continue;
+            cross << row.shape.m << ',' << row.shape.n << ',' << row.shape.k << ",cuda," << csv_field(row.kernel)
+                << ',' << csv_field(row.timing_mode) << ',';
+            auto ref = cpu.find(row.shape.m);
+            const double gpu = row.timing.median_ms;
+            if (ref == cpu.end() || ref->second <= 0 || gpu <= 0) {
+                cross << ",,,unavailable," << row.comparison.tolerance_pass << '\n';
+                continue;
+            }
+            bool& already = crossed[{row.kernel, row.timing_mode}];
+            const bool wins = gpu < ref->second;
+            const char* status = wins ? (already ? "gpu_faster" : "first_sampled_gpu_win") : "cpu_faster_or_equal";
+            already = already || wins;
+            cross << ref->second << ',' << gpu << ',' << ref->second / gpu << ',' << status
+                << ',' << row.comparison.tolerance_pass << '\n';
+        }
+        write_file(path / "crossover.csv", cross.str());
+    }
     write_file(path / "summary.csv", summary.str());
     if (any_mismatch) write_file(path / "mismatches.csv", mismatches.str());
     write_file(path / "console.txt", console);
+    for (const auto& artifact : timing_artifacts(config,rows)) write_file(path / artifact.first,artifact.second);
     // Metadata is the completion marker and is written last.
     auto recorded = values;
     bool truncated = false;

@@ -46,6 +46,7 @@ target_link_libraries(output PUBLIC matrix numeric)
 add_library(comparison src/comparison.cpp)
 target_link_libraries(comparison PUBLIC matrix numeric)
 add_library(benchmark src/benchmark.cpp)
+target_link_libraries(benchmark PUBLIC matrix)
 target_include_directories(benchmark PUBLIC include)
 
 add_library(inspector src/inspector.cpp)
@@ -93,7 +94,7 @@ add_custom_target(build-provenance
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/provenance.cmake"
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/git_provenance.hpp"
     VERBATIM)
-add_library(experiment src/experiment.cpp src/metadata.cpp)
+add_library(experiment src/experiment.cpp src/metadata.cpp src/timing_artifacts.cpp)
 target_link_libraries(experiment PUBLIC comparison benchmark output)
 target_include_directories(experiment PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>")
@@ -113,6 +114,16 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(benchmark-statistics-tests tests/benchmark_statistics_test.cpp)
+    target_link_libraries(benchmark-statistics-tests PRIVATE experiment)
+    add_test(NAME benchmark-statistics-tests COMMAND benchmark-statistics-tests)
+    set_tests_properties(benchmark-statistics-tests PROPERTIES LABELS "cpu")
+
+    add_executable(crossover-tests tests/crossover_test.cpp)
+    target_link_libraries(crossover-tests PRIVATE experiment)
+    add_test(NAME crossover-tests COMMAND crossover-tests)
+    set_tests_properties(crossover-tests PROPERTIES LABELS "cpu")
+
     add_executable(output-tests tests/output_test.cpp)
     target_link_libraries(output-tests PRIVATE output)
     add_test(NAME output-tests COMMAND output-tests)
@@ -142,6 +153,13 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME reliability-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/reliability_test.py" $<TARGET_FILE:benchmark-statistics-tests>)
+        set_tests_properties(reliability-tests PROPERTIES LABELS "cpu")
+        add_test(NAME crossover-artifact-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/crossover_test.py" $<TARGET_FILE:crossover-tests>
+            $<TARGET_FILE:matmul-inspector>)
+        set_tests_properties(crossover-artifact-tests PROPERTIES LABELS "cpu")
         add_test(NAME report-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/report_test.py")
         set_tests_properties(report-tests PROPERTIES LABELS "cpu")
@@ -157,6 +175,9 @@ if(BUILD_TESTING)
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
         if(Python3_Interpreter_FOUND)
+            add_test(NAME crossover-gpu-tests COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/crossover_gpu_test.py" $<TARGET_FILE:matmul-inspector>)
+            set_tests_properties(crossover-gpu-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
             add_test(NAME fp-replay-tests COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/fp_replay_test.py" $<TARGET_FILE:matmul-inspector>
                 "${CMAKE_CURRENT_SOURCE_DIR}")

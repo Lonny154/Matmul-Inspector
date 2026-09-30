@@ -3,13 +3,14 @@
 import argparse
 import csv
 import math
+import os
 from pathlib import Path
 import sys
 
 from compare_hardware import load_json, finite_number
 
 
-METRICS = ('mean_ms', 'gflops', 'speedup', 'divergent_count', 'divergent_percent',
+METRICS = ('median_speedup', 'median_ms', 'mean_ms', 'gflops', 'speedup', 'divergent_count', 'divergent_percent',
            'tolerance_failures', 'tolerance_failure_percent')
 
 
@@ -40,11 +41,12 @@ def load_report(run):
                 warnings.append(f'Skipping summary line {line}: {error}')
                 continue
             # A same-kernel reference/candidate pair can have two timing rows.
-            identity = (raw['kernel'], raw.get('reference_kernel') or 'unknown', shape)
+            identity = (raw['kernel'], raw.get('reference_kernel') or 'unknown', shape, raw.get('timing_mode', ''))
             if identity in seen:
                 raise ValueError(f'Ambiguous duplicate kernel/reference/shape at line {line}')
             seen.add(identity)
-            row = dict(kernel=identity[0], reference=identity[1], shape=shape)
+            row = dict(row_id=raw.get('row_id', str(line-2)), kernel=identity[0], reference=identity[1], shape=shape, timing_mode=identity[3],
+                       tolerance_pass={'true': True, 'false': False}.get(raw.get('tolerance_pass')))
             for field in METRICS:
                 try:
                     value = finite_number(raw.get(field))
@@ -73,6 +75,8 @@ def group_rows(rows, numerical=False):
         if numerical and row['kernel'] == row['reference']:
             continue  # Reference self-comparisons do not characterize a candidate.
         label = row['kernel']
+        if row.get('timing_mode'):
+            label += ' [' + row['timing_mode'] + ']'
         if numerical:
             label += ' vs ' + row['reference']
         groups.setdefault(label, []).append(row)
@@ -117,8 +121,11 @@ def render_plots(rows, destination, warnings):
         figures.append((filename, title, description))
 
     width = min(20, max(8, len(shapes) * 0.9))
+    primary = 'median_ms' if any(r['median_ms'] is not None for r in rows) else 'mean_ms'
+    if primary == 'mean_ms':
+        warnings.append('Median unavailable: latency plot falls back to recorded means.')
     for field, filename, title, ylabel in (
-        ('mean_ms', 'latency.png', 'Kernel latency by shape', 'Mean kernel latency (ms)'),
+        (primary, 'latency.png', 'Kernel latency by shape', ('Median' if primary == 'median_ms' else 'Mean') + ' kernel latency (ms)'),
         ('gflops', 'throughput.png', 'Kernel throughput by shape', 'Throughput (GFLOP/s)'),
     ):
         fig, ax = plt.subplots(figsize=(width, 4.8))
@@ -137,16 +144,18 @@ def render_plots(rows, destination, warnings):
     fig, ax = plt.subplots(figsize=(width, 4.8))
     groups = group_rows(rows, numerical=True)
     series = 0
+    ratio_field = 'median_speedup' if any(r['median_speedup'] is not None for r in rows) else 'speedup'
+    ratio_stat = 'median' if ratio_field == 'median_speedup' else 'mean'
     bar_width = 0.8 / max(1, len(groups))
     for index, (label, group) in enumerate(groups.items()):
-        available = [r for r in group if r['speedup'] is not None and r['mean_ms'] is not None]
+        available = [r for r in group if r[ratio_field] is not None and r['mean_ms'] is not None]
         if available:
             ax.bar([positions[r['shape']] - 0.4 + bar_width * (index + 0.5) for r in available],
-                   [r['speedup'] for r in available], width=bar_width, label=label)
+                   [r[ratio_field] for r in available], width=bar_width, label=label)
             series += 1
     ax.axhline(1, color='black', linewidth=0.8, linestyle='--')
     finish(fig, ax, 'kernel_comparison.png', 'Kernel comparison against recorded reference',
-           'Reference mean / candidate mean (×)',
+           f'Reference {ratio_stat} / candidate {ratio_stat} (×)',
            'Recorded within-run speedup. The dashed line is parity; values above one mean lower '
            'candidate latency for that configuration. References are named in the legend.', series)
 
@@ -179,7 +188,7 @@ def markdown(run, metadata, rows, figures, warnings):
     lines = ['# Matmul-Inspector experiment report', '', f'Run: `{safe(run)}`', '',
              '| Metadata | Value |', '|---|---|']
     for name in ('timestamp_utc', 'status', 'gpu_name', 'gpu_compute_capability', 'git_commit',
-                 'git_dirty', 'build_type', 'cuda_compiler', 'cuda_runtime_version'):
+                 'git_dirty', 'build_type', 'cpu_model', 'cxx_compiler', 'cuda_compiler', 'cuda_runtime_version'):
         lines.append(f'| {name} | {safe(metadata.get(name, "unknown"))} |')
     for name in ('mode', 'seed', 'seed_b', 'input', 'warmups', 'iterations', 'atol', 'rtol'):
         lines.append(f'| {name} | {safe(config.get(name, "unknown"))} |')
@@ -188,6 +197,9 @@ def markdown(run, metadata, rows, figures, warnings):
               'These figures describe this capture only. Hardware/software, clocks, load and '
               'measurement variability limit broader conclusions. Bitwise divergence is distinct '
               'from a numerical tolerance failure.', '']
+    if config.get('mode') == 'crossover':
+        from crossover import section
+        lines += [section(metadata, rows)]
     for filename, title, description in figures:
         lines += [f'## {title}', '', f'![{title}]({filename})', '', description, '']
     if warnings:
@@ -211,9 +223,25 @@ def main(argv=None):
         except ImportError as error:
             raise ValueError('Install plotting support: python3 -m pip install -r scripts/requirements-report.txt') from error
         destination.mkdir(parents=True)
-        figures = render_plots(rows, destination, warnings)
+        if isinstance(metadata.get('config'), dict) and metadata['config'].get('mode') == 'crossover':
+            from crossover import render
+            figures = render(rows, destination, warnings)
+        else:
+            figures = render_plots(rows, destination, warnings)
+        import reliability
+        reliability_text = ''
+        try:
+            data = reliability.load(args.run, rows)
+            if data:
+                figures += reliability.render(data, destination)
+                reliability_text = reliability.section(data, metadata.get('config', {}),
+                                                       os.path.relpath(args.run.resolve(), destination.resolve()))
+            elif any(row['mean_ms'] is not None for row in rows):
+                warnings.append('Raw timing samples unavailable; reliability plots/CIs cannot be reconstructed.')
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            warnings.append('Reliability artifacts unavailable/invalid: ' + str(error))
         (destination / 'report.md').write_text(
-            markdown(args.run.resolve(), metadata, rows, figures, warnings), encoding='utf-8')
+            markdown(args.run.resolve(), metadata, rows, figures, warnings) + '\n' + reliability_text, encoding='utf-8')
         for warning in warnings:
             print('warning: ' + warning, file=sys.stderr)
         print(f'Report: {destination / "report.md"} ({len(figures)} plots)')

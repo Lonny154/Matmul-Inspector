@@ -16,7 +16,8 @@ struct Config {
     std::vector<Shape> shapes{{4, 4, 4}};
     std::string reference = "naive", candidate = "tiled";
     std::uint32_t seed = 42, seed_b = 123;
-    int warmups = 3, iterations = 20;
+    int warmups = 3, iterations = 20, trials = 1;
+    benchmark::AnalysisOptions analysis;
     float atol = 1e-6f, rtol = 1e-5f;
     std::filesystem::path output;
     bool legacy = false;
@@ -42,12 +43,15 @@ struct Row {
     std::string kernel, reference;
     unsigned tile_size = 0;
     bool timed = false;
+    std::string timing_mode; // host_matmul, kernel_only, end_to_end; empty for untimed
     benchmark::Statistics timing;
-    double speedup = 0;
+    double speedup = 0, median_speedup = 0;
     comparison::Result comparison;
     std::string output_sha256, reference_sha256;
     std::string output_file, reference_output_file;
 };
+
+std::map<std::string,std::string> timing_artifacts(const Config& config, const std::vector<Row>& rows);
 
 std::string json_string(const std::string& value);
 std::string csv_field(const std::string& value);
