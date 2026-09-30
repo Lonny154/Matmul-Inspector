@@ -375,3 +375,20 @@ These example tolerances are explicit exploratory settings, not guarantees;
 CPU host versus GPU kernel-only speedup is not end-to-end offload speedup.
 See [supported operations](docs/operations.md) for semantics, timing boundaries,
 scalar output encoding, replay and operation-specific roofline models.
+
+### Reduction-order reproducibility
+
+Compare serial/reverse FP32 accumulation and CUDA trees at blocks 64/128/256/512
+using deterministic fixtures, FP64 analysis references, and repeated execution:
+
+```bash
+python3 scripts/reproducibility.py --executable build/matmul-inspector \
+  --operation reduction_sum --sizes 257,1024,100003 \
+  --fixtures random_uniform,cancellation --block-sizes 64,128,256,512 \
+  --repeats 3 --output results/reduction-study
+```
+
+Produces numerical CSV/JSON, three focused plots and a Markdown report. These
+experiments distinguish repeat determinism from agreement across reduction
+orders; FP64 accumulation is not exact. See [reproducibility experiments](docs/reproducibility.md)
+for fixtures, direct comparisons, CPU-only execution, artifacts and replay.

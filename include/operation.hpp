@@ -11,7 +11,9 @@ std::string name(Kind kind);
 double flops(Kind kind, std::size_t m, std::size_t n, std::size_t k);
 double bytes(Kind kind, std::size_t m, std::size_t n, std::size_t k);
 inline constexpr unsigned block_size = 256;
-unsigned stages(std::size_t length);
+void validate_block_size(unsigned threads);
+bool is_cpu(const std::string& kernel);
+unsigned stages(std::size_t length, unsigned threads = block_size);
 void validate_vectors(Kind kind, const Matrix& a, const Matrix& b);
-Matrix cpu(Kind kind, const Matrix& a, const Matrix& b);
+Matrix cpu(Kind kind, const Matrix& a, const Matrix& b, bool reverse = false);
 }

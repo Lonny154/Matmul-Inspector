@@ -380,12 +380,12 @@ namespace {
 // Every lane reaches every barrier. Missing terms are positive zero.
 __global__ void vector_stage(const float* a, const float* b, float* out,
                              std::size_t length, std::size_t b_stride, bool dot) {
-    __shared__ float partial[operation::block_size];
+    extern __shared__ float partial[];
     const unsigned lane = threadIdx.x;
-    const std::size_t i = std::size_t(blockIdx.x)*operation::block_size + lane;
+    const std::size_t i = std::size_t(blockIdx.x)*blockDim.x + lane;
     partial[lane] = i < length ? (dot ? __fmul_rn(a[i],b[i*b_stride]) : a[i]) : 0.0f;
     __syncthreads();
-    for (unsigned offset=operation::block_size/2; offset; offset/=2) {
+    for (unsigned offset=blockDim.x/2; offset; offset/=2) {
         if (lane < offset) partial[lane] = __fadd_rn(partial[lane],partial[lane+offset]);
         __syncthreads();
     }
@@ -394,15 +394,18 @@ __global__ void vector_stage(const float* a, const float* b, float* out,
 }
 
 CudaKernelMeasurement cuda_vector(operation::Kind kind, const Matrix& a, const Matrix& b,
-                                  int repetitions, int warmups) {
+                                  int repetitions, int warmups, unsigned threads) {
+    operation::validate_block_size(threads);
     operation::validate_vectors(kind,a,b);
     if (repetitions <= 0 || warmups < 0) throw std::invalid_argument("Invalid benchmark counts");
     const auto length=a.cols();
-    const auto blocks=length/operation::block_size+(length%operation::block_size != 0);
+    const auto blocks=length/threads+(length%threads != 0);
     int device;
     check_cuda(cudaGetDevice(&device),"cudaGetDevice");
     cudaDeviceProp props{};
     check_cuda(cudaGetDeviceProperties(&props,device),"cudaGetDeviceProperties");
+    if (threads > static_cast<unsigned>(props.maxThreadsPerBlock) || threads > static_cast<unsigned>(props.maxThreadsDim[0])
+        || threads*sizeof(float) > props.sharedMemPerBlock) throw std::invalid_argument("Reduction block size unsupported by this device");
     if (blocks > static_cast<std::size_t>(props.maxGridSize[0])) throw std::length_error("Vector exceeds CUDA grid limit");
     DeviceBuffer da(storage_bytes(a)), db(kind == operation::Kind::dot ? storage_bytes(b) : sizeof(float));
     DeviceBuffer first(blocks*sizeof(float)), second(blocks*sizeof(float));
@@ -410,15 +413,15 @@ CudaKernelMeasurement cuda_vector(operation::Kind kind, const Matrix& a, const M
     if (kind == operation::Kind::dot)
         check_cuda(cudaMemcpy(db.data(),b.data(),storage_bytes(b),cudaMemcpyHostToDevice),"copy vector B");
     auto launch = [&]() {
-        vector_stage<<<static_cast<unsigned>(blocks),operation::block_size>>>(
+        vector_stage<<<static_cast<unsigned>(blocks),threads,threads*sizeof(float)>>>(
             da.data(),db.data(),first.data(),length,b.row_stride(),kind == operation::Kind::dot);
         check_cuda(cudaGetLastError(),"vector first stage");
         float* input=first.data();
         float* output=second.data();
         auto count=blocks;
         while (count > 1) {
-            const auto next=count/operation::block_size+(count%operation::block_size != 0);
-            vector_stage<<<static_cast<unsigned>(next),operation::block_size>>>(input,nullptr,output,count,0,false);
+            const auto next=count/threads+(count%threads != 0);
+            vector_stage<<<static_cast<unsigned>(next),threads,threads*sizeof(float)>>>(input,nullptr,output,count,0,false);
             check_cuda(cudaGetLastError(),"vector partial reduction");
             std::swap(input,output);
             count=next;

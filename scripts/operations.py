@@ -24,7 +24,7 @@ def identity(config, row=None):
         if operation != 'matmul':
             if (int(row['M']), int(row['N'])) != (1, 1) or int(row.get('length', 0)) != int(row['K']):
                 raise ValueError('Vector row requires scalar output dimensions and explicit length=K')
-            if row['kernel'] not in ('cpu', 'cuda-tree'):
+            if row['kernel'] not in ('cpu', 'cpu-reverse', 'cuda-tree'):
                 raise ValueError('Unsupported vector kernel')
         elif row.get('kernel') not in MATMUL_KERNELS:
             raise ValueError('Unsupported matmul kernel')
@@ -44,3 +44,14 @@ def model(operation, m, n, k):
 def label(row):
     return ('×'.join(map(str, row['shape'])) if row.get('operation', 'matmul') == 'matmul'
             else 'length ' + str(row['shape'][2]))
+
+
+VECTOR_FIXTURES = ('random', 'random_uniform', 'ascending_magnitude', 'descending_magnitude',
+                   'alternating_sign', 'cancellation', 'large_dynamic_range', 'repeated_small_plus_large')
+
+def generator(operation, fixture):
+    if fixture in ('random', 'random_uniform'):
+        return 'lcg32-v1'
+    if operation == 'matmul':
+        return fixture + '-v1' if fixture in ('cancellation', 'fma-sensitive') else None
+    return 'vector-' + fixture + '-v1' if fixture in VECTOR_FIXTURES else None

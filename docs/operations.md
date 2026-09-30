@@ -3,7 +3,7 @@
 Matmul-Inspector supports `matmul` (the default), `dot`, and `reduction_sum`.
 Existing matmul commands, kernels, crossover experiments and input fixtures are
 unchanged. Vector operations support `compare` and `benchmark`, positive lengths,
-and the existing deterministic `random` generator. `--size` selects one length;
+and deterministic vector fixtures (see [reproducibility experiments](reproducibility.md)). `--size` selects one length;
 `--sizes` selects several. Empty vectors and matrix dimension flags are rejected.
 
 ```bash
@@ -44,7 +44,7 @@ comparison remain unchanged. Sum allocates no B input in the CLI.
   computes one rounded FP32 product per lane, then adds it through a tree.
 - **Sum:** `sum_i A[i]`. CPU visits increasing indices from positive zero. CUDA
   loads one input per lane and uses the same tree, without multiplication.
-- **CUDA tree:** 256 threads per block; shared-memory offsets 128,64,…,1;
+- **CUDA tree:** 256 threads per block by default (64/128/256/512 selectable); shared-memory offsets 128,64,…,1;
   left partial plus right partial using explicit round-to-nearest FP32 addition.
   All lanes reach each barrier. Out-of-range lanes load positive zero. Each block
   writes one partial. Separate kernel launches repeatedly reduce those partials
@@ -87,12 +87,12 @@ reduction metadata plus numerical errors appear in the Markdown report.
 
 ## Additive artifact and replay extension
 
-Result schema remains 3; vector runs carry `operation_extension: "1"` and
+Result schema remains 3; vector runs carry `operation_extension: "2"` and
 `config.operation`. Every summary, mismatch and timing CSV includes `operation`.
 Summary adds `length`, `flop_count`, `model_bytes`, `reduction_block_size` and
 `reduction_stages`. Existing contraction/accumulation fields identify
 `serial_increasing_index` and `block_tree_256_multistage`. Configuration records
-the fixed block size for replay. A run contains one operation and any number
+the selected block size for replay. See [reproducibility experiments](reproducibility.md) for repeat capture, fixtures and independent reference/candidate block sizes. A run contains one operation and any number
 of its supported sizes. For vectors the compatibility shape is **M=N=1,
 K=length**: M/N describe the scalar result, not fictitious matrix operands.
 
@@ -149,8 +149,7 @@ actual hardware bottleneck follows from this simple model alone.
 The CUDA resource helpers and vector launch code remain in `cuda_matmul.cu` to
 reuse checked allocations/events without refactoring the existing backend.
 The legacy output transport and M/N/K compatibility columns retain matrix names.
-Vector inputs currently support only the random fixture. Block size is fixed,
-not tuned. Crossover mode and its separate cross-hardware restriction remain
+Vector fixtures and explicit block sizes are supported; block sizes are not tuned. Crossover mode and its separate cross-hardware restriction remain
 matmul-specific; there is no vector end-to-end workflow in this milestone.
 Normal CPU tests require no GPU; CUDA integration tests are separately labeled
 and skip when the runtime/device is unavailable.

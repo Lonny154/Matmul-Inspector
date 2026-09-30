@@ -145,6 +145,8 @@ def binary(run, row):
                     accumulation_mode=semantics(row)[2], output_sha256=row.get('output_sha256'))
     if row.get('operation', 'matmul') != 'matmul':
         expected['operation'] = row['operation']
+        if 'reduction_block_size' in context:
+            expected['reduction_block_size'] = int(row.get('reduction_block_size') or 0)
     if run['config']['dtype'] != 'float32' or any(context.get(k) != v for k, v in expected.items()):
         raise ValueError(f'{path}: binary sidecar incompatible with summary/configuration')
     h = hashlib.sha256()

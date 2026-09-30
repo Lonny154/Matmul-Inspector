@@ -30,7 +30,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
         std::map<int,std::vector<benchmark::Sample>> trials;
         for (const auto& sample : row.timing.samples) {
             samples << id << ',' << row.shape.m << ',' << row.shape.n << ',' << row.shape.k
-                << ',' << (row.kernel == "cpu" ? "cpu" : "cuda") << ',' << csv_field(row.kernel) << ',' << csv_field(row.reference)
+                << ',' << (operation::is_cpu(row.kernel) ? "cpu" : "cuda") << ',' << csv_field(row.kernel) << ',' << csv_field(row.reference)
                 << ',' << csv_field(row.timing_mode) << ',' << (row.timing_mode == "kernel_only" ? "cuda_event" : "steady_clock")
                 << ',' << sample.trial << ',' << sample.iteration << ',' << (sample.warmup ? "warmup" : "measurement")
                 << ',' << sample.latency_ms << ',' << config.seed << ',' << operation::name(config.operation) << '\n';
@@ -61,7 +61,7 @@ std::map<std::string,std::string> timing_artifacts(const Config& config, const s
             const auto& ref = rows[ref_id];
             if (!ref.timed || ref.kernel != row.reference || ref.shape.m != row.shape.m
                 || ref.shape.n != row.shape.n || ref.shape.k != row.shape.k
-                || ref.timing_mode != (row.reference == "cpu" ? (config.operation == operation::Kind::matmul ? "host_matmul" : "host_serial") : row.timing_mode)) continue;
+                || ref.timing_mode != (operation::is_cpu(row.reference) ? (config.operation == operation::Kind::matmul ? "host_matmul" : "host_serial") : row.timing_mode)) continue;
             const auto& a=ref.timing; const auto& b=row.timing;
             pairs << ref_id << ',' << id << ',' << row.shape.m << ',' << row.shape.n << ',' << row.shape.k
                 << ',' << csv_field(ref.kernel) << ',' << csv_field(row.kernel)

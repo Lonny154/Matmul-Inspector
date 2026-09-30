@@ -49,8 +49,8 @@ CudaKernelMeasurement benchmark_cuda_end_to_end(const Matrix& a, const Matrix& b
 // Best-effort device/runtime metadata; unavailable fields are "unknown".
 std::map<std::string, std::string> cuda_metadata();
 
-// Vector operations use fixed 256-thread shared-memory trees; events encompass
+// Vector operations use 64/128/256/512-thread shared-memory trees (default 256); events encompass
 // every reduction stage, excluding allocation/copies and host analysis.
 #include "operation.hpp"
 CudaKernelMeasurement cuda_vector(operation::Kind kind, const Matrix& a, const Matrix& b,
-    int repetitions = 1, int warmups = 0);
+    int repetitions = 1, int warmups = 0, unsigned threads = operation::block_size);

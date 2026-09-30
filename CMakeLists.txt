@@ -40,8 +40,8 @@ target_include_directories(numeric PUBLIC include)
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
-add_library(operation src/operation.cpp)
-target_link_libraries(operation PUBLIC matrix)
+add_library(operation src/operation.cpp src/reduction.cpp)
+target_link_libraries(operation PUBLIC matrix numeric)
 
 add_library(output src/output.cpp)
 target_link_libraries(output PUBLIC matrix numeric)
@@ -117,6 +117,10 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(reduction-tests tests/reduction_test.cpp)
+    target_link_libraries(reduction-tests PRIVATE experiment)
+    add_test(NAME reduction-tests COMMAND reduction-tests)
+    set_tests_properties(reduction-tests PROPERTIES LABELS "cpu")
     add_executable(operation-tests tests/operation_test.cpp)
     target_link_libraries(operation-tests PRIVATE experiment)
     add_test(NAME operation-tests COMMAND operation-tests)
@@ -160,6 +164,10 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME reproducibility-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
+            $<TARGET_FILE:matmul-compare-outputs>)
+        set_tests_properties(reproducibility-tests PROPERTIES LABELS "cpu")
         add_test(NAME operation-artifact-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/operation_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs>)
@@ -193,6 +201,10 @@ if(BUILD_TESTING)
         add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
         set_tests_properties(cuda-vector-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
         if(Python3_Interpreter_FOUND)
+            add_test(NAME reproducibility-gpu-tests COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
+                $<TARGET_FILE:matmul-compare-outputs> --gpu)
+            set_tests_properties(reproducibility-gpu-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
             add_test(NAME operation-gpu-artifact-tests COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/operation_test.py" $<TARGET_FILE:matmul-inspector>
                 $<TARGET_FILE:matmul-compare-outputs> --gpu)

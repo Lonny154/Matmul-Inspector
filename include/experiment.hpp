@@ -2,6 +2,7 @@
 
 #include "benchmark.hpp"
 #include "operation.hpp"
+#include "reduction.hpp"
 #include "comparison.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -18,6 +19,8 @@ struct Config {
     std::vector<Shape> shapes{{4, 4, 4}};
     std::string reference = "naive", candidate = "tiled";
     std::uint32_t seed = 42, seed_b = 123;
+    unsigned reduction_block_size = 256, reference_block_size = 256;
+    int repeats = 1;
     int warmups = 3, iterations = 20, trials = 1;
     benchmark::AnalysisOptions analysis;
     float atol = 1e-6f, rtol = 1e-5f;
@@ -32,8 +35,9 @@ Config parse(const std::vector<std::string>& arguments);
 std::string usage();
 void fill(Matrix& matrix, std::uint32_t seed);
 void fill_inputs(Matrix& a, Matrix& b, const Config& config);
+std::string generator(const Config& config);
 std::string contraction_mode(const std::string& kernel);
-std::string accumulation_mode(const std::string& kernel, operation::Kind kind = operation::Kind::matmul);
+std::string accumulation_mode(const std::string& kernel, operation::Kind kind = operation::Kind::matmul, unsigned threads = 256);
 
 using Metadata = std::map<std::string, std::string>;
 // Optional metadata uses "unknown"; git/fast_math bool strings serialize as booleans.
@@ -44,6 +48,8 @@ struct Row {
     Shape shape;
     std::string kernel, reference;
     unsigned tile_size = 0;
+    unsigned reduction_block_size = 256, reference_block_size = 256;
+    std::vector<reduction::Observation> observations;
     bool timed = false;
     std::string timing_mode; // host_matmul, kernel_only, end_to_end; empty for untimed
     benchmark::Statistics timing;

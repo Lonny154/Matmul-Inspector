@@ -5,16 +5,16 @@ import json
 from pathlib import Path
 import shlex
 import subprocess
-from operations import identity
+from operations import identity, generator
 
 
 def command(metadata, executable, output):
     if metadata.get('schema_version') not in (1, 2, 3):
         raise ValueError('Unsupported metadata schema')
     config = metadata['config']
-    generators = {'random': 'lcg32-v1', 'cancellation': 'cancellation-v1', 'fma-sensitive': 'fma-sensitive-v1'}
+    operation = identity(config)
     input_mode = config.get('input', 'random')
-    if config['generator'] != generators.get(input_mode) or config['dtype'] != 'float32':
+    if config['generator'] != generator(operation,input_mode) or config['dtype'] != 'float32':
         raise ValueError('Unsupported generator or dtype')
     mode = config['mode']
     if mode not in ('compare', 'benchmark', 'crossover'):
@@ -23,11 +23,15 @@ def command(metadata, executable, output):
     shapes = config['shapes']
     operation = identity(config)
     if operation != 'matmul':
-        if config.get('reduction_block_size') != 256:
+        if config.get('reduction_block_size') not in (64,128,256,512):
             raise ValueError('Unsupported reduction block size')
         if not shapes or any(s['M'] != 1 or s['N'] != 1 or s['K'] <= 0 for s in shapes):
             raise ValueError('Invalid vector shapes')
-        args += ['--operation', operation, '--sizes', ','.join(str(s['K']) for s in shapes)]
+        args += ['--operation', operation, '--sizes', ','.join(str(s['K']) for s in shapes),
+                 '--block-size', str(config['reduction_block_size']),
+                 '--reference-block-size', str(config.get('reference_block_size',config['reduction_block_size']))]
+        if mode == 'compare' and 'repeats' in config:
+            args += ['--repeats',str(config['repeats'])]
     elif shapes and all(s['M'] == s['N'] == s['K'] for s in shapes):
         args += ['--sizes', ','.join(str(s['M']) for s in shapes)]
     elif len(shapes) == 1:
