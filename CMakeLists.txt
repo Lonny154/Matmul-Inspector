@@ -142,6 +142,9 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME report-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/report_test.py")
+        set_tests_properties(report-tests PROPERTIES LABELS "cpu")
         add_test(NAME hardware-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/hardware_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs> $<TARGET_FILE:output-tests> "${CMAKE_CURRENT_SOURCE_DIR}")

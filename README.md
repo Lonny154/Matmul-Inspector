@@ -55,6 +55,24 @@ disables tests; `MATMUL_INSPECTOR_GPU_TESTS=OFF` omits GPU test registration whi
 still compiling CUDA. GPU tests have the `gpu` label and return skip code 77 when
 hardware/runtime is unavailable. Normal CI never requires an NVIDIA GPU.
 
+## Reports from saved results
+
+Generate plots without running benchmarks or requiring a GPU:
+
+```sh
+python3 -m pip install -r scripts/requirements-report.txt
+python3 scripts/report.py results/examples/rtx4060ti-controlled-fp/benchmark-no-fma
+```
+
+Open `<run>/report/report.md` for latency, GFLOP/s, recorded kernel speedup,
+and bitwise-divergence/tolerance-failure plots. Shapes use explicit M×N×K
+labels, including rectangular matrices. Numerical fractions use full-summary
+aggregates, never the bounded mismatch samples. Older/missing optional fields
+produce warnings and skipped plots; compare-only runs need no timings.
+Matplotlib is optional for the project build. `--output <new-directory>` selects
+another report location; existing directories are never overwritten. Source
+artifacts are read only. These plots summarize a capture, not a hardware ranking.
+
 ## Correctness comparison
 
 ```sh

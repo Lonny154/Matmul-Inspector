@@ -29,6 +29,9 @@ jobs:
           -DMATMUL_INSPECTOR_ENABLE_CUDA=OFF
       - name: Build
         run: cmake --build build --parallel 2
+      - name: Install optional report plotting dependency
+        if: matrix.compiler == 'g++' && matrix.build_type == 'Release'
+        run: python3 -m pip install -r scripts/requirements-report.txt
       - name: Test
         run: ctest --test-dir build -L cpu --output-on-failure
       - name: Exercise result capture without a GPU
