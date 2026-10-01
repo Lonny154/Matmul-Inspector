@@ -17,6 +17,9 @@ storage, and handle partial tiles. No Tensor Cores, mixed precision, tree reduct
 or cuBLAS are used. Matrix owns layout, numeric/comparison code analyzes values,
 Inspector reports them, CUDA executes kernels, and experiment code records runs.
 
+See [Experimental findings](docs/findings.md) for a concise summary of the
+main performance, floating-point, reproducibility, and cross-hardware results.
+
 ## Build
 
 Requires CMake 3.16+ and a C++17 compiler. Python 3 enables additional integration
@@ -275,6 +278,12 @@ cross-run timing ratios. There is no remote execution or automatic hardware rank
 See the [cross-hardware workflow and binary format](docs/cross_hardware.md) for
 CPU-only validation, exact second-machine replay commands, compatibility rules,
 aggregate artifacts and interpretation limits.
+
+## Experimental findings
+
+A concise summary of the project's main numerical, performance, and
+cross-hardware results is available in
+[Experimental findings](docs/findings.md).
 
 ## Replay the example
 
