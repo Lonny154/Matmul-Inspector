@@ -43,9 +43,9 @@ double reference_fp64(operation::Kind kind, const Matrix& a, const Matrix& b) {
         sum += kind == operation::Kind::dot ? double(a(0,i))*double(b(i,0)) : double(a(0,i));
     return sum;
 }
-Observation observe(float value, float baseline, double fp64, float atol, float rtol) {
+Observation observe(float value, float baseline, double fp64, float atol, float rtol, std::optional<float> forward) {
     Observation result;
-    result.value=value; result.baseline=baseline; result.fp64_reference=fp64;
+    result.value=value; result.baseline=baseline; result.fp32_forward=forward.value_or(baseline); result.fp64_reference=fp64;
     result.tolerance_pass=numeric::nearly_equal(value,baseline,atol,rtol);
     if (std::isfinite(value) && std::isfinite(baseline)) result.ulp=numeric::ulp_distance(value,baseline);
     if (std::isfinite(value) && std::isfinite(fp64)) {

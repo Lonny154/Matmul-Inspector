@@ -40,8 +40,19 @@ target_include_directories(numeric PUBLIC include)
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
-add_library(operation src/operation.cpp src/reduction.cpp)
+add_library(operation src/operation.cpp src/reduction.cpp src/summation.cpp)
 target_link_libraries(operation PUBLIC matrix numeric)
+# Keep compensated operations intact without changing existing CPU/CUDA flags.
+if(MSVC)
+    set_source_files_properties(src/summation.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+    target_compile_definitions(operation PRIVATE MI_SUMMATION_FP_POLICY="/fp:strict" MI_SUMMATION_STRICT=1)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(src/summation.cpp PROPERTIES COMPILE_OPTIONS "-fno-fast-math;-ffp-contract=off")
+    target_compile_definitions(operation PRIVATE MI_SUMMATION_FP_POLICY="-fno-fast-math -ffp-contract=off" MI_SUMMATION_STRICT=1)
+else()
+    target_compile_definitions(operation PRIVATE MI_SUMMATION_FP_POLICY="unverified compiler - stable methods unavailable" MI_SUMMATION_STRICT=0)
+endif()
+
 
 add_library(output src/output.cpp)
 target_link_libraries(output PUBLIC matrix numeric)
@@ -117,6 +128,10 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(summation-tests tests/summation_test.cpp)
+    target_link_libraries(summation-tests PRIVATE experiment)
+    add_test(NAME summation-tests COMMAND summation-tests)
+    set_tests_properties(summation-tests PROPERTIES LABELS "cpu")
     add_executable(reduction-tests tests/reduction_test.cpp)
     target_link_libraries(reduction-tests PRIVATE experiment)
     add_test(NAME reduction-tests COMMAND reduction-tests)
@@ -164,6 +179,10 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME summation-artifact-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/summation_test.py" $<TARGET_FILE:matmul-inspector>
+            $<TARGET_FILE:matmul-compare-outputs>)
+        set_tests_properties(summation-artifact-tests PROPERTIES LABELS "cpu")
         add_test(NAME reproducibility-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs>)
@@ -201,6 +220,10 @@ if(BUILD_TESTING)
         add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
         set_tests_properties(cuda-vector-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
         if(Python3_Interpreter_FOUND)
+            add_test(NAME summation-gpu-tests COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/summation_test.py" $<TARGET_FILE:matmul-inspector>
+                $<TARGET_FILE:matmul-compare-outputs> --gpu)
+            set_tests_properties(summation-gpu-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
             add_test(NAME reproducibility-gpu-tests COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
                 $<TARGET_FILE:matmul-compare-outputs> --gpu)

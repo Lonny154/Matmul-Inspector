@@ -1,4 +1,5 @@
 #include "operation.hpp"
+#include "summation.hpp"
 #include <stdexcept>
 namespace operation {
 Kind parse(const std::string& value) {
@@ -28,7 +29,7 @@ void validate_block_size(unsigned threads) {
     if (threads != 64 && threads != 128 && threads != 256 && threads != 512)
         throw std::invalid_argument("Reduction block size must be 64, 128, 256 or 512");
 }
-bool is_cpu(const std::string& kernel) { return kernel == "cpu" || kernel == "cpu-reverse"; }
+bool is_cpu(const std::string& kernel) { return kernel == "cpu" || kernel == "cpu-reverse" || summation::supported(kernel); }
 unsigned stages(std::size_t length, unsigned threads) {
     validate_block_size(threads);
     unsigned count = 0;

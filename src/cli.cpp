@@ -1,6 +1,7 @@
 #include "experiment.hpp"
 #include "inspector.hpp"
 #include "output.hpp"
+#include "summation.hpp"
 #include <fstream>
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 #include "cuda_matmul.hpp"
@@ -81,7 +82,7 @@ void capture_pair(Row& row, const Matrix& ref, const Matrix& actual, const Confi
 }
 
 Matrix execute(const Matrix& a, const Matrix& b, const std::string& kernel, operation::Kind kind, unsigned threads) {
-    if (operation::is_cpu(kernel)) return operation::cpu(kind,a,b,kernel == "cpu-reverse");
+    if (operation::is_cpu(kernel)) return summation::execute(kernel,kind,a,b);
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
     if (kind != operation::Kind::matmul) return cuda_vector(kind,a,b,1,0,threads).output;
     return cuda_matmul(a, b, cuda_kernel(kernel));
@@ -169,7 +170,12 @@ int run_cli(const std::vector<std::string>& arguments) {
                 values["stability_thresholds"] = "heuristics only: CV>0.20; max/min>3; IQR/median>0.25; first vs remaining median deviation>50% (n>=5); last vs first quarter median deviation>20% (n>=8); n<10 or trials<5 limited evidence; zero latency timer resolution";
             }
             if (config.operation != operation::Kind::matmul) {
-                values["operation_extension"] = "2";
+                values["operation_extension"] = "3";
+                values["summation_fp_policy"] = summation::fp_policy();
+                values["summation_fp_policy_scope"] = "src/summation.cpp only: pairwise, Kahan, Neumaier and error analysis; existing forward/reverse and FP64 reference keep their original compilation flags";
+                values["summation_methods"] = "fp32_forward/reverse reuse existing serial kernels; pairwise combines adjacent pairs carrying odd tails; Kahan/Neumaier use FP32 sum and compensation; fp64_accumulation casts FP64 reference to FP32";
+                values["summation_dot_products"] = "pairwise/Kahan/Neumaier use separately rounded FP32 products; forward/reverse preserve compiler-default contraction; FP64 reference multiplies promoted FP32 operands";
+                values["summation_analysis"] = "improvement baseline=fp32_forward; target=FP64 reference cast to FP32; exact_match means target bits, not exact mathematical sum";
                 values["fp64_analysis"] = "serial increasing-index FP64 accumulation; dot multiplies promoted FP32 operands in FP64; not mathematically exact";
                 values["relative_error_fp64_floor"] = "1e-12; omit relative error when abs(reference)<=floor or nonfinite";
                 values["repeat_method"] = "compare-mode candidate executions in one process; fresh allocations per CUDA execution; observations against fixed FP32 baseline; not independent process restarts";
@@ -299,7 +305,7 @@ int run_cli(const std::vector<std::string>& arguments) {
                     if (config.operation != operation::Kind::matmul && config.mode == "benchmark") {
                         auto measure = [&](const std::string& kernel, unsigned threads) -> benchmark::HostMeasurement {
                             if (operation::is_cpu(kernel)) return benchmark::measure_host(
-                                [&] { return operation::cpu(config.operation,a,b,kernel == "cpu-reverse"); }, config.iterations,config.warmups);
+                                [&] { return summation::execute(kernel,config.operation,a,b); }, config.iterations,config.warmups);
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
                             auto result = cuda_vector(config.operation,a,b,config.iterations,config.warmups,threads);
                             return {std::move(result.output),std::move(result.timing)};
@@ -327,8 +333,9 @@ int run_cli(const std::vector<std::string>& arguments) {
                         reference.output_file = candidate.reference_output_file;
                         reference.comparison = comparison::compare(ref.output,ref.output,config.atol,config.rtol,config.max_mismatches);
                         const auto fp64=reduction::reference_fp64(config.operation,a,b);
-                        candidate.observations.push_back(reduction::observe(actual.output(0,0),ref.output(0,0),fp64,config.atol,config.rtol));
-                        reference.observations.push_back(reduction::observe(ref.output(0,0),ref.output(0,0),fp64,config.atol,config.rtol));
+                        const auto forward=operation::cpu(config.operation,a,b)(0,0);
+                        candidate.observations.push_back(reduction::observe(actual.output(0,0),ref.output(0,0),fp64,config.atol,config.rtol,forward));
+                        reference.observations.push_back(reduction::observe(ref.output(0,0),ref.output(0,0),fp64,config.atol,config.rtol,forward));
                         if (config.reference != config.candidate) rows.push_back(reference);
                         std::cout << "reference scalar=" << ref.output(0,0) << " candidate scalar=" << actual.output(0,0)
                             << " reference median=" << ref.timing.median_ms << " ms candidate median=" << actual.timing.median_ms << " ms\n";
@@ -347,9 +354,10 @@ int run_cli(const std::vector<std::string>& arguments) {
                         Inspector::report_comparison(candidate.comparison);
                         if (config.operation != operation::Kind::matmul) {
                             const auto fp64=reduction::reference_fp64(config.operation,a,b);
+                            const auto forward=operation::cpu(config.operation,a,b)(0,0);
                             for (int repeat=0;repeat<config.repeats;++repeat) {
                                 if (repeat) actual=execute(a,b,config.candidate,config.operation,config.reduction_block_size);
-                                auto point=reduction::observe(actual(0,0),reference(0,0),fp64,config.atol,config.rtol);
+                                auto point=reduction::observe(actual(0,0),reference(0,0),fp64,config.atol,config.rtol,forward);
                                 if (!point.tolerance_pass) exit_code=1;
                                 candidate.observations.push_back(point);
                             }

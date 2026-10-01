@@ -392,3 +392,19 @@ Produces numerical CSV/JSON, three focused plots and a Markdown report. These
 experiments distinguish repeat determinism from agreement across reduction
 orders; FP64 accumulation is not exact. See [reproducibility experiments](docs/reproducibility.md)
 for fixtures, direct comparisons, CPU-only execution, artifacts and replay.
+
+### Stable summation and error attribution
+
+Compare forward/reverse, pairwise, Kahan, Neumaier and FP64 accumulation, with
+optional unchanged CUDA trees:
+
+```bash
+python3 scripts/summation_analysis.py --executable build/matmul-inspector \
+  --sizes 257,1024,100003 --fixtures random_uniform,cancellation,large_dynamic_range \
+  --cuda --block-sizes 64,128,256,512 --output results/summation-study
+```
+
+The report separates error versus FP64 from bitwise matches to its rounded FP32
+target, including zero-baseline and infinite-improvement cases. FP64 is an
+analysis reference, not an exact sum. See [summation methods and metrics](docs/summation.md)
+for CPU-only usage, dot multiplication precision, artifacts and replay.

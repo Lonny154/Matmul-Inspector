@@ -13,13 +13,13 @@ void fill_structured(Matrix& a, Matrix& b, operation::Kind kind,
 double reference_fp64(operation::Kind kind, const Matrix& a, const Matrix& b);
 inline constexpr double relative_floor = 1e-12;
 struct Observation {
-    float value = 0, baseline = 0;
+    float value = 0, baseline = 0, fp32_forward = 0;
     double fp64_reference = 0;
     std::optional<double> absolute_error, relative_error;
     std::optional<std::uint32_t> ulp;
     bool tolerance_pass = false;
 };
-Observation observe(float value, float baseline, double fp64, float atol, float rtol);
+Observation observe(float value, float baseline, double fp64, float atol, float rtol, std::optional<float> forward = std::nullopt);
 std::string classification(float value);
 // One repeat is insufficient evidence. Numerical repeat agreement uses the
 // existing tolerance helper against the first execution, not the CPU baseline.

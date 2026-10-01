@@ -4,6 +4,7 @@ Absent operation is accepted only for legacy matmul kernel names. Vector rows
 use M=N=1 (scalar output), K=length, plus an explicit length column.
 """
 MATMUL_KERNELS = {'cpu', 'naive', 'tiled', 'cuda-naive-fma', 'cuda-naive-no-fma', 'cuda-naive-reordered'}
+SUMMATION_METHODS = ('fp32_forward', 'fp32_reverse', 'fp32_pairwise', 'kahan_fp32', 'neumaier_fp32', 'fp64_accumulation')
 KINDS = {'matmul', 'dot', 'reduction_sum'}
 
 
@@ -24,7 +25,7 @@ def identity(config, row=None):
         if operation != 'matmul':
             if (int(row['M']), int(row['N'])) != (1, 1) or int(row.get('length', 0)) != int(row['K']):
                 raise ValueError('Vector row requires scalar output dimensions and explicit length=K')
-            if row['kernel'] not in ('cpu', 'cpu-reverse', 'cuda-tree'):
+            if row['kernel'] not in ('cpu', 'cpu-reverse', 'cuda-tree', *SUMMATION_METHODS):
                 raise ValueError('Unsupported vector kernel')
         elif row.get('kernel') not in MATMUL_KERNELS:
             raise ValueError('Unsupported matmul kernel')

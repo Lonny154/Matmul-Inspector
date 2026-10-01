@@ -1,5 +1,6 @@
 #include "experiment.hpp"
 #include "numeric.hpp"
+#include "summation.hpp"
 #include "cuda_matmul.hpp"
 
 #include <charconv>
@@ -50,6 +51,8 @@ std::string usage() {
            "  --operation matmul|dot|reduction_sum (default matmul)\n"
            "  --size LENGTH          Vector length; --sizes accepts multiple lengths\n"
            "  Vectors: reference cpu, candidate cuda-tree; optional cpu-reverse variant.\n"
+           "  CPU summation methods: fp32_forward, fp32_reverse, fp32_pairwise,\n"
+           "    kahan_fp32, neumaier_fp32, fp64_accumulation (vector operations only)\n"
            "  --block-size 64|128|256|512  CUDA tree block (default 256)\n"
            "  --reference-block-size INT  Defaults to --block-size\n"
            "  --repeats INT           Vector compare repeat count (default 1)\n"
@@ -171,7 +174,7 @@ Config parse(const std::vector<std::string>& args) {
             if (value.empty()) throw std::invalid_argument("Empty output path");
             config.output = value;
         } else if (option == "--reference" || option == "--candidate") {
-            if (value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled"
+            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled"
                 && value != "cuda-naive-fma" && value != "cuda-naive-no-fma" && value != "cuda-naive-reordered") throw std::invalid_argument("Unknown kernel: " + value);
             if (option == "--reference") config.reference = value;
             else config.candidate = value;
@@ -202,6 +205,7 @@ Config parse(const std::vector<std::string>& args) {
     if (config.operation == operation::Kind::matmul) {
         if (seen.count("--repeats") || seen.count("--block-size") || seen.count("--reference-block-size")
             || config.reference == "cpu-reverse" || config.candidate == "cpu-reverse"
+            || summation::supported(config.reference) || summation::supported(config.candidate)
             || (config.input != "random" && config.input != "cancellation" && config.input != "fma-sensitive"))
             throw std::invalid_argument("Reduction options require a vector operation");
     }
@@ -245,6 +249,8 @@ std::string generator(const Config& config) {
     return (config.operation == operation::Kind::matmul ? "" : "vector-") + config.input + "-v1";
 }
 std::string contraction_mode(const std::string& kernel) {
+    if (kernel == "fp32_pairwise" || kernel == "kahan_fp32" || kernel == "neumaier_fp32") return "separate_fp32_mul_add_strict";
+    if (kernel == "fp64_accumulation") return "fp64_reference_compiler_default";
     if (kernel == "cuda-tree") return "separate_rn_mul_add";
     if (kernel == "cuda-naive-no-fma") return "separate_rn_mul_add";
     if (kernel == "cuda-naive-fma" || kernel == "cuda-naive-reordered") return "explicit_fma_rn";
@@ -252,7 +258,12 @@ std::string contraction_mode(const std::string& kernel) {
 }
 
 std::string accumulation_mode(const std::string& kernel, operation::Kind kind, unsigned threads) {
-    if (kind != operation::Kind::matmul && kernel == "cpu") return "serial_increasing_index";
+    if (kernel == "fp32_pairwise") return "adjacent_pairwise_carry_tail_fp32";
+    if (kernel == "kahan_fp32") return "kahan_serial_fp32";
+    if (kernel == "neumaier_fp32") return "neumaier_serial_fp32";
+    if (kernel == "fp64_accumulation") return "serial_fp64_then_cast_fp32";
+    if (kernel == "fp32_reverse") return "serial_decreasing_index";
+    if (kind != operation::Kind::matmul && (kernel == "cpu" || kernel == "fp32_forward")) return "serial_increasing_index";
     if (kernel == "cpu-reverse") return "serial_decreasing_index";
     if (kernel == "cuda-tree") return "block_tree_" + std::to_string(threads) + "_multistage";
     if (kernel == "cuda-naive-reordered") return "even_odd_partials";
@@ -363,7 +374,7 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
     std::ostringstream summary, mismatches, scalar;
     scalar.imbue(std::locale::classic());
     scalar << std::setprecision(17) << std::boolalpha;
-    scalar << "operation,fixture,length,seed,seed_b,implementation,block_size,reference_kernel,reference_block_size,repeat_index,fp32_result,fp32_bits,fp32_hex,sign,classification,fp32_baseline,baseline_bits,fp64_reference,absolute_error_fp64,relative_error_fp64,relative_error_floor,ulp_vs_baseline,tolerance_pass,determinism,deterministic_across_repeats\n";
+    scalar << "operation,fixture,length,seed,seed_b,implementation,block_size,reference_kernel,reference_block_size,repeat_index,fp32_result,fp32_bits,fp32_hex,sign,classification,fp32_baseline,baseline_bits,fp64_reference,absolute_error_fp64,relative_error_fp64,relative_error_floor,ulp_vs_baseline,tolerance_pass,determinism,deterministic_across_repeats,fp32_forward,fp64_rounded_to_fp32,rounded_target_bits,signed_error_fp64,ulp_to_rounded_target,rounded_target_bitwise_match,forward_absolute_error_fp64,absolute_error_reduction,error_reduction_factor,factor_status,improvement_classification,fp64_accumulator_result\n";
     bool has_scalar=false;
     summary.imbue(std::locale::classic()); mismatches.imbue(std::locale::classic());
     summary << std::setprecision(17) << std::boolalpha;
@@ -452,6 +463,16 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
             scalar << ',' << reduction::relative_floor << ','; if (point.ulp) scalar << *point.ulp;
             scalar << ',' << point.tolerance_pass << ',' << state << ',';
             if (row.observations.size()>1) scalar << (state == "bitwise_deterministic");
+            const auto analysis=summation::analyze(point.value,point.fp32_forward,point.fp64_reference);
+            scalar << ',' << point.fp32_forward << ',' << analysis.rounded_target << ',' << numeric::float_bits(analysis.rounded_target) << ',';
+            if (analysis.signed_error) scalar << *analysis.signed_error;
+            scalar << ','; if (analysis.ulp_to_target) scalar << *analysis.ulp_to_target;
+            scalar << ',' << analysis.target_bitwise_match << ',';
+            if (analysis.baseline_error) scalar << *analysis.baseline_error;
+            scalar << ','; if (analysis.error_reduction) scalar << *analysis.error_reduction;
+            scalar << ','; if (analysis.reduction_factor) scalar << *analysis.reduction_factor;
+            scalar << ',' << analysis.factor_status << ',' << analysis.classification << ',';
+            if (row.kernel == "fp64_accumulation") scalar << point.fp64_reference;
             scalar << '\n';
         }
     }
