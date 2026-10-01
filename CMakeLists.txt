@@ -179,6 +179,10 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME process-reproducibility-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
+            $<TARGET_FILE:matmul-compare-outputs>)
+        set_tests_properties(process-reproducibility-tests PROPERTIES LABELS "cpu")
         add_test(NAME summation-artifact-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/summation_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs>)
@@ -220,6 +224,10 @@ if(BUILD_TESTING)
         add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
         set_tests_properties(cuda-vector-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
         if(Python3_Interpreter_FOUND)
+            add_test(NAME process-reproducibility-gpu-tests COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
+                $<TARGET_FILE:matmul-compare-outputs> --gpu)
+            set_tests_properties(process-reproducibility-gpu-tests PROPERTIES SKIP_RETURN_CODE 77 LABELS "gpu")
             add_test(NAME summation-gpu-tests COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests/summation_test.py" $<TARGET_FILE:matmul-inspector>
                 $<TARGET_FILE:matmul-compare-outputs> --gpu)

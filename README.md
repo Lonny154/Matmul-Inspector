@@ -408,3 +408,19 @@ The report separates error versus FP64 from bitwise matches to its rounded FP32
 target, including zero-baseline and infinite-improvement cases. FP64 is an
 analysis reference, not an exact sum. See [summation methods and metrics](docs/summation.md)
 for CPU-only usage, dot multiplication precision, artifacts and replay.
+
+### Fresh-process reproducibility
+
+Capture independent launches, then compare portable captures offline:
+
+```sh
+python3 scripts/process_reproducibility.py --executable build/matmul-inspector \
+  --operation reduction_sum --size 257 --fixture cancellation \
+  --method neumaier_fp32 --process-repeats 3 --output results/process-a
+python3 scripts/compare_hardware.py --process-captures results/process-a results/process-b \
+  --comparator build/matmul-compare-outputs --output results/process-comparison
+```
+
+Create `process-b` with the same configuration on another machine. See the
+[capture workflow](docs/cross_hardware.md#fresh-process-reproducibility-captures)
+for CUDA/matrix examples, compatibility rules, artifacts and interpretation.

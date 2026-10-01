@@ -284,6 +284,7 @@ def write_csv(path, rows):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('runs', type=Path, nargs='+')
+    parser.add_argument('--process-captures', action='store_true', help='Compare portable fresh-process captures with strict configuration matching')
     parser.add_argument('--baseline', type=Path, help='Must name one of the supplied runs; default is the first')
     parser.add_argument('--output', type=Path, default=Path('cross-hardware-results'), help='New aggregate directory; never overwritten')
     parser.add_argument('--comparator', type=Path, help='CPU-only matmul-compare-outputs executable; otherwise searched on PATH')
@@ -297,6 +298,10 @@ def main():
         baseline_path = args.baseline.resolve() if args.baseline else paths[0]
         if baseline_path not in paths:
             raise ValueError('--baseline must be one of the supplied run directories')
+        if args.process_captures:
+            from process_reproducibility import compare_captures
+            comparator = args.comparator.resolve() if args.comparator else shutil.which('matmul-compare-outputs')
+            return compare_captures(paths, baseline_path, args.output, comparator)
         runs = [read_run(path) for path in paths]
         baseline = next(run for run in runs if run['path'] == baseline_path)
         comparator = args.comparator.resolve() if args.comparator else shutil.which('matmul-compare-outputs')

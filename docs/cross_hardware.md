@@ -208,3 +208,129 @@ helper or missing saved outputs limits the report to hashes/performance. Hashes
 and metadata are integrity checks, not signatures proving where an artifact came
 from. Source snapshots, executables and remote environments are not automatically
 archived or recreated. Keep original run directories and use clean commits.
+
+## Fresh-process reproducibility captures
+
+`scripts/process_reproducibility.py` captures **one configuration** in at least two
+fresh native executable launches (default three). It supports `reduction_sum`,
+`dot`, square or rectangular `matmul`, all existing compatible methods, fixtures,
+seeds, tolerances and CUDA block sizes. Repeat the command for other configurations.
+No new kernels or timing methodology are introduced.
+
+These are different questions:
+
+- Same-process determinism: existing native vector `--repeats` and
+  `scripts/reproducibility.py` repeat execution within one process.
+- Process-level reproducibility: this runner starts a new native process for each
+  observation, preserving inputs/configuration with the existing replay builder.
+- Cross-hardware reproducibility: collect complete captures independently, then
+  compare compatible captures offline. Two captures on one machine validate the
+  workflow but provide no evidence about another GPU.
+- Numerical agreement: the existing native absolute/relative tolerance can pass
+  even when bits differ. FP64 remains an approximate analysis reference, not proof
+  of an exact mathematical result.
+
+### Machine A
+
+Build from the intended commit, then create a portable capture:
+
+```sh
+python3 scripts/process_reproducibility.py \
+  --executable build-cross-cuda/matmul-inspector \
+  --operation reduction_sum --size 257 --fixture cancellation \
+  --method cuda-tree --block-size 256 --seed 42 --process-repeats 3 \
+  --output results/process-machine-a
+```
+
+CPU methods need no GPU. For example, use `--method neumaier_fp32`,
+`kahan_fp32`, `fp32_pairwise`, or `fp32_forward`. Dot accepts these same methods.
+For rectangular matrices use `--operation matmul --m 5 --n 7 --k 17 --fixture random
+--method tiled` instead of vector flags. `--size 17` selects a square matrix for
+matmul. Choose a fresh output directory for every capture; overwriting is refused.
+
+The runner uses native compare mode with a CPU reference, one selected candidate,
+and one observation per launch. Only the selected candidate's saved output is used
+for process-level comparisons. A candidate disagreeing with the CPU reference is
+valid data, not a failed capture. Exit 77 records an unavailable CUDA runtime/device
+as skipped; failed/incomplete/skipped captures are not eligible for comparison.
+The script returns 0 on successful collection even when output varies; inspect the
+classification and tolerance fields. Invalid inputs/captures return 2.
+
+### Machine B and offline comparison
+
+Copy the entire Machine A directory, including `runs/`, to the collection machine.
+On Machine B, build the same commit/configuration where possible, and run:
+
+```sh
+python3 scripts/process_reproducibility.py \
+  --executable build-cross-cuda/matmul-inspector \
+  --operation reduction_sum --size 257 --fixture cancellation \
+  --method cuda-tree --block-size 256 --seed 42 --process-repeats 3 \
+  --output results/process-machine-b
+```
+
+Copy the complete Machine B capture back. No network or simultaneous access is
+needed by these tools. Run the comparison locally (the comparator is CPU-only):
+
+```sh
+python3 scripts/compare_hardware.py --process-captures \
+  results/process-machine-a results/process-machine-b \
+  --baseline results/process-machine-a \
+  --comparator build-cross-cpu/matmul-compare-outputs \
+  --output results/process-comparison
+```
+
+The first input is the baseline if omitted. Every captured launch is compared to
+baseline launch zero, including baseline's other launches. Process classification
+for each capture is reported separately. Configurations must agree on operation,
+shape/length, exact kernel name, fixture/generator, both seeds, dtype/layout,
+encoding, contraction/accumulation, relevant tree block/stages, and tolerances.
+Incompatibilities **reject the comparison before writing a report**; unlike legacy
+run aggregation, they are not simply marked as separate rows. Process repeat
+counts may differ. Hardware, compiler, runtime, driver and executable hashes may
+differ; they are retained and flagged. Dirty/different/unknown source is explicitly
+uncontrolled. A difference alone does not show whether hardware or compiler caused
+it. Matching method names do not verify identical machine instructions.
+
+### Capture contents and interpretation
+
+- `process_reproducibility.csv`: repeat index, UUID, observed PID, timestamp,
+  operation/configuration, exact output SHA-256, scalar bits/value when the output
+  is 1×1, bitwise/tolerance agreement and all native metrics versus launch zero.
+- `process_pairs.csv`: every earlier/later process pair, with native diagnostics.
+  Tolerance is directional, using the earlier output as reference and recorded
+  tolerances. All pairs are checked; tolerance is not assumed transitive.
+- `process_reproducibility_metadata.json`: completion status, capture UUID,
+  executable/comparator/script/helper hashes, full native software/hardware/Git
+  provenance, per-launch UUID/PID/timestamps, commands, relative run paths and
+  artifact digests. Commands may contain original paths for audit; loading a moved
+  capture resolves only paths relative to the capture. PIDs can be reused by the OS;
+  UUIDs distinguish launches. These records are integrity checks, not signatures.
+- `runs/process-0000/`, etc.: unchanged native metadata, summary, console,
+  mismatches/scalar diagnostics where present, binaries and sidecars. Each child
+  can be replayed with `scripts/reproduce.py runs/process-0000/metadata.json ...`.
+- `report.md`: concise process classification and largest observed differences.
+
+Classification is `bitwise_stable` if every pair matches bits,
+`numerically_stable_but_not_bitwise` if all pair tolerances pass but some bits
+vary, otherwise `varying`. Identical NaN payloads are bitwise stable while failing
+numerical tolerance; both fields remain visible. Signed zeros differ bitwise but
+have zero ULP distance and pass tolerance. All diagnostics come from the existing
+C++ comparator, even for matching hashes. Nonfinite aggregate exclusions and the
+existing zero-reference relative-error convention remain unchanged.
+
+Offline comparison writes `cross_hardware_comparison.csv`,
+`cross_hardware_metadata.json`, and `report.md`. They retain hashes, hardware/build
+identities, compatibility warnings, first divergence, ULP/absolute/relative metrics,
+and tolerance results. Native binary validation checks headers, sidecars, payload
+hashes, dimensions and path containment before comparison. No alternative binary
+format or Python floating-point comparison is introduced.
+
+This is untimed numerical analysis, not a performance study. Independent processes
+still share the same driver, caches, clocks and machine environment: this does not
+reset hardware or guarantee future reproducibility. Native comparison can require
+memory proportional to saved output size, and all-pair process checks cost O(R²)
+comparisons for R repeats. Use small repeat counts and intentional matrix sizes.
+The capture archives outputs/provenance, not executables, source snapshots or full
+environments. FP64 references and compensated-method limitations are described in
+[summation.md](summation.md).
