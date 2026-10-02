@@ -44,6 +44,9 @@ Reduce load/store pressure by increasing per-thread reuse.
 - dramatically less instruction/load-store work
 - faster overall execution
 
+## 4x4 register blocking
+- 4×4 register blocking reduced LSU pressure further, but crossed the optimal point for this kernel design. Using only 16 threads per block halved theoretical occupancy from 100% to 50%, reduced active warps per SM from ~45 to ~23, increased register usage to 72/thread, and increased issued instructions. The added per-thread reuse did not compensate for reduced parallelism and higher instruction overhead.
+
 ## Limitations
 - custom kernel, not cuBLAS
 - single GPU
