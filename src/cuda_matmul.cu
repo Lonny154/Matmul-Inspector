@@ -589,6 +589,7 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
     if (a.cols() != b.rows()) {
         throw std::invalid_argument("Incompatible matrix dimensions");
     }
+    kernel = resolve_cuda_matmul_kernel(kernel, a.rows(), b.cols(), a.cols());
     Matrix result(a.rows(), b.cols(), row_stride);
     if (result.rows() == 0 || result.cols() == 0 || a.cols() == 0) {
         return result;

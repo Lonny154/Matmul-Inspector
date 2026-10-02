@@ -51,6 +51,7 @@ CudaMatmulKernel cuda_kernel(const std::string& name) {
         return CudaMatmulKernel::register_blocked_2x2;
     if (name == "register-blocked-4x4")
         return CudaMatmulKernel::register_blocked_4x4;
+    if (name == "register-blocked-auto") return CudaMatmulKernel::register_blocked_auto;
     if (name == "register-blocked-4x2")
         return CudaMatmulKernel::register_blocked_4x2;
     if (name == "cuda-naive-fma") return CudaMatmulKernel::naive_fma;
@@ -72,6 +73,7 @@ std::string capture_output(const Matrix& matrix, const Config& config, const Sha
         << ",\"K\":" << shape.k << ",\"operation\":" << json_string(operation::name(config.operation)) << ",\"kernel\":" << json_string(kernel)
         << ",\"seed\":" << config.seed << ",\"seed_b\":" << config.seed_b
         << ",\"generator\":" << json_string(generator(config))
+        << ",\"resolved_kernel\":" << json_string(resolved_kernel(kernel,shape))
         << ",\"contraction_mode\":" << json_string(contraction_mode(kernel))
         << ",\"accumulation_mode\":" << json_string(accumulation_mode(kernel,config.operation,threads))
         << ",\"reduction_block_size\":" << (kernel == "cuda-tree" ? threads : 0)
@@ -253,6 +255,10 @@ int run_cli(const std::vector<std::string>& arguments) {
                     if (config.operation == operation::Kind::matmul)
                         std::cout << "M=" << shape.m << " N=" << shape.n << " K=" << shape.k << '\n';
                     else std::cout << "length=" << shape.k << '\n';
+                    if (config.reference == "register-blocked-auto" || config.candidate == "register-blocked-auto")
+                        std::cout << "Experimental dispatch: reference " << config.reference << " -> "
+                            << resolved_kernel(config.reference,shape) << "; candidate " << config.candidate
+                            << " -> " << resolved_kernel(config.candidate,shape) << '\n';
                     Row candidate;
                     candidate.shape = shape;
                     candidate.kernel = config.candidate;
@@ -263,7 +269,7 @@ int run_cli(const std::vector<std::string>& arguments) {
                         (config.candidate == "tiled" ||
                         config.candidate == "register-blocked-2x2" ||
                         config.candidate == "register-blocked-4x4" ||
-                        config.candidate == "register-blocked-4x2")
+                        config.candidate == "register-blocked-4x2" || config.candidate == "register-blocked-auto")
                             ? 16
                             : 0;
                     if (config.mode == "crossover") {
@@ -396,7 +402,7 @@ int run_cli(const std::vector<std::string>& arguments) {
                         reference.output_file = candidate.reference_output_file;
                         reference.tile_size = (config.reference == "tiled" ||
                             config.reference == "register-blocked-2x2" || config.reference == "register-blocked-4x4" ||
-                            config.reference == "register-blocked-4x2") ? 16 : 0;
+                            config.reference == "register-blocked-4x2" || config.reference == "register-blocked-auto") ? 16 : 0;
                         reference.timing = ref.timing;
                         reference.speedup = reference.timing.mean_ms > 0 ? 1 : 0;
                         reference.median_speedup = reference.timing.median_ms > 0 ? 1 : 0;

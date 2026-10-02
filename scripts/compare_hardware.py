@@ -55,7 +55,7 @@ def semantics(row):
     contraction = 'separate_rn_mul_add' if kernel == 'cuda-naive-no-fma' else (
         'explicit_fma_rn' if kernel in ('cuda-naive-fma', 'cuda-naive-reordered') else 'compiler_default')
     accumulation = 'even_odd_partials' if kernel == 'cuda-naive-reordered' else (
-        'increasing_k_zero_padded_tiles' if kernel in ('tiled', 'register-blocked-2x2', 'register-blocked-4x4', 'register-blocked-4x2') else 'increasing_k')
+        'increasing_k_zero_padded_tiles' if kernel in ('tiled', 'register-blocked-2x2', 'register-blocked-4x4', 'register-blocked-4x2', 'register-blocked-auto') else 'increasing_k')
     return (int(row['tile_size']), row.get('contraction_mode', contraction), row.get('accumulation_mode', accumulation))
 
 
@@ -143,6 +143,8 @@ def binary(run, row):
                     seed=run['config']['seed'], seed_b=run['config']['seed_b'],
                     generator=run['config']['generator'], contraction_mode=semantics(row)[1],
                     accumulation_mode=semantics(row)[2], output_sha256=row.get('output_sha256'))
+    if row['kernel'] == 'register-blocked-auto':
+        expected['resolved_kernel'] = row['resolved_kernel']
     if row.get('operation', 'matmul') != 'matmul':
         expected['operation'] = row['operation']
         if 'reduction_block_size' in context:
@@ -173,7 +175,8 @@ def compatibility(run, baseline, row, ref):
         if a[field] != b[field] or a[field] in (None, '', 'unknown'):
             warnings.append('incompatible_' + field)
             numerical = False
-    if (semantics(row) != semantics(ref)
+    if (row.get('resolved_kernel', row['kernel']) != ref.get('resolved_kernel', ref['kernel'])
+        or semantics(row) != semantics(ref)
         or row.get('reduction_block_size', '') != ref.get('reduction_block_size', '')
         or row.get('reduction_stages', '') != ref.get('reduction_stages', '')):
         warnings.append('incompatible_kernel_semantics')

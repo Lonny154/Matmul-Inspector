@@ -62,7 +62,7 @@ std::string usage() {
            "  --m M --n N --k K      One rectangular configuration; exclusive with --sizes\n"
            "  --reference KERNEL --candidate KERNEL (defaults naive, tiled)\n"
            "    Kernels: cpu (compare or crossover reference), naive, tiled, cuda-naive-fma,\n"
-           "             register-blocked-2x2, register-blocked-4x4, register-blocked-4x2,\n"
+           "             register-blocked-2x2, register-blocked-4x4, register-blocked-4x2, register-blocked-auto,\n"
            "             cuda-naive-no-fma, cuda-naive-reordered\n"
            "  --input random|cancellation|fma-sensitive (default random)\n"
            "  --max-mismatches 0..1000  Saved samples per configuration (default 100)\n"
@@ -175,7 +175,7 @@ Config parse(const std::vector<std::string>& args) {
             if (value.empty()) throw std::invalid_argument("Empty output path");
             config.output = value;
         } else if (option == "--reference" || option == "--candidate") {
-            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled" && value != "register-blocked-2x2" && value != "register-blocked-4x4" && value != "register-blocked-4x2"
+            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled" && value != "register-blocked-2x2" && value != "register-blocked-4x4" && value != "register-blocked-4x2" && value != "register-blocked-auto"
                 && value != "cuda-naive-fma" && value != "cuda-naive-no-fma" && value != "cuda-naive-reordered") throw std::invalid_argument("Unknown kernel: " + value);
             if (option == "--reference") config.reference = value;
             else config.candidate = value;
@@ -258,6 +258,12 @@ std::string contraction_mode(const std::string& kernel) {
     return "compiler_default";
 }
 
+std::string resolved_kernel(const std::string& requested, Shape shape) {
+    if (requested != "register-blocked-auto") return requested;
+    return resolve_cuda_matmul_kernel(CudaMatmulKernel::register_blocked_auto, shape.m, shape.n, shape.k)
+        == CudaMatmulKernel::register_blocked_4x2 ? "register-blocked-4x2" : "register-blocked-2x2";
+}
+
 std::string accumulation_mode(const std::string& kernel, operation::Kind kind, unsigned threads) {
     if (kernel == "fp32_pairwise") return "adjacent_pairwise_carry_tail_fp32";
     if (kernel == "kahan_fp32") return "kahan_serial_fp32";
@@ -268,7 +274,7 @@ std::string accumulation_mode(const std::string& kernel, operation::Kind kind, u
     if (kernel == "cpu-reverse") return "serial_decreasing_index";
     if (kernel == "cuda-tree") return "block_tree_" + std::to_string(threads) + "_multistage";
     if (kernel == "cuda-naive-reordered") return "even_odd_partials";
-    if (kernel == "tiled" || kernel == "register-blocked-2x2" || kernel == "register-blocked-4x4" || kernel == "register-blocked-4x2") return "increasing_k_zero_padded_tiles";
+    if (kernel == "tiled" || kernel == "register-blocked-2x2" || kernel == "register-blocked-4x4" || kernel == "register-blocked-4x2" || kernel == "register-blocked-auto") return "increasing_k_zero_padded_tiles";
     return "increasing_k";
 }
 
@@ -359,7 +365,22 @@ std::string metadata_json(const Config& config, const Metadata& values) {
         if (i) out << ',';
         out << "{\"M\":" << shape.m << ",\"N\":" << shape.n << ",\"K\":" << shape.k << '}';
     }
-    out << "]\n  }\n}\n";
+    out << "]";
+    if (config.reference == "register-blocked-auto" || config.candidate == "register-blocked-auto") {
+        out << ",\n    \"dispatch_policy\": \"experimental-rtx4060ti-square-v1\", \"auto_square_threshold\": "
+            << register_blocked_auto_square_threshold << ",\n    \"kernel_resolution\": [";
+        for (std::size_t i = 0; i < config.shapes.size(); ++i) {
+            const auto shape = config.shapes[i];
+            if (i) out << ',';
+            out << "{\"M\":" << shape.m << ",\"N\":" << shape.n << ",\"K\":" << shape.k
+                << ",\"requested_reference\":" << json_string(config.reference)
+                << ",\"resolved_reference\":" << json_string(resolved_kernel(config.reference,shape))
+                << ",\"requested_candidate\":" << json_string(config.candidate)
+                << ",\"resolved_candidate\":" << json_string(resolved_kernel(config.candidate,shape)) << '}';
+        }
+        out << ']';
+    }
+    out << "\n  }\n}\n";
     return out.str();
 }
 
@@ -380,7 +401,7 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
     summary.imbue(std::locale::classic()); mismatches.imbue(std::locale::classic());
     summary << std::setprecision(17) << std::boolalpha;
     mismatches << std::setprecision(17) << std::boolalpha;
-    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file,backend,timing_mode,row_id,max_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,median_speedup,stability_warnings,operation,length,flop_count,model_bytes,reduction_block_size,reduction_stages\n";
+    summary << "M,N,K,kernel,tile_size,mean_ms,median_ms,min_ms,stddev_ms,gflops,reference_kernel,speedup,bitwise_equal,divergent_count,tolerance_pass,contraction_mode,accumulation_mode,reference_contraction,reference_accumulation,divergent_percent,max_ulp,mean_divergent_ulp,max_absolute_error,max_relative_error,tolerance_failures,tolerance_failure_percent,ulp_0,ulp_1,ulp_2,ulp_3_4,ulp_5_8,ulp_gt_8,finite_pairs,finite_divergent_count,nan_pairs,infinity_pairs,zero_reference_nonzero,mismatch_count,mismatches_saved,mismatches_truncated,output_sha256,reference_sha256,output_file,reference_output_file,backend,timing_mode,row_id,max_ms,iqr_ms,mad_ms,cv,median_ci_low_ms,median_ci_high_ms,median_speedup,stability_warnings,operation,length,flop_count,model_bytes,reduction_block_size,reduction_stages,resolved_kernel,resolved_reference_kernel\n";
     mismatches << "M,N,K,kernel,reference_kernel,kind,row,col,reference_value,candidate_value,reference_bits,candidate_bits,ulp_distance,absolute_error,relative_error,tolerance,tolerance_pass,timing_mode,operation\n";
     bool any_mismatch = false;
     std::size_t row_id = 0;
@@ -424,7 +445,8 @@ void write_artifacts(const std::filesystem::path& path, const Config& config,
         if (row.kernel == "cuda-tree") summary << row.reduction_block_size;
         summary << ',';
         if (row.kernel == "cuda-tree") summary << operation::stages(row.shape.k,row.reduction_block_size);
-        summary << '\n';
+        summary << ',' << csv_field(resolved_kernel(row.kernel,row.shape))
+            << ',' << csv_field(resolved_kernel(row.reference,row.shape)) << '\n';
         auto mismatch = [&](const std::optional<comparison::Divergence>& point, const char* kind) {
             if (!point) return;
             any_mismatch = true;

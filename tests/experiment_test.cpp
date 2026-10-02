@@ -1,5 +1,6 @@
 #include "experiment.hpp"
 #include "numeric.hpp"
+#include "cuda_matmul.hpp"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -16,6 +17,24 @@ template<class Function> void invalid(Function function) {
 }
 
 void test_config() {
+    for (std::size_t size : {15u,16u,17u,1024u,3136u,3199u,3200u,3201u,3328u}) {
+        const auto expected = size < register_blocked_auto_square_threshold
+            ? CudaMatmulKernel::register_blocked_2x2 : CudaMatmulKernel::register_blocked_4x2;
+        check(resolve_cuda_matmul_kernel(CudaMatmulKernel::register_blocked_auto,size,size,size) == expected,
+              "auto square dispatch boundary");
+        check(resolve_cuda_matmul_kernel(CudaMatmulKernel::tiled,size,size,size) == CudaMatmulKernel::tiled,
+              "explicit kernel unchanged");
+    }
+    check(resolve_cuda_matmul_kernel(CudaMatmulKernel::register_blocked_auto,31,47,19)
+          == CudaMatmulKernel::register_blocked_2x2, "auto rectangular fallback");
+    check(resolve_cuda_matmul_kernel(CudaMatmulKernel::register_blocked_auto,4096,4096,17)
+          == CudaMatmulKernel::register_blocked_2x2, "square output with nonsquare inputs uses fallback");
+    auto automatic = experiment::parse({"compare", "--reference", "register-blocked-auto",
+                                       "--candidate", "register-blocked-auto", "--sizes", "3199,3200,3201"});
+    const auto metadata = experiment::metadata_json(automatic,{});
+    check(metadata.find("resolved_candidate") != std::string::npos
+          && metadata.find("register-blocked-2x2") != std::string::npos
+          && metadata.find("register-blocked-4x2") != std::string::npos, "auto per-shape metadata");
     auto blocked = experiment::parse({"compare", "--reference", "register-blocked-4x4",
                                      "--candidate", "register-blocked-4x4"});
     check(blocked.reference == "register-blocked-4x4" && blocked.candidate == blocked.reference,
