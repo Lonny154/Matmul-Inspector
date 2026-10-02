@@ -174,7 +174,7 @@ Config parse(const std::vector<std::string>& args) {
             if (value.empty()) throw std::invalid_argument("Empty output path");
             config.output = value;
         } else if (option == "--reference" || option == "--candidate") {
-            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled"
+            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled" && value != "register-blocked-2x2"
                 && value != "cuda-naive-fma" && value != "cuda-naive-no-fma" && value != "cuda-naive-reordered") throw std::invalid_argument("Unknown kernel: " + value);
             if (option == "--reference") config.reference = value;
             else config.candidate = value;
@@ -267,7 +267,7 @@ std::string accumulation_mode(const std::string& kernel, operation::Kind kind, u
     if (kernel == "cpu-reverse") return "serial_decreasing_index";
     if (kernel == "cuda-tree") return "block_tree_" + std::to_string(threads) + "_multistage";
     if (kernel == "cuda-naive-reordered") return "even_odd_partials";
-    if (kernel == "tiled") return "increasing_k_zero_padded_tiles";
+    if (kernel == "tiled" || kernel == "register-blocked-2x2") return "increasing_k_zero_padded_tiles";
     return "increasing_k";
 }
 
