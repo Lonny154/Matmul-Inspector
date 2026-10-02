@@ -55,7 +55,7 @@ def semantics(row):
     contraction = 'separate_rn_mul_add' if kernel == 'cuda-naive-no-fma' else (
         'explicit_fma_rn' if kernel in ('cuda-naive-fma', 'cuda-naive-reordered') else 'compiler_default')
     accumulation = 'even_odd_partials' if kernel == 'cuda-naive-reordered' else (
-        'increasing_k_zero_padded_tiles' if kernel in ('tiled', 'register-blocked-2x2', 'register-blocked-4x4') else 'increasing_k')
+        'increasing_k_zero_padded_tiles' if kernel in ('tiled', 'register-blocked-2x2', 'register-blocked-4x4', 'register-blocked-4x2') else 'increasing_k')
     return (int(row['tile_size']), row.get('contraction_mode', contraction), row.get('accumulation_mode', accumulation))
 
 

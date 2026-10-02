@@ -192,6 +192,24 @@ void test_register_blocked_4x4() {
     }
 }
 
+void test_register_blocked_4x2() {
+    struct Shape { std::size_t m, n, k; };
+    for (const auto shape : {Shape{4,4,4}, Shape{15,15,15}, Shape{16,16,16},
+                            Shape{17,17,17}, Shape{31,31,31}, Shape{257,257,257},
+                            Shape{31,47,19}}) {
+        for (std::size_t padding : {0u, 3u}) {
+            Matrix a(shape.m,shape.k,shape.k+padding), b(shape.k,shape.n,shape.n+padding);
+            fill(a,42); fill(b,123);
+            auto reference = cuda_matmul(a,b,CudaMatmulKernel::tiled);
+            auto candidate = cuda_matmul(a,b,shape.n+padding,CudaMatmulKernel::register_blocked_4x2);
+            check(candidate.row_stride() == shape.n+padding, "4x2 output stride");
+            check_agreement(reference,candidate);
+            check(comparison::compare(reference,candidate).divergent_count == 0,
+                  "4x2 bitwise agreement with tiled including partial tiles");
+        }
+    }
+}
+
 void test_controlled() {
     for (std::size_t k : {4u, 16u, 17u, 257u}) {
         Matrix a(3,k,k+2), b(k,5,8);
@@ -261,6 +279,7 @@ int main() {
             return 77;
         }
         test_register_blocked_4x4();
+        test_register_blocked_4x2();
         test_controlled();
         test_example();
         test_layouts();
