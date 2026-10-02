@@ -17,7 +17,7 @@ bool cuda_available(std::string* reason = nullptr);
 Matrix cuda_matmul(const Matrix& a, const Matrix& b);
 Matrix cuda_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride);
 
-enum class CudaMatmulKernel { naive, tiled, register_blocked_2x2, register_blocked_4x4, register_blocked_4x2, register_blocked_auto, naive_fma, naive_no_fma, naive_reordered };
+enum class CudaMatmulKernel { naive, tiled, register_blocked_2x2, register_blocked_4x4, register_blocked_4x2, register_blocked_auto, cublas, naive_fma, naive_no_fma, naive_reordered };
 inline constexpr unsigned cuda_matmul_tile_size = 16;
 
 // Experimental RTX 4060 Ti square-FP32 heuristic, not a portable optimum.
@@ -57,6 +57,7 @@ CudaKernelMeasurement benchmark_cuda_end_to_end(const Matrix& a, const Matrix& b
 
 // Best-effort device/runtime metadata; unavailable fields are "unknown".
 std::map<std::string, std::string> cuda_metadata();
+std::map<std::string, std::string> cublas_metadata();
 
 // Vector operations use 64/128/256/512-thread shared-memory trees (default 256); events encompass
 // every reduction stage, excluding allocation/copies and host analysis.

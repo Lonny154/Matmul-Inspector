@@ -3,7 +3,7 @@
 Absent operation is accepted only for legacy matmul kernel names. Vector rows
 use M=N=1 (scalar output), K=length, plus an explicit length column.
 """
-MATMUL_KERNELS = {'cpu', 'naive', 'tiled', 'register-blocked-2x2', 'register-blocked-4x4', 'register-blocked-4x2', 'register-blocked-auto', 'cuda-naive-fma', 'cuda-naive-no-fma', 'cuda-naive-reordered'}
+MATMUL_KERNELS = {'cpu', 'cublas', 'naive', 'tiled', 'register-blocked-2x2', 'register-blocked-4x4', 'register-blocked-4x2', 'register-blocked-auto', 'cuda-naive-fma', 'cuda-naive-no-fma', 'cuda-naive-reordered'}
 SUMMATION_METHODS = ('fp32_forward', 'fp32_reverse', 'fp32_pairwise', 'kahan_fp32', 'neumaier_fp32', 'fp64_accumulation')
 KINDS = {'matmul', 'dot', 'reduction_sum'}
 

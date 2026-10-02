@@ -108,7 +108,7 @@ void test_layouts() {
 }
 
 void test_validation_and_empty_products() {
-    for (auto kernel : {CudaMatmulKernel::naive_fma, CudaMatmulKernel::naive_no_fma, CudaMatmulKernel::naive_reordered}) {
+    for (auto kernel : {CudaMatmulKernel::cublas, CudaMatmulKernel::naive_fma, CudaMatmulKernel::naive_no_fma, CudaMatmulKernel::naive_reordered}) {
         check_invalid([kernel] { cuda_matmul(Matrix(2,3), Matrix(2,4), kernel); }, "controlled invalid dimensions");
         check_invalid([kernel] { cuda_matmul(Matrix(2,3), Matrix(3,4), 3, kernel); }, "controlled short stride");
         check_invalid([kernel] { benchmark_cuda_kernel(Matrix(1,1), Matrix(1,1), kernel, 0); }, "controlled zero iterations");
@@ -228,6 +228,29 @@ void test_register_blocked_auto() {
     }
 }
 
+void test_cublas() {
+    struct Shape { std::size_t m,n,k; };
+    for (const auto shape : {Shape{4,4,4},Shape{15,15,15},Shape{16,16,16},Shape{17,17,17},
+                            Shape{31,47,19},Shape{257,257,257}}) {
+        for (std::size_t padding : {0u,3u}) {
+            Matrix a(shape.m,shape.k,shape.k+padding), b(shape.k,shape.n,shape.n+padding+2);
+            fill(a,42); fill(b,123);
+            auto ref=cuda_matmul(a,b,CudaMatmulKernel::tiled);
+            auto result=cuda_matmul(a,b,shape.n+padding,CudaMatmulKernel::cublas);
+            check(result.row_stride()==shape.n+padding, "cuBLAS output stride");
+            // Different association can exceed the default near-zero tolerance.
+            // Explicit test tolerance; diagnostics still measure every bit mismatch.
+            check(comparison::compare(ref,result,1e-4f,1e-4f).tolerance_pass, "cuBLAS numerical agreement");
+            for (std::size_t r=0;r<shape.m;++r)
+                for (std::size_t c=shape.n;c<result.row_stride();++c)
+                    check(result.data()[r*result.row_stride()+c]==0, "cuBLAS padding untouched");
+        }
+    }
+    auto metadata=cublas_metadata();
+    check(metadata.at("cublas_math_mode")=="CUBLAS_PEDANTIC_MATH", "cuBLAS queried math mode");
+    check(metadata.at("cublas_version")!="0", "cuBLAS version captured");
+}
+
 void test_controlled() {
     for (std::size_t k : {4u, 16u, 17u, 257u}) {
         Matrix a(3,k,k+2), b(k,5,8);
@@ -299,6 +322,7 @@ int main() {
         test_register_blocked_4x4();
         test_register_blocked_4x2();
         test_register_blocked_auto();
+        test_cublas();
         test_controlled();
         test_example();
         test_layouts();

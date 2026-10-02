@@ -1,6 +1,8 @@
 #include "cuda_matmul.hpp"
 
 #include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <memory>
 
 #include <cstdio>
 #include <limits>
@@ -14,6 +16,41 @@ void check_cuda(cudaError_t status, const char* operation) {
     if (status != cudaSuccess) {
         throw std::runtime_error(std::string(operation) + ": " + cudaGetErrorString(status));
     }
+}
+
+void check_cublas(cublasStatus_t status, const char* operation) {
+    if (status != CUBLAS_STATUS_SUCCESS)
+        throw std::runtime_error(std::string(operation) + ": cuBLAS status " + std::to_string(int(status)));
+}
+
+class CublasHandle {
+public:
+    CublasHandle() { check_cublas(cublasCreate(&handle_), "cublasCreate"); }
+    CublasHandle(const CublasHandle&) = delete;
+    CublasHandle& operator=(const CublasHandle&) = delete;
+    ~CublasHandle() {
+        if (handle_) {
+            const auto status = cublasDestroy(handle_);
+            if (status != CUBLAS_STATUS_SUCCESS)
+                std::fprintf(stderr, "cublasDestroy during cleanup: status %d\n", int(status));
+        }
+    }
+    void configure() {
+        check_cublas(cublasSetMathMode(handle_, CUBLAS_PEDANTIC_MATH), "cublasSetMathMode pedantic");
+        check_cublas(cublasSetAtomicsMode(handle_, CUBLAS_ATOMICS_NOT_ALLOWED), "cublasSetAtomicsMode");
+        check_cublas(cublasSetPointerMode(handle_, CUBLAS_POINTER_MODE_HOST), "cublasSetPointerMode");
+        check_cublas(cublasSetStream(handle_, nullptr), "cublasSetStream default");
+    }
+    cublasHandle_t get() const { return handle_; }
+    void release() { check_cublas(cublasDestroy(std::exchange(handle_, nullptr)), "cublasDestroy"); }
+private:
+    cublasHandle_t handle_ = nullptr;
+};
+
+int blas_dimension(std::size_t value) {
+    if (value > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+        throw std::length_error("cuBLAS SGEMM dimensions and leading dimensions must fit int");
+    return static_cast<int>(value);
 }
 
 class DeviceBuffer {
@@ -611,7 +648,7 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
         kernel == CudaMatmulKernel::register_blocked_4x4 ||
         kernel == CudaMatmulKernel::register_blocked_4x2;
 
-    if (!uses_2d_grid
+    if (kernel != CudaMatmulKernel::cublas && !uses_2d_grid
         && blocks > static_cast<std::size_t>(properties.maxGridSize[0])) {
         throw std::length_error("Matrix exceeds the naive CUDA kernel's grid limit");
     }
@@ -622,6 +659,16 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
         throw std::length_error("Matrix exceeds the 2D CUDA kernel's grid limit");
     }
 
+    // Validate the 32-bit cuBLAS interface before allocating any device storage.
+    if (kernel == CudaMatmulKernel::cublas) {
+        for (auto value : {a.rows(), b.cols(), a.cols(), a.row_stride(), b.row_stride(), result.row_stride()})
+            blas_dimension(value);
+    }
+    std::unique_ptr<CublasHandle> blas;
+    if (kernel == CudaMatmulKernel::cublas) {
+        blas = std::make_unique<CublasHandle>();
+        blas->configure();
+    }
     const auto a_bytes = storage_bytes(a);
     const auto b_bytes = storage_bytes(b);
     const auto c_bytes = storage_bytes(result);
@@ -633,7 +680,16 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
     check_cuda(cudaMemset(device_c.data(), 0, c_bytes), "cudaMemset C");
 
     auto launch = [&] {
-        if (kernel == CudaMatmulKernel::naive) {
+        if (kernel == CudaMatmulKernel::cublas) {
+            const float alpha = 1.0f, beta = 0.0f;
+            // Row-major C = A B becomes column-major C^T = B^T A^T.
+            // The same bytes represent these transposes; no packing is needed.
+            check_cublas(cublasSgemm(blas->get(), CUBLAS_OP_N, CUBLAS_OP_N,
+                blas_dimension(b.cols()), blas_dimension(a.rows()), blas_dimension(a.cols()),
+                &alpha, device_b.data(), blas_dimension(b.row_stride()),
+                device_a.data(), blas_dimension(a.row_stride()), &beta,
+                device_c.data(), blas_dimension(result.row_stride())), "cublasSgemm");
+        } else if (kernel == CudaMatmulKernel::naive) {
             matmul_kernel<<<static_cast<unsigned>(blocks), threads>>>(
                 device_a.data(), device_b.data(), device_c.data(),
                 a.rows(), b.cols(), a.cols(), a.row_stride(), b.row_stride(), result.row_stride()
@@ -722,6 +778,7 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
     check_cuda(cudaDeviceSynchronize(), "matmul kernel synchronization");
     check_cuda(cudaMemcpy(result.data(), device_c.data(), c_bytes, cudaMemcpyDeviceToHost), "cudaMemcpy C to host");
 
+    if (blas) blas->release();
     device_c.release();
     device_b.release();
     device_a.release();
@@ -729,6 +786,24 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
 }
 
 }  // namespace
+
+std::map<std::string, std::string> cublas_metadata() {
+    CublasHandle handle;
+    handle.configure();
+    int version = 0;
+    check_cublas(cublasGetVersion(handle.get(), &version), "cublasGetVersion");
+    cublasMath_t mode;
+    check_cublas(cublasGetMathMode(handle.get(), &mode), "cublasGetMathMode");
+    if (mode != CUBLAS_PEDANTIC_MATH) throw std::runtime_error("cuBLAS pedantic math mode not applied");
+    handle.release();
+    return {{"cublas_version", std::to_string(version)},
+        {"cublas_math_mode", "CUBLAS_PEDANTIC_MATH"},
+        {"cublas_tf32", "disabled by pedantic FP32 math; no Tensor Core mode requested"},
+        {"cublas_atomics_mode", "CUBLAS_ATOMICS_NOT_ALLOWED"},
+        {"cublas_layout", "C^T=B^T*A^T; SGEMM N,N with (N,M,K), operands B,A; lda=B.row_stride, ldb=A.row_stride, ldc=C.row_stride"},
+        {"cublas_layout_conversion", "none"},
+        {"cublas_timing", "default-stream CUDA events around SGEMM submission/execution; handle setup/destruction, allocations and transfers excluded from kernel_only; end_to_end includes them"}};
+}
 
 std::map<std::string, std::string> cuda_metadata() {
     std::map<std::string, std::string> values{

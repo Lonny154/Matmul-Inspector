@@ -45,6 +45,7 @@ private:
 
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 CudaMatmulKernel cuda_kernel(const std::string& name) {
+    if (name == "cublas") return CudaMatmulKernel::cublas;
     if (name == "naive") return CudaMatmulKernel::naive;
     if (name == "tiled") return CudaMatmulKernel::tiled;
     if (name == "register-blocked-2x2")
@@ -222,9 +223,11 @@ int run_cli(const std::vector<std::string>& arguments) {
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
             if (needs_gpu) {
                 available = cuda_available(&reason);
-                // Optional probes are outside measured execution and do not make a run fail.
+                // Device probes are outside timing; cuBLAS setup also verifies its required math policy.
                 if (available) {
                     for (const auto& entry : cuda_metadata()) values[entry.first] = entry.second;
+                    if (config.reference == "cublas" || config.candidate == "cublas")
+                        for (const auto& entry : cublas_metadata()) values[entry.first] = entry.second;
                     auto driver = command_output("nvidia-smi --query-gpu=driver_version --format=csv,noheader");
                     if (!driver.empty()) values["nvidia_driver_version"] = driver.substr(0, driver.find('\n'));
                 }

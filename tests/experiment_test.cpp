@@ -17,6 +17,12 @@ template<class Function> void invalid(Function function) {
 }
 
 void test_config() {
+    auto blas = experiment::parse({"compare", "--reference", "cublas", "--candidate", "cublas"});
+    check(blas.reference == "cublas" && blas.candidate == "cublas", "cuBLAS CLI roles");
+    check(experiment::contraction_mode("cublas") == "cublas_pedantic_fp32", "cuBLAS math metadata");
+    check(experiment::accumulation_mode("cublas") == "cublas_unspecified_order", "cuBLAS order unspecified");
+    check(experiment::metadata_json(blas,{}).find("cublas_leading_dimensions") != std::string::npos,
+          "cuBLAS layout metadata");
     for (std::size_t size : {15u,16u,17u,1024u,3136u,3199u,3200u,3201u,3328u}) {
         const auto expected = size < register_blocked_auto_square_threshold
             ? CudaMatmulKernel::register_blocked_2x2 : CudaMatmulKernel::register_blocked_4x2;

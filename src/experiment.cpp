@@ -61,7 +61,7 @@ std::string usage() {
            "  --sizes 4,256,257,1024   Square sizes (compare default: 4)\n"
            "  --m M --n N --k K      One rectangular configuration; exclusive with --sizes\n"
            "  --reference KERNEL --candidate KERNEL (defaults naive, tiled)\n"
-           "    Kernels: cpu (compare or crossover reference), naive, tiled, cuda-naive-fma,\n"
+           "    Kernels: cpu (compare or crossover reference), naive, tiled, cublas, cuda-naive-fma,\n"
            "             register-blocked-2x2, register-blocked-4x4, register-blocked-4x2, register-blocked-auto,\n"
            "             cuda-naive-no-fma, cuda-naive-reordered\n"
            "  --input random|cancellation|fma-sensitive (default random)\n"
@@ -175,7 +175,7 @@ Config parse(const std::vector<std::string>& args) {
             if (value.empty()) throw std::invalid_argument("Empty output path");
             config.output = value;
         } else if (option == "--reference" || option == "--candidate") {
-            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "naive" && value != "tiled" && value != "register-blocked-2x2" && value != "register-blocked-4x4" && value != "register-blocked-4x2" && value != "register-blocked-auto"
+            if (!summation::supported(value) && value != "cpu-reverse" && value != "cuda-tree" && value != "cpu" && value != "cublas" && value != "naive" && value != "tiled" && value != "register-blocked-2x2" && value != "register-blocked-4x4" && value != "register-blocked-4x2" && value != "register-blocked-auto"
                 && value != "cuda-naive-fma" && value != "cuda-naive-no-fma" && value != "cuda-naive-reordered") throw std::invalid_argument("Unknown kernel: " + value);
             if (option == "--reference") config.reference = value;
             else config.candidate = value;
@@ -250,6 +250,7 @@ std::string generator(const Config& config) {
     return (config.operation == operation::Kind::matmul ? "" : "vector-") + config.input + "-v1";
 }
 std::string contraction_mode(const std::string& kernel) {
+    if (kernel == "cublas") return "cublas_pedantic_fp32";
     if (kernel == "fp32_pairwise" || kernel == "kahan_fp32" || kernel == "neumaier_fp32") return "separate_fp32_mul_add_strict";
     if (kernel == "fp64_accumulation") return "fp64_reference_compiler_default";
     if (kernel == "cuda-tree") return "separate_rn_mul_add";
@@ -265,6 +266,7 @@ std::string resolved_kernel(const std::string& requested, Shape shape) {
 }
 
 std::string accumulation_mode(const std::string& kernel, operation::Kind kind, unsigned threads) {
+    if (kernel == "cublas") return "cublas_unspecified_order";
     if (kernel == "fp32_pairwise") return "adjacent_pairwise_carry_tail_fp32";
     if (kernel == "kahan_fp32") return "kahan_serial_fp32";
     if (kernel == "neumaier_fp32") return "neumaier_serial_fp32";
@@ -377,6 +379,17 @@ std::string metadata_json(const Config& config, const Metadata& values) {
                 << ",\"resolved_reference\":" << json_string(resolved_kernel(config.reference,shape))
                 << ",\"requested_candidate\":" << json_string(config.candidate)
                 << ",\"resolved_candidate\":" << json_string(resolved_kernel(config.candidate,shape)) << '}';
+        }
+        out << ']';
+    }
+    if (config.reference == "cublas" || config.candidate == "cublas") {
+        out << ",\n    \"cublas_leading_dimensions\": [";
+        for (std::size_t i=0; i<config.shapes.size(); ++i) {
+            if (i) out << ',';
+            const auto shape=config.shapes[i];
+            // CLI generated inputs/outputs are packed. Public CUDA API also accepts padded rows.
+            out << "{\"M\":" << shape.m << ",\"N\":" << shape.n << ",\"K\":" << shape.k
+                << ",\"lda\":" << shape.n << ",\"ldb\":" << shape.k << ",\"ldc\":" << shape.n << '}';
         }
         out << ']';
     }

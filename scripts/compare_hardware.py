@@ -16,7 +16,7 @@ from operations import identity as operation_identity
 ENVIRONMENT = ('gpu_name', 'gpu_compute_capability', 'cpu_model', 'cuda_runtime_version',
                'cuda_driver_api_version', 'nvidia_driver_version', 'cxx_compiler', 'cuda_compiler',
                'cuda_architectures', 'cxx_flags', 'cuda_flags', 'fast_math', 'os')
-TOOLCHAIN = ('cuda_runtime_version', 'cuda_driver_api_version', 'nvidia_driver_version',
+TOOLCHAIN = ('cublas_version', 'cublas_math_mode', 'cublas_atomics_mode', 'cuda_runtime_version', 'cuda_driver_api_version', 'nvidia_driver_version',
              'cxx_compiler', 'cuda_compiler', 'cuda_architectures', 'cxx_flags', 'cuda_flags', 'fast_math')
 INPUT_FIELDS = ('operation', 'seed', 'seed_b', 'dtype', 'generator', 'input')
 METRICS = ('divergent_count', 'divergent_percent', 'max_ulp', 'mean_divergent_ulp',
@@ -52,6 +52,9 @@ def key(row):
 
 def semantics(row):
     kernel = row['kernel']
+    if kernel == 'cublas':
+        return (int(row['tile_size']), row.get('contraction_mode', 'cublas_pedantic_fp32'),
+                row.get('accumulation_mode', 'cublas_unspecified_order'))
     contraction = 'separate_rn_mul_add' if kernel == 'cuda-naive-no-fma' else (
         'explicit_fma_rn' if kernel in ('cuda-naive-fma', 'cuda-naive-reordered') else 'compiler_default')
     accumulation = 'even_odd_partials' if kernel == 'cuda-naive-reordered' else (

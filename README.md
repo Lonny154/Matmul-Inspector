@@ -22,7 +22,7 @@ main performance, floating-point, reproducibility, and cross-hardware results.
 
 ## Build
 
-Requires CMake 3.16+ and a C++17 compiler. Python 3 enables additional integration
+Requires CMake 3.17+ and a C++17 compiler. Python 3 enables additional integration
 checks and experiment replay; the executable itself needs no Python or third-party
 JSON/statistics libraries. Linux is the exercised platform; unavailable optional
 metadata on other platforms is recorded as `unknown`.
