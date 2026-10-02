@@ -48,7 +48,9 @@ CudaMatmulKernel cuda_kernel(const std::string& name) {
     if (name == "naive") return CudaMatmulKernel::naive;
     if (name == "tiled") return CudaMatmulKernel::tiled;
     if (name == "register-blocked-2x2")
-    return CudaMatmulKernel::register_blocked_2x2;
+        return CudaMatmulKernel::register_blocked_2x2;
+    if (name == "register-blocked-4x4")
+        return CudaMatmulKernel::register_blocked_4x4;
     if (name == "cuda-naive-fma") return CudaMatmulKernel::naive_fma;
     if (name == "cuda-naive-no-fma") return CudaMatmulKernel::naive_no_fma;
     if (name == "cuda-naive-reordered") return CudaMatmulKernel::naive_reordered;
@@ -257,7 +259,8 @@ int run_cli(const std::vector<std::string>& arguments) {
                     candidate.reference_block_size=config.reference_block_size;
                     candidate.tile_size =
                         (config.candidate == "tiled" ||
-                        config.candidate == "register-blocked-2x2")
+                        config.candidate == "register-blocked-2x2" ||
+                        config.candidate == "register-blocked-4x4")
                             ? 16
                             : 0;
                     if (config.mode == "crossover") {
@@ -388,7 +391,8 @@ int run_cli(const std::vector<std::string>& arguments) {
                         reference.kernel = config.reference;
                         reference.output_sha256 = candidate.reference_sha256;
                         reference.output_file = candidate.reference_output_file;
-                        reference.tile_size = (config.reference == "tiled" || config.candidate == "register-blocked-2x2") ? 16 : 0;
+                        reference.tile_size = (config.reference == "tiled" ||
+                            config.reference == "register-blocked-2x2" || config.reference == "register-blocked-4x4") ? 16 : 0;
                         reference.timing = ref.timing;
                         reference.speedup = reference.timing.mean_ms > 0 ? 1 : 0;
                         reference.median_speedup = reference.timing.median_ms > 0 ? 1 : 0;

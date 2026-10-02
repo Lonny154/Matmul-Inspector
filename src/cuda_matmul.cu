@@ -261,6 +261,151 @@ __global__ void register_blocked_2x2_matmul_kernel(
     }
 }
 
+__global__ void register_blocked_4x4_matmul_kernel(
+    const float* a, const float* b, float* c,
+    std::size_t rows, std::size_t cols, std::size_t inner,
+    std::size_t a_stride, std::size_t b_stride, std::size_t c_stride
+) {
+    constexpr unsigned tile = cuda_matmul_tile_size;
+
+    __shared__ float a_tile[tile][tile];
+    __shared__ float b_tile[tile][tile];
+
+    const unsigned tx = threadIdx.x;
+    const unsigned ty = threadIdx.y;
+
+    const std::size_t block_row =
+        static_cast<std::size_t>(blockIdx.y) * tile;
+    const std::size_t block_col =
+        static_cast<std::size_t>(blockIdx.x) * tile;
+
+    const std::size_t row0 = block_row + ty * 4;
+    const std::size_t col0 = block_col + tx * 4;
+
+    float c00 = 0.0f;
+    float c01 = 0.0f;
+    float c02 = 0.0f;
+    float c03 = 0.0f;
+    float c10 = 0.0f;
+    float c11 = 0.0f;
+    float c12 = 0.0f;
+    float c13 = 0.0f;
+    float c20 = 0.0f;
+    float c21 = 0.0f;
+    float c22 = 0.0f;
+    float c23 = 0.0f;
+    float c30 = 0.0f;
+    float c31 = 0.0f;
+    float c32 = 0.0f;
+    float c33 = 0.0f;
+
+    // Each of 16 threads loads a disjoint 4x4 patch of both shared tiles.
+    // No edge thread exits early: both barriers are reached by the whole block.
+    for (std::size_t base = 0; base < inner; base += tile) {
+        for (unsigned dy = 0; dy < 4; ++dy) {
+            for (unsigned dx = 0; dx < 4; ++dx) {
+                const unsigned local_row = ty * 4 + dy;
+                const unsigned local_col = tx * 4 + dx;
+
+                const std::size_t global_row = block_row + local_row;
+                const std::size_t global_col = block_col + local_col;
+
+                a_tile[local_row][local_col] =
+                    global_row < rows && base + local_col < inner
+                        ? a[global_row * a_stride + base + local_col]
+                        : 0.0f;
+
+                b_tile[local_row][local_col] =
+                    base + local_row < inner && global_col < cols
+                        ? b[(base + local_row) * b_stride + global_col]
+                        : 0.0f;
+            }
+        }
+
+        __syncthreads();
+
+        for (unsigned k = 0; k < tile && base + k < inner; ++k) {
+            const float a0 = a_tile[ty * 4 + 0][k];
+            const float a1 = a_tile[ty * 4 + 1][k];
+            const float a2 = a_tile[ty * 4 + 2][k];
+            const float a3 = a_tile[ty * 4 + 3][k];
+            const float b0 = b_tile[k][tx * 4 + 0];
+            const float b1 = b_tile[k][tx * 4 + 1];
+            const float b2 = b_tile[k][tx * 4 + 2];
+            const float b3 = b_tile[k][tx * 4 + 3];
+
+            c00 += a0 * b0;
+            c01 += a0 * b1;
+            c02 += a0 * b2;
+            c03 += a0 * b3;
+            c10 += a1 * b0;
+            c11 += a1 * b1;
+            c12 += a1 * b2;
+            c13 += a1 * b3;
+            c20 += a2 * b0;
+            c21 += a2 * b1;
+            c22 += a2 * b2;
+            c23 += a2 * b3;
+            c30 += a3 * b0;
+            c31 += a3 * b1;
+            c32 += a3 * b2;
+            c33 += a3 * b3;
+
+        }
+
+        __syncthreads();
+    }
+
+    if (row0 + 0 < rows && col0 + 0 < cols) {
+        c[(row0 + 0) * c_stride + col0 + 0] = c00;
+    }
+    if (row0 + 0 < rows && col0 + 1 < cols) {
+        c[(row0 + 0) * c_stride + col0 + 1] = c01;
+    }
+    if (row0 + 0 < rows && col0 + 2 < cols) {
+        c[(row0 + 0) * c_stride + col0 + 2] = c02;
+    }
+    if (row0 + 0 < rows && col0 + 3 < cols) {
+        c[(row0 + 0) * c_stride + col0 + 3] = c03;
+    }
+    if (row0 + 1 < rows && col0 + 0 < cols) {
+        c[(row0 + 1) * c_stride + col0 + 0] = c10;
+    }
+    if (row0 + 1 < rows && col0 + 1 < cols) {
+        c[(row0 + 1) * c_stride + col0 + 1] = c11;
+    }
+    if (row0 + 1 < rows && col0 + 2 < cols) {
+        c[(row0 + 1) * c_stride + col0 + 2] = c12;
+    }
+    if (row0 + 1 < rows && col0 + 3 < cols) {
+        c[(row0 + 1) * c_stride + col0 + 3] = c13;
+    }
+    if (row0 + 2 < rows && col0 + 0 < cols) {
+        c[(row0 + 2) * c_stride + col0 + 0] = c20;
+    }
+    if (row0 + 2 < rows && col0 + 1 < cols) {
+        c[(row0 + 2) * c_stride + col0 + 1] = c21;
+    }
+    if (row0 + 2 < rows && col0 + 2 < cols) {
+        c[(row0 + 2) * c_stride + col0 + 2] = c22;
+    }
+    if (row0 + 2 < rows && col0 + 3 < cols) {
+        c[(row0 + 2) * c_stride + col0 + 3] = c23;
+    }
+    if (row0 + 3 < rows && col0 + 0 < cols) {
+        c[(row0 + 3) * c_stride + col0 + 0] = c30;
+    }
+    if (row0 + 3 < rows && col0 + 1 < cols) {
+        c[(row0 + 3) * c_stride + col0 + 1] = c31;
+    }
+    if (row0 + 3 < rows && col0 + 2 < cols) {
+        c[(row0 + 3) * c_stride + col0 + 2] = c32;
+    }
+    if (row0 + 3 < rows && col0 + 3 < cols) {
+        c[(row0 + 3) * c_stride + col0 + 3] = c33;
+    }
+}
+
 Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
                   CudaMatmulKernel kernel, int repetitions, int warmups, benchmark::Statistics* stats);
 
@@ -361,7 +506,8 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
     check_cuda(cudaGetDeviceProperties(&properties, device), "cudaGetDeviceProperties");
     const bool uses_2d_grid =
         kernel == CudaMatmulKernel::tiled ||
-        kernel == CudaMatmulKernel::register_blocked_2x2;
+        kernel == CudaMatmulKernel::register_blocked_2x2 ||
+        kernel == CudaMatmulKernel::register_blocked_4x4;
 
     if (!uses_2d_grid
         && blocks > static_cast<std::size_t>(properties.maxGridSize[0])) {
@@ -402,6 +548,18 @@ Matrix run_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride,
                     static_cast<unsigned>(blocks_y)
                 ),
                 dim3(tile / 2, tile / 2)
+            >>>(
+                device_a.data(), device_b.data(), device_c.data(),
+                a.rows(), b.cols(), a.cols(),
+                a.row_stride(), b.row_stride(), result.row_stride()
+            );
+        } else if (kernel == CudaMatmulKernel::register_blocked_4x4) {
+            register_blocked_4x4_matmul_kernel<<<
+                dim3(
+                    static_cast<unsigned>(blocks_x),
+                    static_cast<unsigned>(blocks_y)
+                ),
+                dim3(tile / 4, tile / 4)
             >>>(
                 device_a.data(), device_b.data(), device_c.data(),
                 a.rows(), b.cols(), a.cols(),

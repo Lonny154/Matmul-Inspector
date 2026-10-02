@@ -17,7 +17,7 @@ bool cuda_available(std::string* reason = nullptr);
 Matrix cuda_matmul(const Matrix& a, const Matrix& b);
 Matrix cuda_matmul(const Matrix& a, const Matrix& b, std::size_t row_stride);
 
-enum class CudaMatmulKernel { naive, tiled, register_blocked_2x2, naive_fma, naive_no_fma, naive_reordered };
+enum class CudaMatmulKernel { naive, tiled, register_blocked_2x2, register_blocked_4x4, naive_fma, naive_no_fma, naive_reordered };
 inline constexpr unsigned cuda_matmul_tile_size = 16;
 
 Matrix cuda_matmul(const Matrix& a, const Matrix& b, CudaMatmulKernel kernel);

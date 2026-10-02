@@ -16,6 +16,12 @@ template<class Function> void invalid(Function function) {
 }
 
 void test_config() {
+    auto blocked = experiment::parse({"compare", "--reference", "register-blocked-4x4",
+                                     "--candidate", "register-blocked-4x4"});
+    check(blocked.reference == "register-blocked-4x4" && blocked.candidate == blocked.reference,
+          "4x4 accepted in both CLI roles");
+    check(experiment::accumulation_mode(blocked.candidate) == "increasing_k_zero_padded_tiles",
+          "4x4 tiled accumulation metadata");
     auto config = experiment::parse({"benchmark", "--sizes", "4,257", "--seed", "0", "--warmups", "0", "--iterations", "2"});
     check(config.shapes.size() == 2 && config.shapes[1].k == 257, "square shapes");
     check(config.seed == 0 && config.seed_b == 81 && config.warmups == 0 && config.iterations == 2, "explicit counts and seeds");
