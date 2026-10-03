@@ -2,6 +2,95 @@ import torch
 import triton
 import triton.language as tl
 
+@triton.jit
+def matmul_kernel_fixed(
+    a_ptr,
+    b_ptr,
+    c_ptr,
+    M: tl.constexpr,
+    N: tl.constexpr,
+    K: tl.constexpr,
+    stride_am,
+    stride_ak,
+    stride_bk,
+    stride_bn,
+    stride_cm,
+    stride_cn,
+    BLOCK_M: tl.constexpr,
+    BLOCK_N: tl.constexpr,
+    BLOCK_K: tl.constexpr,
+):
+    pid_m = tl.program_id(axis=0)
+    pid_n = tl.program_id(axis=1)
+
+    offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
+    offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
+    offs_k = tl.arange(0, BLOCK_K)
+
+    a_ptrs = (
+        a_ptr
+        + offs_m[:, None] * stride_am
+        + offs_k[None, :] * stride_ak
+    )
+
+    b_ptrs = (
+        b_ptr
+        + offs_k[:, None] * stride_bk
+        + offs_n[None, :] * stride_bn
+    )
+
+    accumulator = tl.zeros(
+        (BLOCK_M, BLOCK_N),
+        dtype=tl.float32,
+    )
+
+    for k in range(0, tl.cdiv(K, BLOCK_K)):
+        k_offset = k * BLOCK_K
+
+        a = tl.load(
+            a_ptrs,
+            mask=(
+                (offs_m[:, None] < M)
+                & (offs_k[None, :] + k_offset < K)
+            ),
+            other=0.0,
+        )
+
+        b = tl.load(
+            b_ptrs,
+            mask=(
+                (offs_k[:, None] + k_offset < K)
+                & (offs_n[None, :] < N)
+            ),
+            other=0.0,
+        )
+
+        accumulator += tl.dot(
+            a,
+            b,
+            input_precision="ieee",
+        )
+
+        a_ptrs += BLOCK_K * stride_ak
+        b_ptrs += BLOCK_K * stride_bk
+
+    c_ptrs = (
+        c_ptr
+        + offs_m[:, None] * stride_cm
+        + offs_n[None, :] * stride_cn
+    )
+
+    c_mask = (
+        (offs_m[:, None] < M)
+        & (offs_n[None, :] < N)
+    )
+
+    tl.store(
+        c_ptrs,
+        accumulator,
+        mask=c_mask,
+    )
+
 @triton.autotune(
     configs=[
         triton.Config(
@@ -120,6 +209,56 @@ def matmul_kernel(
 
     tl.store(c_ptrs, accumulator, mask=c_mask)
 
+def triton_matmul_fixed(
+    a: torch.Tensor,
+    b: torch.Tensor,
+) -> torch.Tensor:
+    assert a.ndim == 2
+    assert b.ndim == 2
+    assert a.shape[1] == b.shape[0]
+    assert a.is_cuda and b.is_cuda
+    assert a.dtype == torch.float32
+    assert b.dtype == torch.float32
+
+    M, K = a.shape
+    _, N = b.shape
+
+    c = torch.empty(
+        (M, N),
+        device=a.device,
+        dtype=torch.float32,
+    )
+
+    BLOCK_M = 128
+    BLOCK_N = 64
+    BLOCK_K = 32
+
+    grid = (
+        triton.cdiv(M, BLOCK_M),
+        triton.cdiv(N, BLOCK_N),
+    )
+
+    matmul_kernel_fixed[grid](
+        a,
+        b,
+        c,
+        M,
+        N,
+        K,
+        a.stride(0),
+        a.stride(1),
+        b.stride(0),
+        b.stride(1),
+        c.stride(0),
+        c.stride(1),
+        BLOCK_M=BLOCK_M,
+        BLOCK_N=BLOCK_N,
+        BLOCK_K=BLOCK_K,
+        num_warps=4,
+        num_stages=3,
+    )
+
+    return c
 
 def triton_matmul(a: torch.Tensor, b: torch.Tensor,) -> torch.Tensor:
     assert a.ndim == 2
@@ -159,6 +298,29 @@ def triton_matmul(a: torch.Tensor, b: torch.Tensor,) -> torch.Tensor:
     )
 
     return c
+
+def profile_triton_once() -> None:
+    M = N = K = 1024
+
+    a = torch.randn(
+        (M, K),
+        device="cuda",
+        dtype=torch.float32,
+    )
+
+    b = torch.randn(
+        (K, N),
+        device="cuda",
+        dtype=torch.float32,
+    )
+
+    # Use the already-autotuned wrapper once.
+    c = triton_matmul_fixed(a, b)
+
+    torch.cuda.synchronize()
+
+    # Prevent Python from optimizing the result away conceptually
+    print(c[0, 0].item())
 
 def benchmark_stages(M: int, N: int, K: int) -> None:
     a = torch.randn((M, K), device="cuda", dtype=torch.float32)
@@ -353,7 +515,7 @@ def benchmark_configs(M: int, N: int, K: int) -> None:
             f"{gflops:.2f} GFLOP/s"
         )
 
-def main():
+def main_old():
     torch.manual_seed(42)
 
     M = 256
@@ -397,8 +559,15 @@ def main():
     else:
         print("FAIL: Triton differs from torch.matmul")
 
-    for size in [256, 512, 1024, 2048]:
-        benchmark_matmul(size, size, size)
+    #benchmark_matmul(1024, 1024, 1024)
+
+    profile_triton_once()
+
+   # for size in [256, 512, 1024, 2048]:
+        #benchmark_matmul(size, size, size)
+
+def main():
+    profile_triton_once()
 
 
 if __name__ == "__main__":
