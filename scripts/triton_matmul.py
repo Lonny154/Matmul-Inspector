@@ -209,6 +209,71 @@ def matmul_kernel(
 
     tl.store(c_ptrs, accumulator, mask=c_mask)
 
+def triton_matmul_fixed_bad(
+    a: torch.Tensor,
+    b: torch.Tensor,
+) -> torch.Tensor:
+    M, K = a.shape
+    _, N = b.shape
+
+    c = torch.empty(
+        (M, N),
+        device=a.device,
+        dtype=torch.float32,
+    )
+
+    BLOCK_M = 32
+    BLOCK_N = 32
+    BLOCK_K = 32
+
+    grid = (
+        triton.cdiv(M, BLOCK_M),
+        triton.cdiv(N, BLOCK_N),
+    )
+
+    matmul_kernel_fixed[grid](
+        a,
+        b,
+        c,
+        M,
+        N,
+        K,
+        a.stride(0),
+        a.stride(1),
+        b.stride(0),
+        b.stride(1),
+        c.stride(0),
+        c.stride(1),
+        BLOCK_M=BLOCK_M,
+        BLOCK_N=BLOCK_N,
+        BLOCK_K=BLOCK_K,
+        num_warps=4,
+        num_stages=3,
+    )
+
+    return c
+
+def profile_triton_bad_once() -> None:
+    M = N = K = 1024
+
+    a = torch.randn(
+        (M, K),
+        device="cuda",
+        dtype=torch.float32,
+    )
+
+    b = torch.randn(
+        (K, N),
+        device="cuda",
+        dtype=torch.float32,
+    )
+
+    c = triton_matmul_fixed_bad(a, b)
+
+    torch.cuda.synchronize()
+
+    print(c[0, 0].item())
+
 def triton_matmul_fixed(
     a: torch.Tensor,
     b: torch.Tensor,
@@ -567,7 +632,7 @@ def main_old():
         #benchmark_matmul(size, size, size)
 
 def main():
-    profile_triton_once()
+    profile_triton_bad_once()
 
 
 if __name__ == "__main__":
