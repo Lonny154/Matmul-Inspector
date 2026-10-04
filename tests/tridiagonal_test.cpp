@@ -280,7 +280,8 @@ int main() {
         {"serial_host_loop",Mode::serial_host_loop},
         {"true_batched_gpu",Mode::true_batched_gpu},
         {"true_batched_reuse",Mode::true_batched_reuse},
-        {"true_batched_device_resident",Mode::true_batched_device_resident}
+        {"true_batched_device_resident",Mode::true_batched_device_resident},
+        {"true_batched_hybrid",Mode::true_batched_hybrid}
     };
     for (const auto& [name,expected] : modes) {
         const auto parsed=matmul_inspector::parse_tridiagonal_benchmark_cli(

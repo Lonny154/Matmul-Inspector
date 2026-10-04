@@ -12,7 +12,8 @@ enum class TridiagonalBenchmarkMode {
     serial_host_loop,
     true_batched_gpu,
     true_batched_reuse,
-    true_batched_device_resident
+    true_batched_device_resident,
+    true_batched_hybrid
 };
 
 struct TridiagonalBenchmarkConfig {
