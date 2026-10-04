@@ -1,4 +1,5 @@
 #include "cuda_tridiagonal.hpp"
+#include "cuda_tridiagonal_benchmark.hpp"
 #include "tridiagonal.hpp"
 
 #include <cmath>
@@ -98,6 +99,19 @@ int main() {
         if (!test_size(n)) {
             return 1;
         }
+    }
+
+    const auto systems=matmul_inspector::make_benchmark_systems(33,3);
+    const auto kernel=matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,3,1);
+    const auto end_to_end=matmul_inspector::benchmark_cuda_pcr_end_to_end(systems,2,1);
+    if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
+        kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
+        kernel.batch_execution!="serial_host_loop" ||
+        kernel.timing.samples.size()!=4 || kernel.timing.median_ms<=0 ||
+        end_to_end.timing_scope!="end_to_end" || end_to_end.timing.samples.size()!=3 ||
+        end_to_end.timing.median_ms<=0) {
+        std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
+        return 1;
     }
 
     std::cout << "All CUDA PCR tests passed\n";

@@ -1,4 +1,5 @@
 #include "tridiagonal.hpp"
+#include "tridiagonal_benchmark.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -219,6 +220,33 @@ int main() {
             return 1;
         }
     }
+
+    const auto systems=matmul_inspector::make_benchmark_systems(33,3);
+    const auto thomas=matmul_inspector::benchmark_thomas_batch(systems,3,1);
+    const auto pcr=matmul_inspector::benchmark_cpu_pcr_batch(systems,3,1);
+    if (thomas.algorithm!="thomas" || pcr.algorithm!="pcr" ||
+        thomas.backend!="cpu" || thomas.timing_scope!="end_to_end" ||
+        thomas.batch_execution!="serial_host_loop" ||
+        thomas.system_size!=33 || thomas.batch_size!=3 ||
+        thomas.timing.samples.size()!=4 || thomas.timing.max_ms<thomas.timing.min_ms ||
+        pcr.timing.samples.size()!=4) {
+        std::cerr << "CPU tridiagonal benchmark metadata/statistics failed\n";
+        return 1;
+    }
+    const auto header=matmul_inspector::tridiagonal_benchmark_csv_header();
+    const auto row=matmul_inspector::tridiagonal_benchmark_csv_row(thomas);
+    if (header.find("timing_scope") == std::string::npos ||
+        header.find("median_ms") == std::string::npos ||
+        header.find("batch_execution") == std::string::npos ||
+        row.find("thomas,cpu,end_to_end,serial_host_loop,33,3,1,3") != 0) {
+        std::cerr << "Tridiagonal benchmark CSV failed\n";
+        return 1;
+    }
+    try {
+        matmul_inspector::make_benchmark_systems(0,1);
+        std::cerr << "Invalid benchmark size accepted\n";
+        return 1;
+    } catch (const std::invalid_argument&) {}
 
     std::cout << "All Thomas solver tests passed\n";
     return 0;
