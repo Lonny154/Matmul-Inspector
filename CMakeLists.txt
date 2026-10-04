@@ -37,6 +37,9 @@ endif()
 add_library(numeric src/numeric.cpp)
 target_include_directories(numeric PUBLIC include)
 
+add_library(tridiagonal src/tridiagonal.cpp)
+target_include_directories(tridiagonal PUBLIC include)
+
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
@@ -158,6 +161,11 @@ if(BUILD_TESTING)
     add_executable(numeric-tests tests/numeric_test.cpp)
     target_link_libraries(numeric-tests PRIVATE numeric)
     add_test(NAME numeric-tests COMMAND numeric-tests)
+
+    add_executable(tridiagonal-tests tests/tridiagonal_test.cpp)
+    target_link_libraries(tridiagonal-tests PRIVATE tridiagonal)
+    add_test(NAME tridiagonal-tests COMMAND tridiagonal-tests)
+    set_tests_properties(tridiagonal-tests PROPERTIES LABELS "cpu")
 
     add_executable(matrix-tests tests/matrix_test.cpp)
     target_link_libraries(matrix-tests PRIVATE inspector)
