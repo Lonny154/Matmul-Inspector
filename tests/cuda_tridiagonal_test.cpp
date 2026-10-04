@@ -79,6 +79,32 @@ bool test_size(std::size_t n) {
     return true;
 }
 
+bool test_true_batched(std::size_t n,std::size_t batch) {
+    const auto systems=matmul_inspector::make_benchmark_systems(n,batch);
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+    const auto gpu=matmul_inspector::solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    if (gpu.size()!=batch) return false;
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto cpu=matmul_inspector::solve_pcr(
+            systems[system].lower,systems[system].diag,
+            systems[system].upper,systems[system].rhs);
+        for (std::size_t equation=0; equation<n; ++equation) {
+            if (std::abs(gpu[system][equation]-systems[system].expected[equation])>1e-9 ||
+                std::abs(gpu[system][equation]-cpu[equation])>1e-9) {
+                std::cerr << "True-batched PCR mismatch for N=" << n
+                          << " B=" << batch << " system=" << system
+                          << " equation=" << equation << '\n';
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 }  // namespace
 
 int main() {
@@ -101,15 +127,33 @@ int main() {
         }
     }
 
+    // Non-power-of-two sizes, awkward system counts, and flattened work sizes
+    // below, at, and above a 256-thread block boundary.
+    for (const auto& [n,batch] : std::vector<std::pair<std::size_t,std::size_t>>{
+             {1,3},{31,8},{32,8},{33,8},{33,5},{257,3}}) {
+        if (!test_true_batched(n,batch)) return 1;
+    }
+
     const auto systems=matmul_inspector::make_benchmark_systems(33,3);
     const auto kernel=matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,3,1);
     const auto end_to_end=matmul_inspector::benchmark_cuda_pcr_end_to_end(systems,2,1);
+    const auto batched_kernel=
+        matmul_inspector::benchmark_cuda_pcr_true_batched_kernel_only(systems,3,1);
+    const auto batched_end_to_end=
+        matmul_inspector::benchmark_cuda_pcr_true_batched_end_to_end(systems,2,1);
     if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
         kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
         kernel.batch_execution!="serial_host_loop" ||
         kernel.timing.samples.size()!=4 || kernel.timing.median_ms<=0 ||
         end_to_end.timing_scope!="end_to_end" || end_to_end.timing.samples.size()!=3 ||
-        end_to_end.timing.median_ms<=0) {
+        end_to_end.timing.median_ms<=0 ||
+        batched_kernel.batch_execution!="true_batched_gpu" ||
+        batched_kernel.timing_scope!="kernel_only" || batched_kernel.system_size!=33 ||
+        batched_kernel.batch_size!=3 || batched_kernel.timing.samples.size()!=4 ||
+        batched_kernel.timing.median_ms<=0 ||
+        batched_end_to_end.batch_execution!="true_batched_gpu" ||
+        batched_end_to_end.timing_scope!="end_to_end" ||
+        batched_end_to_end.timing.samples.size()!=3 || batched_end_to_end.timing.median_ms<=0) {
         std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
         return 1;
     }

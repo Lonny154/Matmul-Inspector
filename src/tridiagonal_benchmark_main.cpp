@@ -49,8 +49,8 @@ int main(int argc,char** argv) {
             if (option=="--help") {
                 std::cout << "Usage: tridiagonal-benchmark [--sizes LIST] [--batches LIST] "
                              "[--warmups N] [--iterations N] [--output DIRECTORY]\n"
-                             "  --batches is the number of systems processed serially per sample; "
-                             "it is not concurrent GPU batching.\n";
+                             "  --batches is the number of systems included in each sample. "
+                             "See batch_execution for serial versus true-batched CUDA paths.\n";
                 return 0;
             }
             if (i+1==argc) throw std::invalid_argument("Missing option value");
@@ -79,14 +79,21 @@ int main(int argc,char** argv) {
                        matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,iterations,warmups))
                 << matmul_inspector::tridiagonal_benchmark_csv_row(
                        matmul_inspector::benchmark_cuda_pcr_end_to_end(systems,iterations,warmups));
+            csv << matmul_inspector::tridiagonal_benchmark_csv_row(
+                       matmul_inspector::benchmark_cuda_pcr_true_batched_kernel_only(
+                           systems,iterations,warmups))
+                << matmul_inspector::tridiagonal_benchmark_csv_row(
+                       matmul_inspector::benchmark_cuda_pcr_true_batched_end_to_end(
+                           systems,iterations,warmups));
 #endif
             std::cout << "N=" << n << " B=" << batch << " complete\n";
         }
         std::ofstream methodology(output/"methodology.txt");
         methodology << "CPU: steady_clock around a full batch solve, including output/work allocations.\n"
-                    << "batch_size: number of independent systems processed sequentially by a host loop; it does not mean simultaneous GPU execution.\n"
-                    << "CUDA kernel_only: CUDA events around the existing PCR stage and solve kernels for the full batch; allocation, coefficient reset copies, and result copies excluded.\n"
-                    << "CUDA end_to_end: steady_clock around the existing solve_pcr_cuda call for every system, including allocation, H2D, kernels, synchronization, D2H, and cleanup.\n";
+                    << "batch_size: number of independent systems in one sample; batch_execution identifies serial_host_loop or true_batched_gpu execution.\n"
+                    << "CUDA kernel_only: CUDA events around PCR kernels for the full system count; allocation, coefficient reset copies, and result copies excluded.\n"
+                    << "CUDA end_to_end: steady_clock including allocation, H2D, kernels, synchronization, D2H, and cleanup.\n"
+                    << "serial_host_loop launches each system separately; true_batched_gpu launches each PCR stage once over batch_size * system_size equations.\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "tridiagonal-benchmark: " << error.what() << '\n';

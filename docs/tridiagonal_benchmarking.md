@@ -14,7 +14,7 @@ cmake --build build -j
 `summary.csv` has one row for each algorithm, backend, timing scope, system size,
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
-column records `serial_host_loop` to make this explicit. The CSV also records
+column distinguishes `serial_host_loop` from `true_batched_gpu`. The CSV also records
 warmups, iterations, median, mean, minimum, and maximum
 latency in milliseconds. These statistics use the same `benchmark::Sample` and
 `benchmark::analyze` implementation as the matrix workflows. Each latency is for
@@ -34,17 +34,24 @@ not be powers of two; size 33 is included in automated benchmark integration tes
   event because PCR mutates them. The event spans all existing PCR stage and solve
   kernel launches for the batch. Allocation, H2D resets, D2H result copies,
   validation, and cleanup are excluded.
-- CUDA `end_to_end` uses `steady_clock` around the existing `solve_pcr_cuda` call
-  for every system in the batch. It includes host/device allocation, coefficient
-  preparation, H2D copies, kernel execution and synchronization, D2H copies, and
-  cleanup.
+- CUDA `end_to_end` includes host/device allocation, coefficient preparation, H2D
+  copies, kernel execution and synchronization, D2H copies, and cleanup.
 
-The CUDA multi-system path is intentionally a serial host loop over independent
+The `serial_host_loop` CUDA path is intentionally a serial host loop over independent
 invocations of the current naive PCR kernels. Both `kernel_only` and `end_to_end`
 measure all systems in that loop as one sample. This is a serial multi-system
-baseline, not a true batched GPU implementation. This milestone establishes a transparent baseline. It
-does not add shared memory, warp shuffles, fusion, specialized batched kernels, or
-any other PCR optimization. A future optimization experiment will implement true
-batched PCR by exposing both the system index and the equation index as GPU
-parallelism. That implementation should use a new named path so its results remain
-directly comparable to this serial baseline.
+baseline, not a true batched GPU implementation.
+
+The `true_batched_gpu` path flattens the coefficients for `B` systems of size `N`
+into arrays of `B*N` equations. A global thread index maps to
+`system = global / N` and `equation = global % N`; left and right PCR neighbors
+are restricted to that system's `N`-element range. Every stage launches once over
+all `B*N` equations. Consequently, the stage-launch count changes from about
+`B*ceil(log2(N))` for the serial host loop to `ceil(log2(N))` for the true-batched
+path. Both retain the final solve launch.
+
+This change exposes system-level parallelism in addition to equation-level
+parallelism. It does not change PCR mathematics or add shared memory, warp
+shuffles, fusion, cooperative groups, persistent kernels, mixed precision, or
+another algorithm. Keeping both named paths provides a baseline for later PCR
+optimization experiments.
