@@ -41,6 +41,7 @@ public:
 
     void execute();
     void execute_hybrid();
+    void execute_fused();
 
     // The caller supplies B*N storage so benchmarking can exclude host
     // allocation from the device-to-host transfer measurement.

@@ -227,6 +227,54 @@ bool test_hybrid(std::size_t n,std::size_t batch) {
     return true;
 }
 
+bool test_fused(std::size_t n,std::size_t batch) {
+    auto systems=matmul_inspector::make_benchmark_systems(n,batch);
+    matmul_inspector::CudaPcrBatchedWorkspace workspace(n,batch);
+    auto run = [&](const std::vector<matmul_inspector::TridiagonalSystem>& input) {
+        std::vector<std::vector<double>> lower,diag,upper,rhs;
+        for (const auto& system : input) {
+            lower.push_back(system.lower); diag.push_back(system.diag);
+            upper.push_back(system.upper); rhs.push_back(system.rhs);
+        }
+        const auto global=matmul_inspector::solve_pcr_cuda_batched(lower,diag,upper,rhs);
+        workspace.upload(lower,diag,upper,rhs);
+        workspace.make_device_resident();
+        for (int repeat=0; repeat<2; ++repeat) {
+            if (repeat) workspace.reset_from_device();
+            workspace.execute_fused();
+            std::vector<double> fused(n*batch);
+            workspace.download(fused);
+            for (std::size_t system=0; system<batch; ++system) {
+                const auto cpu=matmul_inspector::solve_pcr(
+                    input[system].lower,input[system].diag,
+                    input[system].upper,input[system].rhs);
+                for (std::size_t equation=0; equation<n; ++equation) {
+                    const auto value=fused[system*n+equation];
+                    if (std::abs(value-input[system].expected[equation])>1e-9 ||
+                        std::abs(value-cpu[equation])>1e-9 ||
+                        std::abs(value-global[system][equation])>1e-9) {
+                        std::cerr << "Fused PCR mismatch for N=" << n << " B=" << batch
+                                  << " system=" << system
+                                  << " equation=" << equation << '\n';
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    };
+    if (!run(systems)) return false;
+
+    for (std::size_t system=0; system<batch; ++system) {
+        for (auto& value : systems[system].expected)
+            value += 0.0625*static_cast<double>(system+1);
+        systems[system].rhs=apply_tridiagonal(
+            systems[system].lower,systems[system].diag,
+            systems[system].upper,systems[system].expected);
+    }
+    return run(systems);
+}
+
 }  // namespace
 
 int main() {
@@ -272,6 +320,11 @@ int main() {
              {127,3},{256,5},{257,3},{512,3},{1024,3},{4096,3}}) {
         if (!test_hybrid(n,batch)) return 1;
     }
+    for (const auto& [n,batch] : std::vector<std::pair<std::size_t,std::size_t>>{
+             {1,5},{4,3},{5,7},{127,3},{256,5},{257,3},
+             {512,3},{1024,3},{4096,3},{128,512}}) {
+        if (!test_fused(n,batch)) return 1;
+    }
 
     const auto systems=matmul_inspector::make_benchmark_systems(33,3);
     const auto kernel=matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,3,1);
@@ -286,6 +339,8 @@ int main() {
         matmul_inspector::benchmark_cuda_pcr_device_resident(systems,2,1);
     const auto hybrid=
         matmul_inspector::benchmark_cuda_pcr_hybrid_device_resident(systems,2,1);
+    const auto fused=
+        matmul_inspector::benchmark_cuda_pcr_fused_device_resident(systems,2,1);
     if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
         kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
         kernel.batch_execution!="serial_host_loop" ||
@@ -303,7 +358,11 @@ int main() {
         hybrid.batch_execution!="true_batched_hybrid" ||
         hybrid.timing_scope!="device_resident" || hybrid.system_size!=33 ||
         hybrid.batch_size!=3 || hybrid.timing.samples.size()!=3 ||
-        hybrid.timing.median_ms<=0) {
+        hybrid.timing.median_ms<=0 ||
+        fused.batch_execution!="true_batched_fused" ||
+        fused.timing_scope!="device_resident" || fused.system_size!=33 ||
+        fused.batch_size!=3 || fused.timing.samples.size()!=3 ||
+        fused.timing.median_ms<=0) {
         std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
         return 1;
     }

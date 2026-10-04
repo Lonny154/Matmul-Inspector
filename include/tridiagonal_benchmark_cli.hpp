@@ -13,7 +13,8 @@ enum class TridiagonalBenchmarkMode {
     true_batched_gpu,
     true_batched_reuse,
     true_batched_device_resident,
-    true_batched_hybrid
+    true_batched_hybrid,
+    true_batched_fused
 };
 
 struct TridiagonalBenchmarkConfig {

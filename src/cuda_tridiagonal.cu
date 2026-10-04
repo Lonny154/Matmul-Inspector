@@ -302,6 +302,118 @@ __global__ void pcr_batched_shared_stage_kernel(
     }
 }
 
+__device__ void pcr_fused_shared_update(
+    const double* input_a,
+    const double* input_b,
+    const double* input_c,
+    const double* input_d,
+    double* output_a,
+    double* output_b,
+    double* output_c,
+    double* output_d,
+    std::size_t local,
+    std::size_t output_index,
+    std::size_t equation,
+    std::size_t n,
+    std::size_t offset) {
+    output_a[output_index]=0.0;
+    output_b[output_index]=input_b[local];
+    output_c[output_index]=0.0;
+    output_d[output_index]=input_d[local];
+
+    if (equation>=offset) {
+        const std::size_t left=local-offset;
+        const double alpha=-input_a[local]/input_b[left];
+        output_a[output_index]=alpha*input_a[left];
+        output_b[output_index]+=alpha*input_c[left];
+        output_d[output_index]+=alpha*input_d[left];
+    }
+    if (equation+offset<n) {
+        const std::size_t right=local+offset;
+        const double beta=-input_c[local]/input_b[right];
+        output_b[output_index]+=beta*input_a[right];
+        output_c[output_index]=beta*input_c[right];
+        output_d[output_index]+=beta*input_d[right];
+    }
+}
+
+__global__ void pcr_batched_fused_early_stage_kernel(
+    const double* a,
+    const double* b,
+    const double* c,
+    const double* d,
+    double* next_a,
+    double* next_b,
+    double* next_c,
+    double* next_d,
+    std::size_t n,
+    std::size_t total) {
+    constexpr std::size_t halo=7;
+    extern __shared__ double storage[];
+    const std::size_t span=blockDim.x+2*halo;
+
+    double* first_a=storage;
+    double* first_b=first_a+span;
+    double* first_c=first_b+span;
+    double* first_d=first_c+span;
+    double* second_a=first_d+span;
+    double* second_b=second_a+span;
+    double* second_c=second_b+span;
+    double* second_d=second_c+span;
+
+    const std::size_t block_begin=blockIdx.x*blockDim.x;
+    for (std::size_t local=threadIdx.x; local<span; local+=blockDim.x) {
+        const bool nonnegative=block_begin+local>=halo;
+        const std::size_t source=nonnegative ? block_begin+local-halo : 0;
+        const bool valid=nonnegative && source<total;
+        first_a[local]=valid ? a[source] : 0.0;
+        first_b[local]=valid ? b[source] : 0.0;
+        first_c[local]=valid ? c[source] : 0.0;
+        first_d[local]=valid ? d[source] : 0.0;
+    }
+    __syncthreads();
+
+    // Offset 1: compute the central block plus the six equations of halo that
+    // remain necessary for the following two stages.
+    for (std::size_t local=1+threadIdx.x; local+1<span; local+=blockDim.x) {
+        const bool nonnegative=block_begin+local>=halo;
+        const std::size_t source=nonnegative ? block_begin+local-halo : 0;
+        if (nonnegative && source<total) {
+            pcr_fused_shared_update(
+                first_a,first_b,first_c,first_d,
+                second_a,second_b,second_c,second_d,
+                local,local,source%n,n,1);
+        } else {
+            second_a[local]=second_b[local]=second_c[local]=second_d[local]=0.0;
+        }
+    }
+    __syncthreads();
+
+    // Offset 2: the remaining dependency halo is four equations.
+    for (std::size_t local=3+threadIdx.x; local+3<span; local+=blockDim.x) {
+        const bool nonnegative=block_begin+local>=halo;
+        const std::size_t source=nonnegative ? block_begin+local-halo : 0;
+        if (nonnegative && source<total) {
+            pcr_fused_shared_update(
+                second_a,second_b,second_c,second_d,
+                first_a,first_b,first_c,first_d,
+                local,local,source%n,n,2);
+        } else {
+            first_a[local]=first_b[local]=first_c[local]=first_d[local]=0.0;
+        }
+    }
+    __syncthreads();
+
+    // Offset 4: produce only the block's 256 owned output equations.
+    const std::size_t global=block_begin+threadIdx.x;
+    if (global>=total) return;
+    const std::size_t local=threadIdx.x+halo;
+    pcr_fused_shared_update(
+        first_a,first_b,first_c,first_d,
+        next_a,next_b,next_c,next_d,
+        local,global,global%n,n,4);
+}
+
 __global__ void pcr_batched_solve_kernel(
     const double* b,
     const double* d,
@@ -438,7 +550,7 @@ void launch_prepared(PreparedPcr& p) {
     check_cuda(cudaGetLastError(),"benchmark PCR solve launch");
 }
 
-enum class BatchedStagePath { global_only, hybrid_shared };
+enum class BatchedStagePath { global_only, hybrid_shared, fused_early };
 
 constexpr std::size_t pcr_shared_max_offset=256;
 
@@ -451,7 +563,23 @@ void launch_prepared_batched(
     constexpr unsigned threads=256;
     const auto blocks=static_cast<unsigned>((p.total+threads-1)/threads);
     std::size_t stage=0;
-    for (std::size_t offset=1; offset<p.flat.n; offset*=2,++stage) {
+    std::size_t offset=1;
+    if (path==BatchedStagePath::fused_early && p.flat.n>4) {
+        constexpr std::size_t fused_halo=7;
+        const auto shared_bytes=8*(threads+2*fused_halo)*sizeof(double);
+        {
+            PcrProfilingRange range("pcr_fused_stages_0_2_offsets_1_2_4");
+            pcr_batched_fused_early_stage_kernel<<<blocks,threads,shared_bytes>>>(
+                current_a,current_b,current_c,current_d,
+                next_a,next_b,next_c,next_d,p.flat.n,p.total);
+            check_cuda(cudaGetLastError(),"fused batched PCR stage launch");
+        }
+        std::swap(current_a,next_a); std::swap(current_b,next_b);
+        std::swap(current_c,next_c); std::swap(current_d,next_d);
+        stage=3;
+        offset=8;
+    }
+    for (; offset<p.flat.n; offset*=2,++stage) {
         const bool use_shared=
             path==BatchedStagePath::hybrid_shared && offset<=pcr_shared_max_offset;
         {
@@ -610,6 +738,13 @@ void CudaPcrBatchedWorkspace::execute_hybrid() {
     if (!impl_->uploaded)
         throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
     launch_prepared_batched(impl_->prepared,BatchedStagePath::hybrid_shared);
+    impl_->executed=true;
+}
+
+void CudaPcrBatchedWorkspace::execute_fused() {
+    if (!impl_->uploaded)
+        throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
+    launch_prepared_batched(impl_->prepared,BatchedStagePath::fused_early);
     impl_->executed=true;
 }
 
@@ -1183,6 +1318,57 @@ TridiagonalBenchmarkResult benchmark_cuda_pcr_hybrid_device_resident(
     workspace.download(output);
     verify_batched_result(output,systems);
     return {"pcr","cuda","device_resident","true_batched_hybrid",
+        n,batch,warmups,iterations,analyze_samples(samples)};
+}
+
+TridiagonalBenchmarkResult benchmark_cuda_pcr_fused_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups) {
+    if (systems.empty() || iterations<=0 || warmups<0)
+        throw std::invalid_argument("Invalid fused CUDA PCR benchmark configuration");
+    const auto n=systems.front().diag.size();
+    const auto batch=systems.size();
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    lower.reserve(batch); diag.reserve(batch); upper.reserve(batch); rhs.reserve(batch);
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+
+    CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.make_device_resident();
+    workspace.execute_fused();
+    std::vector<double> output(n*batch);
+    workspace.download(output);
+    verify_batched_result(output,systems);
+
+    const auto global=solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto begin=output.begin()+static_cast<std::ptrdiff_t>(system*n);
+        verify_tridiagonal_solution(
+            std::vector<double>(begin,begin+static_cast<std::ptrdiff_t>(n)),global[system]);
+    }
+
+    std::vector<benchmark::Sample> samples;
+    CudaEvent start,stop;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            workspace.reset_from_device();
+            check_cuda(cudaEventRecord(start.get()),"record fused PCR start");
+            workspace.execute_fused();
+            check_cuda(cudaEventRecord(stop.get()),"record fused PCR stop");
+            check_cuda(cudaEventSynchronize(stop.get()),"synchronize fused PCR");
+            float elapsed=0;
+            check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                       "elapsed fused PCR");
+            samples.push_back({0,iteration,warmup,elapsed});
+        }
+    }
+    workspace.download(output);
+    verify_batched_result(output,systems);
+    return {"pcr","cuda","device_resident","true_batched_fused",
         n,batch,warmups,iterations,analyze_samples(samples)};
 }
 

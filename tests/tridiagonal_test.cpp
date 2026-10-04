@@ -281,7 +281,8 @@ int main() {
         {"true_batched_gpu",Mode::true_batched_gpu},
         {"true_batched_reuse",Mode::true_batched_reuse},
         {"true_batched_device_resident",Mode::true_batched_device_resident},
-        {"true_batched_hybrid",Mode::true_batched_hybrid}
+        {"true_batched_hybrid",Mode::true_batched_hybrid},
+        {"true_batched_fused",Mode::true_batched_fused}
     };
     for (const auto& [name,expected] : modes) {
         const auto parsed=matmul_inspector::parse_tridiagonal_benchmark_cli(

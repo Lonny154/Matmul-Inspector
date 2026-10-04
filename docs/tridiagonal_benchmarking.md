@@ -37,13 +37,15 @@ available.
 - `true_batched_device_resident`: D2D reset and device-resident solve.
 - `true_batched_hybrid`: global device-resident baseline plus the experimental
   shared/global hybrid row.
+- `true_batched_fused`: global device-resident baseline plus the experimental
+  fused offset-1/2/4 row.
 
 `summary.csv` has one row for each algorithm, backend, timing scope, system size,
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
 column distinguishes `serial_host_loop`, one-shot `true_batched_gpu`,
 `true_batched_reuse`, `true_batched_device_resident`, and
-`true_batched_hybrid`. The CSV also records
+`true_batched_hybrid`, and `true_batched_fused`. The CSV also records
 warmups, iterations, median, mean, minimum, and maximum
 latency in milliseconds. These statistics use the same `benchmark::Sample` and
 `benchmark::analyze` implementation as the matrix workflows. Each latency is for
@@ -262,3 +264,66 @@ These results do not show a consistent benefit. Most larger configurations were
 effectively tied or slightly slower, and the small configurations are sensitive
 to launch and measurement noise. The shared-memory path remains an experimental
 comparison while the global kernel remains the baseline.
+
+## Experimental fused early stages
+
+The shared-stage experiment still wrote and reread the full PCR state between
+every logical stage. The `true_batched_fused` path tests whether avoiding those
+intermediate global-memory round trips matters more than caching one stage. It
+fuses exactly offsets 1, 2, and 4 in one kernel, writes only the offset-4 result
+to global memory, and resumes the established global kernel at offset 8. Systems
+with `N <= 4`, which do not contain all three stages, use the global path.
+
+The block-locality radius grows across the fused stages:
+
+- Offset 1 depends on initial equations `i-1` through `i+1`: radius 1.
+- Offset 2 consumes offset-1 results at `i-2`, `i`, and `i+2`: initial radius 3.
+- Offset 4 consumes offset-2 results at `i-4`, `i`, and `i+4`: initial radius 7.
+
+Each 256-output block therefore loads 270 initial equations: its 256 owned
+equations plus seven on each side. It computes 268 offset-1 intermediates and
+264 offset-2 intermediates redundantly within the block before producing the
+central 256 offset-4 outputs. Two shared-memory ping-pong states each contain
+`a`, `b`, `c`, and `d` for all 270 slots. The exact footprint is
+`2 * 4 * 270 * 8 = 17,280` bytes per block. Barriers separate the initial load,
+offset-1 stage, and offset-2 stage. No dependency leaves the loaded radius, so
+no grid-wide synchronization is required. Every logical stage applies the same
+per-system equation checks, preventing halo values from crossing system
+boundaries even when one CUDA block spans multiple flattened systems.
+
+With NVTX enabled, the fused launch is labeled
+`pcr_fused_stages_0_2_offsets_1_2_4`. The next launch is labeled
+`pcr_global_stage_3_offset_8`, and subsequent stages retain their individual
+global labels.
+
+The following hardware-specific medians were measured on an NVIDIA GeForce RTX
+4060 Ti with CUDA 13.3, using three warmups and 20 measured iterations. Speedup
+is global device-resident time divided by fused device-resident time. All cases
+passed comparison against CPU PCR and global CUDA PCR.
+
+| N | B | Global ms | Fused ms | Speedup |
+|---:|---:|---:|---:|---:|
+| 128 | 32 | 0.110976 | 0.030720 | 3.613x |
+| 128 | 128 | 0.061856 | 0.044032 | 1.405x |
+| 128 | 512 | 0.101168 | 0.094144 | 1.075x |
+| 256 | 32 | 0.089088 | 0.069632 | 1.279x |
+| 256 | 128 | 0.091568 | 0.086528 | 1.058x |
+| 256 | 512 | 0.198144 | 0.187456 | 1.057x |
+| 512 | 32 | 0.089600 | 0.063904 | 1.402x |
+| 512 | 128 | 0.128000 | 0.124576 | 1.027x |
+| 512 | 512 | 0.383488 | 0.397312 | 0.965x |
+| 1024 | 32 | 0.095232 | 0.129616 | 0.735x |
+| 1024 | 128 | 0.248336 | 0.246624 | 1.007x |
+| 1024 | 512 | 0.839680 | 0.854016 | 0.983x |
+| 2048 | 32 | 0.203264 | 0.170080 | 1.195x |
+| 2048 | 128 | 0.521216 | 0.523264 | 0.996x |
+| 2048 | 512 | 2.961984 | 2.659328 | 1.114x |
+| 4096 | 32 | 0.320064 | 0.309760 | 1.033x |
+| 4096 | 128 | 1.056704 | 1.068560 | 0.989x |
+| 4096 | 512 | 6.573568 | 5.956096 | 1.104x |
+
+Fusion helps several configurations, including a 1.104x improvement at the
+target `N=4096`, `B=512`, but it is not uniformly beneficial. It regressed at
+`512x512`, `1024x32`, `1024x512`, and some medium-batch cases. Small absolute
+times are also sensitive to launch and measurement noise. The global path
+remains the baseline and the fused path remains explicitly experimental.

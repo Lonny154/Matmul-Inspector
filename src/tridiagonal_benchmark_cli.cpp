@@ -46,6 +46,7 @@ TridiagonalBenchmarkMode mode(const std::string& value) {
     if (value=="true_batched_device_resident")
         return TridiagonalBenchmarkMode::true_batched_device_resident;
     if (value=="true_batched_hybrid") return TridiagonalBenchmarkMode::true_batched_hybrid;
+    if (value=="true_batched_fused") return TridiagonalBenchmarkMode::true_batched_fused;
     throw std::invalid_argument("Invalid benchmark mode: "+value);
 }
 
@@ -90,6 +91,7 @@ const char* tridiagonal_benchmark_mode_name(TridiagonalBenchmarkMode value) {
     case TridiagonalBenchmarkMode::true_batched_device_resident:
         return "true_batched_device_resident";
     case TridiagonalBenchmarkMode::true_batched_hybrid: return "true_batched_hybrid";
+    case TridiagonalBenchmarkMode::true_batched_fused: return "true_batched_fused";
     }
     throw std::invalid_argument("Unknown tridiagonal benchmark mode");
 }
@@ -108,7 +110,7 @@ std::string tridiagonal_benchmark_help() {
         "  --batches LIST    Run comma-separated system counts\n"
         "  --mode MODE       all, cpu, serial_host_loop, true_batched_gpu,\n"
         "                    true_batched_reuse, true_batched_device_resident,\n"
-        "                    true_batched_hybrid\n"
+        "                    true_batched_hybrid, true_batched_fused\n"
         "  --warmups N       Warmup iterations\n"
         "  --iterations N    Measured iterations\n"
         "  --output DIR      Result directory\n"
