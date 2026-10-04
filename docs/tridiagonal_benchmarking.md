@@ -15,7 +15,7 @@ cmake --build build -j
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
 column distinguishes `serial_host_loop`, one-shot `true_batched_gpu`, and
-`true_batched_reuse`. The CSV also records
+`true_batched_reuse`, and `true_batched_device_resident`. The CSV also records
 warmups, iterations, median, mean, minimum, and maximum
 latency in milliseconds. These statistics use the same `benchmark::Sample` and
 `benchmark::analyze` implementation as the matrix workflows. Each latency is for
@@ -90,3 +90,29 @@ CUDA events measure work on the CUDA timeline and require synchronization of the
 stop event; `steady_clock` measures host-visible latency. Pageable host memory,
 runtime submission costs, synchronization, and measurement noise can make the
 two clocks differ.
+
+## Device-resident solve
+
+`true_batched_device_resident` models a multi-kernel ML or HPC pipeline in which
+the tridiagonal coefficients are already on the accelerator and the result is
+consumed by later GPU work. The workspace keeps four immutable device copies of
+the original flattened coefficients alongside the mutable PCR working buffers.
+It uploads and snapshots inputs before timing, restores the mutable buffers with
+device-to-device copies between solves, and downloads only after timing for
+correctness verification.
+
+Two rows keep the required reset work visible without mixing it into solve time:
+
+- `d2d_reset` uses CUDA events around the four device-to-device coefficient
+  copies from immutable sources into mutable working buffers.
+- `device_resident` restores coefficients before its start event, then measures
+  all PCR stage kernels and the final solve kernel through its stop event. The
+  output remains resident until after the event has completed. Allocation, H2D,
+  D2H, D2D reset, and correctness checks are excluded.
+
+The existing `kernel_only` row also measures PCR kernels, but belongs to the
+one-shot or reusable host-driven benchmark setup and retains its established
+meaning. `reusable_end_to_end` includes H2D reset and D2H transfer using allocated
+buffers. `device_resident` represents only the solve portion of an accelerator
+pipeline. All three paths invoke the same kernels and use the same PCR arithmetic;
+this experiment changes data residency and measurement boundaries only.

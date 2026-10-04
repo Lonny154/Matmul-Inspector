@@ -147,6 +147,51 @@ bool test_workspace_reuse(std::size_t n,std::size_t batch) {
     return run(systems);
 }
 
+bool test_device_resident(std::size_t n,std::size_t batch) {
+    auto systems=matmul_inspector::make_benchmark_systems(n,batch);
+    matmul_inspector::CudaPcrBatchedWorkspace workspace(n,batch);
+    auto run = [&](const std::vector<matmul_inspector::TridiagonalSystem>& input) {
+        std::vector<std::vector<double>> lower,diag,upper,rhs;
+        for (const auto& system : input) {
+            lower.push_back(system.lower); diag.push_back(system.diag);
+            upper.push_back(system.upper); rhs.push_back(system.rhs);
+        }
+        workspace.upload(lower,diag,upper,rhs);
+        workspace.make_device_resident();
+        const auto one_shot=matmul_inspector::solve_pcr_cuda_batched(lower,diag,upper,rhs);
+        for (int repeat=0; repeat<2; ++repeat) {
+            if (repeat) workspace.reset_from_device();
+            workspace.execute();
+            std::vector<double> flat(n*batch);
+            workspace.download(flat);
+            for (std::size_t system=0; system<batch; ++system) {
+                const auto cpu=matmul_inspector::solve_pcr(
+                    input[system].lower,input[system].diag,
+                    input[system].upper,input[system].rhs);
+                for (std::size_t equation=0; equation<n; ++equation) {
+                    const auto value=flat[system*n+equation];
+                    if (std::abs(value-input[system].expected[equation])>1e-9 ||
+                        std::abs(value-cpu[equation])>1e-9 ||
+                        std::abs(value-one_shot[system][equation])>1e-9)
+                        return false;
+                }
+            }
+        }
+        return true;
+    };
+    if (!run(systems)) return false;
+
+    // Replace the immutable device snapshot without reallocating the workspace.
+    for (std::size_t system=0; system<batch; ++system) {
+        for (auto& value : systems[system].expected)
+            value -= 0.125*static_cast<double>(system+1);
+        systems[system].rhs=apply_tridiagonal(
+            systems[system].lower,systems[system].diag,
+            systems[system].upper,systems[system].expected);
+    }
+    return run(systems);
+}
+
 }  // namespace
 
 int main() {
@@ -182,6 +227,11 @@ int main() {
                       << " B=" << batch << '\n';
             return 1;
         }
+        if (!test_device_resident(n,batch)) {
+            std::cerr << "Device-resident true-batched PCR failed for N=" << n
+                      << " B=" << batch << '\n';
+            return 1;
+        }
     }
 
     const auto systems=matmul_inspector::make_benchmark_systems(33,3);
@@ -193,6 +243,8 @@ int main() {
         matmul_inspector::benchmark_cuda_pcr_true_batched_end_to_end(systems,2,1);
     const auto reuse=
         matmul_inspector::benchmark_cuda_pcr_true_batched_reuse(systems,2,1);
+    const auto resident=
+        matmul_inspector::benchmark_cuda_pcr_device_resident(systems,2,1);
     if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
         kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
         kernel.batch_execution!="serial_host_loop" ||
@@ -206,9 +258,19 @@ int main() {
         batched_end_to_end.batch_execution!="true_batched_gpu" ||
         batched_end_to_end.timing_scope!="end_to_end" ||
         batched_end_to_end.timing.samples.size()!=3 || batched_end_to_end.timing.median_ms<=0 ||
-        reuse.size()!=5) {
+        reuse.size()!=5 || resident.size()!=2) {
         std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
         return 1;
+    }
+    const std::vector<std::string> resident_scopes{"d2d_reset","device_resident"};
+    for (std::size_t i=0; i<resident.size(); ++i) {
+        if (resident[i].batch_execution!="true_batched_device_resident" ||
+            resident[i].timing_scope!=resident_scopes[i] || resident[i].system_size!=33 ||
+            resident[i].batch_size!=3 || resident[i].timing.samples.size()!=3 ||
+            resident[i].timing.median_ms<=0) {
+            std::cerr << "Device-resident CUDA PCR timing metadata failed\n";
+            return 1;
+        }
     }
     const std::vector<std::string> reuse_scopes{
         "allocation_setup","h2d","kernel_only","d2h","reusable_end_to_end"};

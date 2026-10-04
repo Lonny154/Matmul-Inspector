@@ -373,8 +373,10 @@ struct CudaPcrBatchedWorkspace::Impl {
         : prepared(checked_workspace_size(n,batch),batch) {}
 
     PreparedBatchedPcr prepared;
+    std::unique_ptr<DeviceDoubleBuffer> resident_a,resident_b,resident_c,resident_d;
     bool uploaded=false;
     bool executed=false;
+    bool resident=false;
 };
 
 CudaPcrBatchedWorkspace::CudaPcrBatchedWorkspace(
@@ -402,12 +404,50 @@ void CudaPcrBatchedWorkspace::upload(
     impl_->prepared.upload(flatten_batch(lower,diag,upper,rhs));
     impl_->uploaded=true;
     impl_->executed=false;
+    impl_->resident=false;
 }
 
 void CudaPcrBatchedWorkspace::reset() {
     if (!impl_->uploaded)
         throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
     impl_->prepared.reset();
+    impl_->executed=false;
+}
+
+void CudaPcrBatchedWorkspace::make_device_resident() {
+    if (!impl_->uploaded)
+        throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
+    if (!impl_->resident_a) {
+        impl_->resident_a=std::make_unique<DeviceDoubleBuffer>(impl_->prepared.total);
+        impl_->resident_b=std::make_unique<DeviceDoubleBuffer>(impl_->prepared.total);
+        impl_->resident_c=std::make_unique<DeviceDoubleBuffer>(impl_->prepared.total);
+        impl_->resident_d=std::make_unique<DeviceDoubleBuffer>(impl_->prepared.total);
+    }
+    const auto bytes=impl_->prepared.total*sizeof(double);
+    check_cuda(cudaMemcpy(impl_->resident_a->data(),impl_->prepared.device_a.data(),bytes,
+                          cudaMemcpyDeviceToDevice),"snapshot resident PCR a");
+    check_cuda(cudaMemcpy(impl_->resident_b->data(),impl_->prepared.device_b.data(),bytes,
+                          cudaMemcpyDeviceToDevice),"snapshot resident PCR b");
+    check_cuda(cudaMemcpy(impl_->resident_c->data(),impl_->prepared.device_c.data(),bytes,
+                          cudaMemcpyDeviceToDevice),"snapshot resident PCR c");
+    check_cuda(cudaMemcpy(impl_->resident_d->data(),impl_->prepared.device_d.data(),bytes,
+                          cudaMemcpyDeviceToDevice),"snapshot resident PCR d");
+    impl_->resident=true;
+    impl_->executed=false;
+}
+
+void CudaPcrBatchedWorkspace::reset_from_device() {
+    if (!impl_->resident)
+        throw std::logic_error("Batched PCR workspace has no resident coefficient snapshot");
+    const auto bytes=impl_->prepared.total*sizeof(double);
+    check_cuda(cudaMemcpy(impl_->prepared.device_a.data(),impl_->resident_a->data(),bytes,
+                          cudaMemcpyDeviceToDevice),"restore resident PCR a");
+    check_cuda(cudaMemcpy(impl_->prepared.device_b.data(),impl_->resident_b->data(),bytes,
+                          cudaMemcpyDeviceToDevice),"restore resident PCR b");
+    check_cuda(cudaMemcpy(impl_->prepared.device_c.data(),impl_->resident_c->data(),bytes,
+                          cudaMemcpyDeviceToDevice),"restore resident PCR c");
+    check_cuda(cudaMemcpy(impl_->prepared.device_d.data(),impl_->resident_d->data(),bytes,
+                          cudaMemcpyDeviceToDevice),"restore resident PCR d");
     impl_->executed=false;
 }
 
@@ -849,6 +889,94 @@ std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_true_batched_reuse(
         result("kernel_only",kernel_samples),
         result("d2h",d2h_samples),
         result("reusable_end_to_end",total_samples)
+    };
+}
+
+std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups) {
+    if (systems.empty() || iterations<=0 || warmups<0)
+        throw std::invalid_argument("Invalid device-resident CUDA PCR benchmark configuration");
+    const auto n=systems.front().diag.size();
+    const auto batch=systems.size();
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    lower.reserve(batch); diag.reserve(batch); upper.reserve(batch); rhs.reserve(batch);
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+
+    CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.make_device_resident();
+
+    // Establish correctness against known solutions, CPU PCR, and the existing
+    // one-shot true-batched CUDA path before collecting samples.
+    workspace.execute();
+    std::vector<double> output(n*batch);
+    workspace.download(output);
+    verify_batched_result(output,systems);
+    const auto one_shot=solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto begin=output.begin()+static_cast<std::ptrdiff_t>(system*n);
+        verify_tridiagonal_solution(
+            std::vector<double>(begin,begin+static_cast<std::ptrdiff_t>(n)),one_shot[system]);
+    }
+
+    auto event_samples = [&](auto&& operation,const char* description) {
+        std::vector<benchmark::Sample> samples;
+        CudaEvent start,stop;
+        for (int phase=0; phase<2; ++phase) {
+            const bool warmup=phase==0;
+            const int count=warmup?warmups:iterations;
+            for (int iteration=0; iteration<count; ++iteration) {
+                check_cuda(cudaEventRecord(start.get()),"record device-resident PCR start");
+                operation();
+                check_cuda(cudaEventRecord(stop.get()),"record device-resident PCR stop");
+                check_cuda(cudaEventSynchronize(stop.get()),description);
+                float elapsed=0;
+                check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                           "elapsed device-resident PCR operation");
+                samples.push_back({0,iteration,warmup,elapsed});
+            }
+        }
+        return samples;
+    };
+
+    const auto reset_samples=event_samples(
+        [&] { workspace.reset_from_device(); },
+        "synchronize resident PCR D2D reset");
+
+    std::vector<benchmark::Sample> solve_samples;
+    CudaEvent start,stop;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            // Restore inputs before the start event. Default-stream ordering
+            // ensures the start timestamp follows the D2D copies.
+            workspace.reset_from_device();
+            check_cuda(cudaEventRecord(start.get()),"record resident solve start");
+            workspace.execute();
+            check_cuda(cudaEventRecord(stop.get()),"record resident solve stop");
+            check_cuda(cudaEventSynchronize(stop.get()),"synchronize resident solve");
+            float elapsed=0;
+            check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                       "elapsed resident solve");
+            solve_samples.push_back({0,iteration,warmup,elapsed});
+        }
+    }
+
+    workspace.download(output);
+    verify_batched_result(output,systems);
+
+    auto result = [&](const char* scope,const std::vector<benchmark::Sample>& samples) {
+        return TridiagonalBenchmarkResult{"pcr","cuda",scope,
+            "true_batched_device_resident",n,batch,warmups,iterations,
+            analyze_samples(samples)};
+    };
+    return {
+        result("d2d_reset",reset_samples),
+        result("device_resident",solve_samples)
     };
 }
 

@@ -32,6 +32,13 @@ public:
     // device working buffers.
     void reset();
 
+    // Snapshot the current uploaded coefficients into immutable device buffers.
+    // The source buffers are allocated lazily and then reused.
+    void make_device_resident();
+
+    // Restore mutable PCR working buffers from the resident device snapshot.
+    void reset_from_device();
+
     void execute();
 
     // The caller supplies B*N storage so benchmarking can exclude host
