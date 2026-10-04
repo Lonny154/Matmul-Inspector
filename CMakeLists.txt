@@ -66,7 +66,10 @@ add_library(benchmark src/benchmark.cpp)
 target_link_libraries(benchmark PUBLIC matrix)
 target_include_directories(benchmark PUBLIC include)
 
-add_library(tridiagonal_benchmark src/tridiagonal_benchmark.cpp)
+add_library(tridiagonal_benchmark
+    src/tridiagonal_benchmark.cpp
+    src/tridiagonal_benchmark_cli.cpp
+)
 target_include_directories(tridiagonal_benchmark PUBLIC include)
 target_link_libraries(tridiagonal_benchmark PUBLIC tridiagonal benchmark)
 

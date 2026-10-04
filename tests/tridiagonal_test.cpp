@@ -1,9 +1,12 @@
 #include "tridiagonal.hpp"
 #include "tridiagonal_benchmark.hpp"
+#include "tridiagonal_benchmark_cli.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -247,6 +250,64 @@ int main() {
         std::cerr << "Invalid benchmark size accepted\n";
         return 1;
     } catch (const std::invalid_argument&) {}
+
+    using Mode=matmul_inspector::TridiagonalBenchmarkMode;
+    const auto defaults=matmul_inspector::parse_tridiagonal_benchmark_cli({});
+    if (defaults.system_sizes!=std::vector<std::size_t>{32,64,128,256,512,1024,2048,4096} ||
+        defaults.batch_sizes!=std::vector<std::size_t>{1,8,32,128,512} ||
+        defaults.mode!=Mode::all || defaults.warmups!=3 || defaults.iterations!=20) {
+        std::cerr << "Tridiagonal benchmark CLI defaults changed\n";
+        return 1;
+    }
+    const auto single_size=matmul_inspector::parse_tridiagonal_benchmark_cli(
+        {"--system-size","33"});
+    const auto single_batch=matmul_inspector::parse_tridiagonal_benchmark_cli(
+        {"--batch-size","3"});
+    const auto combined=matmul_inspector::parse_tridiagonal_benchmark_cli(
+        {"--system-size","33","--batch-size","3","--mode","cpu"});
+    if (single_size.system_sizes!=std::vector<std::size_t>{33} ||
+        single_size.batch_sizes!=defaults.batch_sizes ||
+        single_batch.system_sizes!=defaults.system_sizes ||
+        single_batch.batch_sizes!=std::vector<std::size_t>{3} ||
+        combined.system_sizes!=std::vector<std::size_t>{33} ||
+        combined.batch_sizes!=std::vector<std::size_t>{3} || combined.mode!=Mode::cpu) {
+        std::cerr << "Tridiagonal benchmark CLI filters failed\n";
+        return 1;
+    }
+    const std::vector<std::pair<std::string,Mode>> modes{
+        {"all",Mode::all},
+        {"cpu",Mode::cpu},
+        {"serial_host_loop",Mode::serial_host_loop},
+        {"true_batched_gpu",Mode::true_batched_gpu},
+        {"true_batched_reuse",Mode::true_batched_reuse},
+        {"true_batched_device_resident",Mode::true_batched_device_resident}
+    };
+    for (const auto& [name,expected] : modes) {
+        const auto parsed=matmul_inspector::parse_tridiagonal_benchmark_cli(
+            {"--mode",name});
+        if (parsed.mode!=expected ||
+            std::string(matmul_inspector::tridiagonal_benchmark_mode_name(expected))!=name ||
+            !matmul_inspector::tridiagonal_benchmark_mode_includes(Mode::all,expected) ||
+            !matmul_inspector::tridiagonal_benchmark_mode_includes(expected,expected)) {
+            std::cerr << "Tridiagonal benchmark mode parsing failed for " << name << '\n';
+            return 1;
+        }
+    }
+    for (const auto& arguments : std::vector<std::vector<std::string>>{
+             {"--system-size","0"},{"--system-size","-1"},
+             {"--batch-size","0"},{"--batch-size","-1"},
+             {"--mode","unknown"}}) {
+        try {
+            matmul_inspector::parse_tridiagonal_benchmark_cli(arguments);
+            std::cerr << "Invalid tridiagonal benchmark CLI arguments accepted\n";
+            return 1;
+        } catch (const std::invalid_argument&) {}
+    }
+    if (matmul_inspector::tridiagonal_benchmark_help().find("--system-size") ==
+        std::string::npos) {
+        std::cerr << "Tridiagonal benchmark CLI help is incomplete\n";
+        return 1;
+    }
 
     std::cout << "All Thomas solver tests passed\n";
     return 0;

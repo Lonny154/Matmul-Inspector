@@ -11,6 +11,31 @@ cmake --build build -j
   --output results/tridiagonal-baseline
 ```
 
+For profiling, select one configuration and execution path:
+
+```sh
+./build/tridiagonal-benchmark \
+  --system-size 4096 \
+  --batch-size 512 \
+  --mode true_batched_device_resident \
+  --warmups 1 --iterations 1 \
+  --output results/ncu-4096x512
+```
+
+`--system-size` and `--batch-size` accept any positive value, including
+non-power-of-two system sizes. When omitted, the existing default grids remain
+in effect. The legacy comma-separated `--sizes` and `--batches` options remain
+available.
+
+`--mode` defaults to `all`. Its values select these rows:
+
+- `all`: every CPU and CUDA path.
+- `cpu`: CPU Thomas and CPU PCR.
+- `serial_host_loop`: serial multi-system CUDA kernel-only and end-to-end.
+- `true_batched_gpu`: one-shot true-batched kernel-only and end-to-end.
+- `true_batched_reuse`: persistent-workspace decomposition and reusable total.
+- `true_batched_device_resident`: D2D reset and device-resident solve.
+
 `summary.csv` has one row for each algorithm, backend, timing scope, system size,
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
