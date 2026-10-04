@@ -71,6 +71,28 @@ target_link_libraries(inspector PUBLIC comparison)
 
 set(MATMUL_INSPECTOR_CUDA_BUILT OFF)
 if(MATMUL_INSPECTOR_ENABLE_CUDA AND CMAKE_CUDA_COMPILER)
+    add_library(cuda_tridiagonal src/cuda_tridiagonal.cu)
+    set_target_properties(cuda_tridiagonal PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+    )
+    target_include_directories(cuda_tridiagonal PUBLIC include)
+    target_compile_definitions(
+        cuda_tridiagonal
+        PUBLIC MATMUL_INSPECTOR_HAS_CUDA=1
+    )
+
+    if(MATMUL_INSPECTOR_WARNINGS AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+        if(MSVC)
+            target_compile_options(
+                cuda_tridiagonal PRIVATE -Xcompiler=/W4
+            )
+        else()
+            target_compile_options(
+                cuda_tridiagonal PRIVATE -Xcompiler=-Wall,-Wextra
+            )
+        endif()
+    endif()
     set(MATMUL_INSPECTOR_CUDA_BUILT ON)
     add_library(cuda_matmul src/cuda_matmul.cu)
     set_target_properties(cuda_matmul PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON)
@@ -227,6 +249,27 @@ if(BUILD_TESTING)
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
+        add_executable(
+            cuda-tridiagonal-tests
+            tests/cuda_tridiagonal_test.cpp
+        )
+
+        target_link_libraries(
+            cuda-tridiagonal-tests
+            PRIVATE cuda_tridiagonal tridiagonal
+        )
+
+        add_test(
+            NAME cuda-tridiagonal-tests
+            COMMAND cuda-tridiagonal-tests
+        )
+
+        set_tests_properties(
+            cuda-tridiagonal-tests
+            PROPERTIES
+                SKIP_RETURN_CODE 77
+                LABELS "gpu"
+        )
         add_executable(cuda-vector-tests tests/cuda_vector_test.cpp)
         target_link_libraries(cuda-vector-tests PRIVATE cuda_matmul experiment)
         add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
