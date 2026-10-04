@@ -6,6 +6,12 @@
 
 namespace matmul_inspector {
 
+// Measurement-derived policy used by the adaptive true-batched PCR path.
+// The version string makes result artifacts interpretable if the threshold is
+// revisited after measurements on other hardware.
+bool should_use_fused_pcr(std::size_t system_size,std::size_t batch_size) noexcept;
+const char* adaptive_pcr_dispatch_rule() noexcept;
+
 // Owns reusable device storage for B tridiagonal systems of a fixed size N.
 // Upload, execute, and download are separate so callers can measure or schedule
 // those phases without reallocating device memory.
@@ -42,6 +48,7 @@ public:
     void execute();
     void execute_hybrid();
     void execute_fused();
+    void execute_adaptive();
 
     // The caller supplies B*N storage so benchmarking can exclude host
     // allocation from the device-to-host transfer measurement.

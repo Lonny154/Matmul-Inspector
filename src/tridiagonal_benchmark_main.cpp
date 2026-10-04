@@ -70,9 +70,12 @@ int main(int argc,char** argv) {
             const bool fused_selected=
                 matmul_inspector::tridiagonal_benchmark_mode_includes(
                     config.mode,Mode::true_batched_fused);
+            const bool adaptive_selected=
+                matmul_inspector::tridiagonal_benchmark_mode_includes(
+                    config.mode,Mode::true_batched_adaptive);
             if (matmul_inspector::tridiagonal_benchmark_mode_includes(
                     config.mode,Mode::true_batched_device_resident) ||
-                hybrid_selected || fused_selected)
+                hybrid_selected || fused_selected || adaptive_selected)
                 for (const auto& result :
                      matmul_inspector::benchmark_cuda_pcr_device_resident(
                          systems,config.iterations,config.warmups))
@@ -81,9 +84,13 @@ int main(int argc,char** argv) {
                 csv << matmul_inspector::tridiagonal_benchmark_csv_row(
                     matmul_inspector::benchmark_cuda_pcr_hybrid_device_resident(
                         systems,config.iterations,config.warmups));
-            if (fused_selected)
+            if (fused_selected || adaptive_selected)
                 csv << matmul_inspector::tridiagonal_benchmark_csv_row(
                     matmul_inspector::benchmark_cuda_pcr_fused_device_resident(
+                        systems,config.iterations,config.warmups));
+            if (adaptive_selected)
+                csv << matmul_inspector::tridiagonal_benchmark_csv_row(
+                    matmul_inspector::benchmark_cuda_pcr_adaptive_device_resident(
                         systems,config.iterations,config.warmups));
 #endif
             std::cout << "N=" << n << " B=" << batch << " complete\n";
@@ -92,14 +99,15 @@ int main(int argc,char** argv) {
         methodology << "selected_mode: "
                     << matmul_inspector::tridiagonal_benchmark_mode_name(config.mode) << '\n'
                     << "CPU: steady_clock around a full batch solve, including output/work allocations.\n"
-                    << "batch_size: number of independent systems in one sample; batch_execution identifies serial_host_loop, true_batched_gpu, true_batched_reuse, true_batched_device_resident, true_batched_hybrid, or true_batched_fused.\n"
+                    << "batch_size: number of independent systems in one sample; batch_execution identifies serial_host_loop, true_batched_gpu, true_batched_reuse, true_batched_device_resident, true_batched_hybrid, true_batched_fused, or true_batched_adaptive.\n"
                     << "CUDA kernel_only: CUDA events around PCR kernels for the full system count; allocation, coefficient reset copies, and result copies excluded.\n"
                     << "CUDA end_to_end: steady_clock including allocation, H2D, kernels, synchronization, D2H, and cleanup.\n"
                     << "serial_host_loop launches each system separately; true_batched_gpu launches each PCR stage once over batch_size * system_size equations.\n"
                     << "true_batched_reuse owns persistent device buffers: allocation_setup uses steady_clock; h2d, kernel_only, and d2h use CUDA events; reusable_end_to_end uses steady_clock around reset, kernels, and download but excludes workspace allocation and cleanup.\n"
                     << "true_batched_device_resident uploads before sampling and retains output on device through the stop event. d2d_reset separately measures restoring mutable working coefficients from immutable device copies; device_resident measures only all PCR stages and the final solve kernel.\n"
                     << "true_batched_hybrid uses shared-memory stages through offset 256 and the established global-memory kernel at larger offsets; its device_resident row has the same timing boundary as the global baseline.\n"
-                    << "true_batched_fused performs offsets 1, 2, and 4 in one shared-memory kernel, then resumes established global stages at offset 8; its device_resident row matches the global baseline timing boundary.\n";
+                    << "true_batched_fused performs offsets 1, 2, and 4 in one shared-memory kernel, then resumes established global stages at offset 8; its device_resident row matches the global baseline timing boundary.\n"
+                    << "true_batched_adaptive uses adaptive_work_v1: fused when system_size * batch_size >= 786432, otherwise global. Its selected_path and dispatch_rule CSV columns record the decision.\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "tridiagonal-benchmark: " << error.what() << '\n';

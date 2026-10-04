@@ -35,4 +35,7 @@ TridiagonalBenchmarkResult benchmark_cuda_pcr_hybrid_device_resident(
 TridiagonalBenchmarkResult benchmark_cuda_pcr_fused_device_resident(
     const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
 
+TridiagonalBenchmarkResult benchmark_cuda_pcr_adaptive_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
+
 }  // namespace matmul_inspector

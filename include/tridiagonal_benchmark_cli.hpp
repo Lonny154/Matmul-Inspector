@@ -14,7 +14,8 @@ enum class TridiagonalBenchmarkMode {
     true_batched_reuse,
     true_batched_device_resident,
     true_batched_hybrid,
-    true_batched_fused
+    true_batched_fused,
+    true_batched_adaptive
 };
 
 struct TridiagonalBenchmarkConfig {

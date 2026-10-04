@@ -241,6 +241,8 @@ int main() {
     if (header.find("timing_scope") == std::string::npos ||
         header.find("median_ms") == std::string::npos ||
         header.find("batch_execution") == std::string::npos ||
+        header.find("selected_path") == std::string::npos ||
+        header.find("dispatch_rule") == std::string::npos ||
         row.find("thomas,cpu,end_to_end,serial_host_loop,33,3,1,3") != 0) {
         std::cerr << "Tridiagonal benchmark CSV failed\n";
         return 1;
@@ -282,7 +284,8 @@ int main() {
         {"true_batched_reuse",Mode::true_batched_reuse},
         {"true_batched_device_resident",Mode::true_batched_device_resident},
         {"true_batched_hybrid",Mode::true_batched_hybrid},
-        {"true_batched_fused",Mode::true_batched_fused}
+        {"true_batched_fused",Mode::true_batched_fused},
+        {"true_batched_adaptive",Mode::true_batched_adaptive}
     };
     for (const auto& [name,expected] : modes) {
         const auto parsed=matmul_inspector::parse_tridiagonal_benchmark_cli(

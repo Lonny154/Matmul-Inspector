@@ -644,6 +644,22 @@ std::size_t checked_workspace_size(std::size_t n,std::size_t batch) {
 
 }  // namespace
 
+bool should_use_fused_pcr(
+    std::size_t system_size,std::size_t batch_size) noexcept {
+    // Derived from the RTX 4060 Ti dense sweep documented in
+    // docs/tridiagonal_benchmarking.md. At and above this work size the fused
+    // path won every decisive measured point; smaller results were noisy and
+    // workload-dependent, so the policy conservatively retains the baseline.
+    constexpr std::size_t fused_work_threshold=786432;
+    if (!system_size || !batch_size) return false;
+    return system_size>=fused_work_threshold ||
+           batch_size>=(fused_work_threshold+system_size-1)/system_size;
+}
+
+const char* adaptive_pcr_dispatch_rule() noexcept {
+    return "adaptive_work_v1:n_times_batch_gte_786432";
+}
+
 struct CudaPcrBatchedWorkspace::Impl {
     Impl(std::size_t n,std::size_t batch)
         : prepared(checked_workspace_size(n,batch),batch) {}
@@ -746,6 +762,11 @@ void CudaPcrBatchedWorkspace::execute_fused() {
         throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
     launch_prepared_batched(impl_->prepared,BatchedStagePath::fused_early);
     impl_->executed=true;
+}
+
+void CudaPcrBatchedWorkspace::execute_adaptive() {
+    if (should_use_fused_pcr(system_size(),batch_size())) execute_fused();
+    else execute();
 }
 
 void CudaPcrBatchedWorkspace::download(std::vector<double>& result) const {
@@ -1370,6 +1391,60 @@ TridiagonalBenchmarkResult benchmark_cuda_pcr_fused_device_resident(
     verify_batched_result(output,systems);
     return {"pcr","cuda","device_resident","true_batched_fused",
         n,batch,warmups,iterations,analyze_samples(samples)};
+}
+
+TridiagonalBenchmarkResult benchmark_cuda_pcr_adaptive_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups) {
+    if (systems.empty() || iterations<=0 || warmups<0)
+        throw std::invalid_argument("Invalid adaptive CUDA PCR benchmark configuration");
+    const auto n=systems.front().diag.size();
+    const auto batch=systems.size();
+    const bool fused=should_use_fused_pcr(n,batch);
+    const char* selected_path=fused ? "fused" : "global";
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    lower.reserve(batch); diag.reserve(batch); upper.reserve(batch); rhs.reserve(batch);
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+
+    CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.make_device_resident();
+    workspace.execute_adaptive();
+    std::vector<double> output(n*batch);
+    workspace.download(output);
+    verify_batched_result(output,systems);
+
+    const auto global=solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto begin=output.begin()+static_cast<std::ptrdiff_t>(system*n);
+        verify_tridiagonal_solution(
+            std::vector<double>(begin,begin+static_cast<std::ptrdiff_t>(n)),global[system]);
+    }
+
+    std::vector<benchmark::Sample> samples;
+    CudaEvent start,stop;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            workspace.reset_from_device();
+            check_cuda(cudaEventRecord(start.get()),"record adaptive PCR start");
+            workspace.execute_adaptive();
+            check_cuda(cudaEventRecord(stop.get()),"record adaptive PCR stop");
+            check_cuda(cudaEventSynchronize(stop.get()),"synchronize adaptive PCR");
+            float elapsed=0;
+            check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                       "elapsed adaptive PCR");
+            samples.push_back({0,iteration,warmup,elapsed});
+        }
+    }
+    workspace.download(output);
+    verify_batched_result(output,systems);
+    return {"pcr","cuda","device_resident","true_batched_adaptive",
+        n,batch,warmups,iterations,analyze_samples(samples),
+        selected_path,adaptive_pcr_dispatch_rule()};
 }
 
 }  // namespace matmul_inspector

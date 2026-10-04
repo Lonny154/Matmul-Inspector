@@ -39,13 +39,17 @@ available.
   shared/global hybrid row.
 - `true_batched_fused`: global device-resident baseline plus the experimental
   fused offset-1/2/4 row.
+- `true_batched_adaptive`: global and fused baselines plus a policy-selected
+  device-resident row.
 
 `summary.csv` has one row for each algorithm, backend, timing scope, system size,
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
 column distinguishes `serial_host_loop`, one-shot `true_batched_gpu`,
 `true_batched_reuse`, `true_batched_device_resident`, and
-`true_batched_hybrid`, and `true_batched_fused`. The CSV also records
+`true_batched_hybrid`, `true_batched_fused`, and `true_batched_adaptive`. The
+adaptive row fills the appended `selected_path` and `dispatch_rule` columns;
+baseline rows leave them empty. The CSV also records
 warmups, iterations, median, mean, minimum, and maximum
 latency in milliseconds. These statistics use the same `benchmark::Sample` and
 `benchmark::analyze` implementation as the matrix workflows. Each latency is for
@@ -327,3 +331,79 @@ target `N=4096`, `B=512`, but it is not uniformly beneficial. It regressed at
 `512x512`, `1024x32`, `1024x512`, and some medium-batch cases. Small absolute
 times are also sensitive to launch and measurement noise. The global path
 remains the baseline and the fused path remains explicitly experimental.
+
+## Measurement-driven adaptive dispatch
+
+`true_batched_adaptive` selects an established implementation; it does not
+change either kernel. The versioned `adaptive_work_v1` rule is:
+
+```text
+use fused offsets 1/2/4 when N * B >= 786432; otherwise use global-only PCR
+```
+
+Adaptive CSV rows record `selected_path=global|fused` and
+`dispatch_rule=adaptive_work_v1:n_times_batch_gte_786432`. The mode emits the
+global device-resident baseline, fused baseline, and adaptive row so the policy
+decision remains directly auditable.
+
+The rule was derived on an RTX 4060 Ti with CUDA 13.3 from a 100-point grid:
+`N={64,128,256,512,768,1024,1536,2048,3072,4096}` and
+`B={1,2,4,8,16,32,64,128,256,512}`. Each point used three warmups and 20 CUDA
+event samples. A result within two percent was classified as a tie. `F`, `G`,
+and `T` below mean fused, global, and effective tie.
+
+| N / B | 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512 |
+|---:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| 64 | F | F | F | F | F | F | F | F | F | T |
+| 128 | F | G | F | F | G | F | F | F | F | F |
+| 256 | G | F | F | F | G | G | F | F | F | T |
+| 512 | F | F | F | F | G | F | F | F | T | G |
+| 768 | F | F | F | F | F | F | T | G | G | T |
+| 1024 | F | F | G | F | F | F | F | T | T | T |
+| 1536 | G | F | G | F | G | F | T | T | T | F |
+| 2048 | F | F | G | F | F | T | T | G | T | F |
+| 3072 | F | F | F | G | T | T | T | T | F | F |
+| 4096 | F | G | F | F | F | F | T | T | F | F |
+
+Small points take only tens of microseconds and showed substantial run-to-run
+variation. Earlier `1024x32` data favored global, while later 50- and
+100-iteration repeats favored fused. These contradictory launch-scale results
+were not used to lower the threshold. In contrast, all repeated points at
+786,432 equations or more favored fused by approximately 9--13%. Points from
+393,216 through 524,288 equations were within the two-percent tie band.
+
+The candidate rules below were evaluated against the 80 decisive points. Times
+are sums of per-configuration medians and compare policies on this grid; they
+are not one application's elapsed time.
+
+| Rule | Accuracy | False fused | False global | Aggregate ms |
+|---|---:|---:|---:|---:|
+| Always global | 21.2% | 0 | 63 | 39.6363 |
+| Always fused | 78.8% | 17 | 0 | 36.0251 |
+| A: `N*B >= 786432` | 28.7% | 0 | 57 | 37.4584 |
+| B: `N >= 1536 && B >= 512` | 26.2% | 0 | 59 | 37.9499 |
+| C: A plus `N >= 1536` | 28.7% | 0 | 57 | 37.4584 |
+| D: fused blocks `>= 3072` | 28.7% | 0 | 57 | 37.4584 |
+| Oracle per point | 100% | 0 | 0 | 35.4824 |
+
+Rule A was selected despite lower raw classification accuracy. It avoids every
+measured false-fusion regression, retains the stable large-workload gains, and
+improves aggregate runtime by 5.5% over always-global. Rule D is equivalent
+because the fused launch uses 256 threads per block. Rule B discards some useful
+configurations, while C adds no distinction on this grid. Always fused scores
+well because many noisy, very small points favored it, but it also selects all
+17 decisive regressions.
+
+The dependency-free analysis command records total equations, fused block
+count, medians, speedup, and winner for every point. With `--sm-count`, it also
+records a simple one-block-per-SM launch-wave estimate. This is a launch-size
+indicator, not a CUDA occupancy calculation.
+
+```bash
+python3 scripts/analyze_pcr_dispatch.py results/pcr-dispatch-dense \
+  --sm-count 34
+```
+
+This policy is hardware-specific evidence encoded as a transparent experiment,
+not a universal performance claim. Recalibration on another GPU should use a
+new rule identifier rather than silently changing `adaptive_work_v1`.

@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace matmul_inspector {
@@ -13,12 +14,30 @@ struct TridiagonalSystem {
 };
 
 struct TridiagonalBenchmarkResult {
+    TridiagonalBenchmarkResult(
+        std::string algorithm_value,std::string backend_value,
+        std::string timing_scope_value,std::string batch_execution_value,
+        std::size_t system_size_value,std::size_t batch_size_value,
+        int warmups_value,int iterations_value,benchmark::Statistics timing_value,
+        std::string selected_path_value={},std::string dispatch_rule_value={})
+        : algorithm(std::move(algorithm_value)), backend(std::move(backend_value)),
+          timing_scope(std::move(timing_scope_value)),
+          batch_execution(std::move(batch_execution_value)),
+          system_size(system_size_value), batch_size(batch_size_value),
+          warmups(warmups_value), iterations(iterations_value),
+          timing(std::move(timing_value)),
+          selected_path(std::move(selected_path_value)),
+          dispatch_rule(std::move(dispatch_rule_value)) {}
+
     std::string algorithm, backend, timing_scope, batch_execution;
     // Number of independent systems included in one timing sample. This does
     // not imply that the systems execute concurrently.
     std::size_t system_size = 0, batch_size = 0;
     int warmups = 0, iterations = 0;
     benchmark::Statistics timing;
+    // Populated by policy-driven rows. Appended to the CSV so existing column
+    // positions and baseline row semantics remain unchanged.
+    std::string selected_path, dispatch_rule;
 };
 
 std::vector<TridiagonalSystem> make_benchmark_systems(

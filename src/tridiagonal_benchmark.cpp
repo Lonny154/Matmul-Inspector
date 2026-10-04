@@ -97,7 +97,7 @@ TridiagonalBenchmarkResult benchmark_cpu_pcr_batch(
 }
 
 std::string tridiagonal_benchmark_csv_header() {
-    return "algorithm,backend,timing_scope,batch_execution,system_size,batch_size,warmups,iterations,median_ms,mean_ms,min_ms,max_ms\n";
+    return "algorithm,backend,timing_scope,batch_execution,system_size,batch_size,warmups,iterations,median_ms,mean_ms,min_ms,max_ms,selected_path,dispatch_rule\n";
 }
 
 std::string tridiagonal_benchmark_csv_row(const TridiagonalBenchmarkResult& r) {
@@ -106,7 +106,7 @@ std::string tridiagonal_benchmark_csv_row(const TridiagonalBenchmarkResult& r) {
         << ',' << r.batch_execution << ',' << r.system_size << ',' << r.batch_size
         << ',' << r.warmups << ',' << r.iterations
         << ',' << r.timing.median_ms << ',' << r.timing.mean_ms << ',' << r.timing.min_ms
-        << ',' << r.timing.max_ms << '\n';
+        << ',' << r.timing.max_ms << ',' << r.selected_path << ',' << r.dispatch_rule << '\n';
     return out.str();
 }
 
