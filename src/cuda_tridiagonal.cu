@@ -5,8 +5,20 @@
 
 #include <cuda_runtime.h>
 
+#if defined(__has_include)
+#if __has_include(<nvtx3/nvToolsExt.h>)
+#include <nvtx3/nvToolsExt.h>
+#define MATMUL_INSPECTOR_HAS_NVTX 1
+#endif
+#endif
+#ifndef MATMUL_INSPECTOR_HAS_NVTX
+#define MATMUL_INSPECTOR_HAS_NVTX 0
+#endif
+
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <cstdio>
 #include <memory>
 #include <limits>
@@ -70,6 +82,58 @@ public:
     cudaEvent_t get() const { return event_; }
 private:
     cudaEvent_t event_ = nullptr;
+};
+
+#if MATMUL_INSPECTOR_HAS_NVTX
+bool pcr_stage_profiling_enabled() {
+    static const bool enabled=[] {
+        const char* value=std::getenv("MATMUL_INSPECTOR_NVTX");
+        return value && value[0]!='\0' && std::strcmp(value,"0")!=0;
+    }();
+    return enabled;
+}
+#endif
+
+class PcrProfilingRange {
+public:
+    PcrProfilingRange(std::size_t stage,std::size_t offset) {
+#if MATMUL_INSPECTOR_HAS_NVTX
+        if (pcr_stage_profiling_enabled()) {
+            std::snprintf(name_,sizeof(name_),"pcr_stage_%zu_offset_%zu",stage,offset);
+            nvtxRangePushA(name_);
+            active_=true;
+        }
+#else
+        (void)stage;
+        (void)offset;
+#endif
+    }
+
+    explicit PcrProfilingRange(const char* name) {
+#if MATMUL_INSPECTOR_HAS_NVTX
+        if (pcr_stage_profiling_enabled()) {
+            nvtxRangePushA(name);
+            active_=true;
+        }
+#else
+        (void)name;
+#endif
+    }
+
+    PcrProfilingRange(const PcrProfilingRange&) = delete;
+    PcrProfilingRange& operator=(const PcrProfilingRange&) = delete;
+
+    ~PcrProfilingRange() {
+#if MATMUL_INSPECTOR_HAS_NVTX
+        if (active_) nvtxRangePop();
+#endif
+    }
+
+private:
+#if MATMUL_INSPECTOR_HAS_NVTX
+    char name_[64]{};
+    bool active_=false;
+#endif
 };
 
 }  // namespace
@@ -320,16 +384,23 @@ void launch_prepared_batched(PreparedBatchedPcr& p) {
     double *next_c=p.device_next_c.data(), *next_d=p.device_next_d.data();
     constexpr unsigned threads=256;
     const auto blocks=static_cast<unsigned>((p.total+threads-1)/threads);
-    for (std::size_t offset=1; offset<p.flat.n; offset*=2) {
-        pcr_batched_stage_kernel<<<blocks,threads>>>(current_a,current_b,current_c,current_d,
-            next_a,next_b,next_c,next_d,p.flat.n,p.total,offset);
-        check_cuda(cudaGetLastError(),"batched PCR stage launch");
+    std::size_t stage=0;
+    for (std::size_t offset=1; offset<p.flat.n; offset*=2,++stage) {
+        {
+            PcrProfilingRange range(stage,offset);
+            pcr_batched_stage_kernel<<<blocks,threads>>>(current_a,current_b,current_c,current_d,
+                next_a,next_b,next_c,next_d,p.flat.n,p.total,offset);
+            check_cuda(cudaGetLastError(),"batched PCR stage launch");
+        }
         std::swap(current_a,next_a); std::swap(current_b,next_b);
         std::swap(current_c,next_c); std::swap(current_d,next_d);
     }
-    pcr_batched_solve_kernel<<<blocks,threads>>>(
-        current_b,current_d,p.device_x.data(),p.total);
-    check_cuda(cudaGetLastError(),"batched PCR solve launch");
+    {
+        PcrProfilingRange range("pcr_final_solve");
+        pcr_batched_solve_kernel<<<blocks,threads>>>(
+            current_b,current_d,p.device_x.data(),p.total);
+        check_cuda(cudaGetLastError(),"batched PCR solve launch");
+    }
 }
 
 std::vector<double> copy_batched_result(const PreparedBatchedPcr& p) {

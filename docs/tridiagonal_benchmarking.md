@@ -141,3 +141,64 @@ meaning. `reusable_end_to_end` includes H2D reset and D2H transfer using allocat
 buffers. `device_resident` represents only the solve portion of an accelerator
 pipeline. All three paths invoke the same kernels and use the same PCR arithmetic;
 this experiment changes data residency and measurement boundaries only.
+
+## Stage-aware profiling
+
+Set `MATMUL_INSPECTOR_NVTX=1` to add NVTX push/pop ranges around the existing
+true-batched kernel launches. Normal benchmark runs leave these ranges disabled,
+so marker construction and NVTX calls do not affect their timing. If the CUDA
+toolkit's `nvtx3/nvToolsExt.h` header is unavailable, the same source builds with
+no-op ranges.
+
+Stage labels have the deterministic form
+`pcr_stage_<stage-index>_offset_<offset>`. Stage index starts at zero and offset
+is `2^stage-index`. The final solve kernel is labeled `pcr_final_solve`. For
+`N=4096`, the mapping is:
+
+| Stage | Offset | NVTX label |
+|---:|---:|---|
+| 0 | 1 | `pcr_stage_0_offset_1` |
+| 1 | 2 | `pcr_stage_1_offset_2` |
+| 2 | 4 | `pcr_stage_2_offset_4` |
+| 3 | 8 | `pcr_stage_3_offset_8` |
+| 4 | 16 | `pcr_stage_4_offset_16` |
+| 5 | 32 | `pcr_stage_5_offset_32` |
+| 6 | 64 | `pcr_stage_6_offset_64` |
+| 7 | 128 | `pcr_stage_7_offset_128` |
+| 8 | 256 | `pcr_stage_8_offset_256` |
+| 9 | 512 | `pcr_stage_9_offset_512` |
+| 10 | 1024 | `pcr_stage_10_offset_1024` |
+| 11 | 2048 | `pcr_stage_11_offset_2048` |
+
+Capture all ranges and their CUDA launches with Nsight Systems:
+
+```sh
+MATMUL_INSPECTOR_NVTX=1 nsys profile \
+  --trace=cuda,nvtx \
+  --output results/ncu-4096x512/timeline \
+  ./build/tridiagonal-benchmark \
+    --system-size 4096 --batch-size 512 \
+    --mode true_batched_device_resident \
+    --warmups 0 --iterations 1 \
+    --output results/ncu-4096x512/run
+```
+
+Select one logical stage with Nsight Compute, for example the final PCR stage:
+
+```sh
+MATMUL_INSPECTOR_NVTX=1 ncu \
+  --nvtx --nvtx-include pcr_stage_11_offset_2048 \
+  --launch-count 1 \
+  --set full \
+  --export results/ncu-4096x512/stage-11 \
+  ./build/tridiagonal-benchmark \
+    --system-size 4096 --batch-size 512 \
+    --mode true_batched_device_resident \
+    --warmups 0 --iterations 1 \
+    --output results/ncu-4096x512/ncu-run
+```
+
+The NVTX range encloses only the host-side launch and adds no synchronization,
+copy, ordering change, or event-boundary change. With profiling enabled, the
+profiler necessarily observes the small host marker cost; leave the environment
+variable unset for benchmark measurements.
