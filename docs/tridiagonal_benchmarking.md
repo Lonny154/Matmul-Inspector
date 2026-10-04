@@ -35,12 +35,15 @@ available.
 - `true_batched_gpu`: one-shot true-batched kernel-only and end-to-end.
 - `true_batched_reuse`: persistent-workspace decomposition and reusable total.
 - `true_batched_device_resident`: D2D reset and device-resident solve.
+- `true_batched_hybrid`: global device-resident baseline plus the experimental
+  shared/global hybrid row.
 
 `summary.csv` has one row for each algorithm, backend, timing scope, system size,
 and system count. The legacy-compatible `batch_size` column is that system count;
 it does **not** mean simultaneous batched GPU execution. The `batch_execution`
-column distinguishes `serial_host_loop`, one-shot `true_batched_gpu`, and
-`true_batched_reuse`, and `true_batched_device_resident`. The CSV also records
+column distinguishes `serial_host_loop`, one-shot `true_batched_gpu`,
+`true_batched_reuse`, `true_batched_device_resident`, and
+`true_batched_hybrid`. The CSV also records
 warmups, iterations, median, mean, minimum, and maximum
 latency in milliseconds. These statistics use the same `benchmark::Sample` and
 `benchmark::analyze` implementation as the matrix workflows. Each latency is for
@@ -151,24 +154,25 @@ toolkit's `nvtx3/nvToolsExt.h` header is unavailable, the same source builds wit
 no-op ranges.
 
 Stage labels have the deterministic form
-`pcr_stage_<stage-index>_offset_<offset>`. Stage index starts at zero and offset
-is `2^stage-index`. The final solve kernel is labeled `pcr_final_solve`. For
-`N=4096`, the mapping is:
+`pcr_<global|shared>_stage_<stage-index>_offset_<offset>`. Stage index starts at
+zero and offset is `2^stage-index`. The final solve kernel is labeled
+`pcr_final_solve`. The global baseline uses `global` at every stage. For
+`N=4096`, the logical mapping is:
 
 | Stage | Offset | NVTX label |
 |---:|---:|---|
-| 0 | 1 | `pcr_stage_0_offset_1` |
-| 1 | 2 | `pcr_stage_1_offset_2` |
-| 2 | 4 | `pcr_stage_2_offset_4` |
-| 3 | 8 | `pcr_stage_3_offset_8` |
-| 4 | 16 | `pcr_stage_4_offset_16` |
-| 5 | 32 | `pcr_stage_5_offset_32` |
-| 6 | 64 | `pcr_stage_6_offset_64` |
-| 7 | 128 | `pcr_stage_7_offset_128` |
-| 8 | 256 | `pcr_stage_8_offset_256` |
-| 9 | 512 | `pcr_stage_9_offset_512` |
-| 10 | 1024 | `pcr_stage_10_offset_1024` |
-| 11 | 2048 | `pcr_stage_11_offset_2048` |
+| 0 | 1 | `pcr_global_stage_0_offset_1` |
+| 1 | 2 | `pcr_global_stage_1_offset_2` |
+| 2 | 4 | `pcr_global_stage_2_offset_4` |
+| 3 | 8 | `pcr_global_stage_3_offset_8` |
+| 4 | 16 | `pcr_global_stage_4_offset_16` |
+| 5 | 32 | `pcr_global_stage_5_offset_32` |
+| 6 | 64 | `pcr_global_stage_6_offset_64` |
+| 7 | 128 | `pcr_global_stage_7_offset_128` |
+| 8 | 256 | `pcr_global_stage_8_offset_256` |
+| 9 | 512 | `pcr_global_stage_9_offset_512` |
+| 10 | 1024 | `pcr_global_stage_10_offset_1024` |
+| 11 | 2048 | `pcr_global_stage_11_offset_2048` |
 
 Capture all ranges and their CUDA launches with Nsight Systems:
 
@@ -187,7 +191,7 @@ Select one logical stage with Nsight Compute, for example the final PCR stage:
 
 ```sh
 MATMUL_INSPECTOR_NVTX=1 ncu \
-  --nvtx --nvtx-include pcr_stage_11_offset_2048 \
+  --nvtx --nvtx-include pcr_global_stage_11_offset_2048 \
   --launch-count 1 \
   --set full \
   --export results/ncu-4096x512/stage-11 \
@@ -202,3 +206,59 @@ The NVTX range encloses only the host-side launch and adds no synchronization,
 copy, ordering change, or event-boundary change. With profiling enabled, the
 profiler necessarily observes the small host marker cost; leave the environment
 variable unset for benchmark measurements.
+
+## Experimental shared-memory stages
+
+Nsight Compute measurements on the global kernel at `N=4096`, `B=512` showed
+offsets 1 through 256 near 90–92% DRAM utilization with substantial
+L1TEX/long-scoreboard stalls. Offset 512 was the observed transition toward
+higher compute utilization. The `true_batched_hybrid` experiment therefore uses
+shared memory for offsets up to the explicit `pcr_shared_max_offset=256` cutoff
+and retains the established global kernel for offsets 512 and larger.
+
+For a 256-thread block and FP64 coefficients, each shared stage loads a contiguous
+window of `256 + 2*offset` values for each of `a`, `b`, `c`, and `d`. Its dynamic
+shared-memory requirement is `4 * (256 + 2*offset) * 8` bytes: 8,256 bytes at
+offset 1, 10,240 at offset 32, 16,384 at offset 128, and 24,576 at offset 256.
+All threads cooperatively load the center and halo and reach one barrier before
+using the data. Per-equation bounds still decide whether left and right neighbors
+belong to the same system, so a flattened CUDA block may cross system boundaries
+without reading another system's coefficients. Partial blocks and non-power-of-two
+systems use the same guarded loads. The offset-256 halo is safe but relatively
+large, so its benefit was treated as an experimental question rather than assumed.
+
+The hybrid path uses labels such as `pcr_shared_stage_5_offset_32` through
+`pcr_shared_stage_8_offset_256`, followed by
+`pcr_global_stage_9_offset_512`. Its `device_resident` timing boundary matches the
+global-only device-resident baseline; D2D reset remains outside both measurements.
+
+The following hardware-specific medians were measured on an NVIDIA GeForce RTX
+4060 Ti with CUDA 13.3, using three warmups and 20 measured iterations. Speedup is
+global time divided by hybrid time. All configurations passed comparison against
+CPU PCR and the global CUDA implementation.
+
+| N | B | Global ms | Hybrid ms | Speedup |
+|---:|---:|---:|---:|---:|
+| 128 | 32 | 0.120832 | 0.057856 | 2.088x |
+| 128 | 128 | 0.065024 | 0.065024 | 1.000x |
+| 128 | 512 | 0.100352 | 0.113040 | 0.888x |
+| 256 | 32 | 0.061744 | 0.063488 | 0.973x |
+| 256 | 128 | 0.086016 | 0.096256 | 0.894x |
+| 256 | 512 | 0.191488 | 0.193024 | 0.992x |
+| 512 | 32 | 0.077824 | 0.082640 | 0.942x |
+| 512 | 128 | 0.128000 | 0.132608 | 0.965x |
+| 512 | 512 | 0.380928 | 0.382976 | 0.995x |
+| 1024 | 32 | 0.103424 | 0.112128 | 0.922x |
+| 1024 | 128 | 0.246784 | 0.247296 | 0.998x |
+| 1024 | 512 | 0.840720 | 0.844800 | 0.995x |
+| 2048 | 32 | 0.202752 | 0.203776 | 0.995x |
+| 2048 | 128 | 0.521216 | 0.521216 | 1.000x |
+| 2048 | 512 | 2.956800 | 2.958448 | 0.999x |
+| 4096 | 32 | 0.313856 | 0.311296 | 1.008x |
+| 4096 | 128 | 1.060864 | 1.064960 | 0.996x |
+| 4096 | 512 | 6.559312 | 6.698496 | 0.979x |
+
+These results do not show a consistent benefit. Most larger configurations were
+effectively tied or slightly slower, and the small configurations are sensitive
+to launch and measurement noise. The shared-memory path remains an experimental
+comparison while the global kernel remains the baseline.

@@ -40,6 +40,7 @@ public:
     void reset_from_device();
 
     void execute();
+    void execute_hybrid();
 
     // The caller supplies B*N storage so benchmarking can exclude host
     // allocation from the device-to-host transfer measurement.

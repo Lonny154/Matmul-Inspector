@@ -29,4 +29,7 @@ std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_true_batched_reuse(
 std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_device_resident(
     const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
 
+TridiagonalBenchmarkResult benchmark_cuda_pcr_hybrid_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
+
 }  // namespace matmul_inspector

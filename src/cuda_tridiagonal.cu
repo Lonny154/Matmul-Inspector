@@ -96,14 +96,16 @@ bool pcr_stage_profiling_enabled() {
 
 class PcrProfilingRange {
 public:
-    PcrProfilingRange(std::size_t stage,std::size_t offset) {
+    PcrProfilingRange(const char* kernel,std::size_t stage,std::size_t offset) {
 #if MATMUL_INSPECTOR_HAS_NVTX
         if (pcr_stage_profiling_enabled()) {
-            std::snprintf(name_,sizeof(name_),"pcr_stage_%zu_offset_%zu",stage,offset);
+            std::snprintf(
+                name_,sizeof(name_),"pcr_%s_stage_%zu_offset_%zu",kernel,stage,offset);
             nvtxRangePushA(name_);
             active_=true;
         }
 #else
+        (void)kernel;
         (void)stage;
         (void)offset;
 #endif
@@ -238,6 +240,65 @@ __global__ void pcr_batched_stage_kernel(
         next_b[global] += beta * a[right];
         next_c[global] = beta * c[right];
         next_d[global] += beta * d[right];
+    }
+}
+
+__global__ void pcr_batched_shared_stage_kernel(
+    const double* a,
+    const double* b,
+    const double* c,
+    const double* d,
+    double* next_a,
+    double* next_b,
+    double* next_c,
+    double* next_d,
+    std::size_t n,
+    std::size_t total,
+    std::size_t offset) {
+
+    extern __shared__ double storage[];
+    const std::size_t span=blockDim.x+2*offset;
+    double* shared_a=storage;
+    double* shared_b=shared_a+span;
+    double* shared_c=shared_b+span;
+    double* shared_d=shared_c+span;
+    const std::size_t block_begin=blockIdx.x*blockDim.x;
+
+    for (std::size_t local=threadIdx.x; local<span; local+=blockDim.x) {
+        const bool nonnegative=block_begin+local>=offset;
+        const std::size_t source=nonnegative ? block_begin+local-offset : 0;
+        const bool valid=nonnegative && source<total;
+        shared_a[local]=valid ? a[source] : 0.0;
+        shared_b[local]=valid ? b[source] : 0.0;
+        shared_c[local]=valid ? c[source] : 0.0;
+        shared_d[local]=valid ? d[source] : 0.0;
+    }
+    __syncthreads();
+
+    const std::size_t global=block_begin+threadIdx.x;
+    if (global>=total) return;
+
+    const std::size_t equation=global%n;
+    const std::size_t local=threadIdx.x+offset;
+    next_a[global]=0.0;
+    next_b[global]=shared_b[local];
+    next_c[global]=0.0;
+    next_d[global]=shared_d[local];
+
+    if (equation>=offset) {
+        const std::size_t left=local-offset;
+        const double alpha=-shared_a[local]/shared_b[left];
+        next_a[global]=alpha*shared_a[left];
+        next_b[global]+=alpha*shared_c[left];
+        next_d[global]+=alpha*shared_d[left];
+    }
+
+    if (equation+offset<n) {
+        const std::size_t right=local+offset;
+        const double beta=-shared_c[local]/shared_b[right];
+        next_b[global]+=beta*shared_a[right];
+        next_c[global]=beta*shared_c[right];
+        next_d[global]+=beta*shared_d[right];
     }
 }
 
@@ -377,7 +438,12 @@ void launch_prepared(PreparedPcr& p) {
     check_cuda(cudaGetLastError(),"benchmark PCR solve launch");
 }
 
-void launch_prepared_batched(PreparedBatchedPcr& p) {
+enum class BatchedStagePath { global_only, hybrid_shared };
+
+constexpr std::size_t pcr_shared_max_offset=256;
+
+void launch_prepared_batched(
+    PreparedBatchedPcr& p,BatchedStagePath path=BatchedStagePath::global_only) {
     double *current_a=p.device_a.data(), *current_b=p.device_b.data();
     double *current_c=p.device_c.data(), *current_d=p.device_d.data();
     double *next_a=p.device_next_a.data(), *next_b=p.device_next_b.data();
@@ -386,11 +452,22 @@ void launch_prepared_batched(PreparedBatchedPcr& p) {
     const auto blocks=static_cast<unsigned>((p.total+threads-1)/threads);
     std::size_t stage=0;
     for (std::size_t offset=1; offset<p.flat.n; offset*=2,++stage) {
+        const bool use_shared=
+            path==BatchedStagePath::hybrid_shared && offset<=pcr_shared_max_offset;
         {
-            PcrProfilingRange range(stage,offset);
-            pcr_batched_stage_kernel<<<blocks,threads>>>(current_a,current_b,current_c,current_d,
-                next_a,next_b,next_c,next_d,p.flat.n,p.total,offset);
-            check_cuda(cudaGetLastError(),"batched PCR stage launch");
+            PcrProfilingRange range(use_shared ? "shared" : "global",stage,offset);
+            if (use_shared) {
+                const auto shared_bytes=4*(threads+2*offset)*sizeof(double);
+                pcr_batched_shared_stage_kernel<<<blocks,threads,shared_bytes>>>(
+                    current_a,current_b,current_c,current_d,
+                    next_a,next_b,next_c,next_d,p.flat.n,p.total,offset);
+                check_cuda(cudaGetLastError(),"shared batched PCR stage launch");
+            } else {
+                pcr_batched_stage_kernel<<<blocks,threads>>>(
+                    current_a,current_b,current_c,current_d,
+                    next_a,next_b,next_c,next_d,p.flat.n,p.total,offset);
+                check_cuda(cudaGetLastError(),"batched PCR stage launch");
+            }
         }
         std::swap(current_a,next_a); std::swap(current_b,next_b);
         std::swap(current_c,next_c); std::swap(current_d,next_d);
@@ -526,6 +603,13 @@ void CudaPcrBatchedWorkspace::execute() {
     if (!impl_->uploaded)
         throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
     launch_prepared_batched(impl_->prepared);
+    impl_->executed=true;
+}
+
+void CudaPcrBatchedWorkspace::execute_hybrid() {
+    if (!impl_->uploaded)
+        throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
+    launch_prepared_batched(impl_->prepared,BatchedStagePath::hybrid_shared);
     impl_->executed=true;
 }
 
@@ -1049,6 +1133,57 @@ std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_device_resident(
         result("d2d_reset",reset_samples),
         result("device_resident",solve_samples)
     };
+}
+
+TridiagonalBenchmarkResult benchmark_cuda_pcr_hybrid_device_resident(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups) {
+    if (systems.empty() || iterations<=0 || warmups<0)
+        throw std::invalid_argument("Invalid hybrid CUDA PCR benchmark configuration");
+    const auto n=systems.front().diag.size();
+    const auto batch=systems.size();
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    lower.reserve(batch); diag.reserve(batch); upper.reserve(batch); rhs.reserve(batch);
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+
+    CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.make_device_resident();
+    workspace.execute_hybrid();
+    std::vector<double> output(n*batch);
+    workspace.download(output);
+    verify_batched_result(output,systems);
+
+    const auto global=solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto begin=output.begin()+static_cast<std::ptrdiff_t>(system*n);
+        verify_tridiagonal_solution(
+            std::vector<double>(begin,begin+static_cast<std::ptrdiff_t>(n)),global[system]);
+    }
+
+    std::vector<benchmark::Sample> samples;
+    CudaEvent start,stop;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            workspace.reset_from_device();
+            check_cuda(cudaEventRecord(start.get()),"record hybrid PCR start");
+            workspace.execute_hybrid();
+            check_cuda(cudaEventRecord(stop.get()),"record hybrid PCR stop");
+            check_cuda(cudaEventSynchronize(stop.get()),"synchronize hybrid PCR");
+            float elapsed=0;
+            check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                       "elapsed hybrid PCR");
+            samples.push_back({0,iteration,warmup,elapsed});
+        }
+    }
+    workspace.download(output);
+    verify_batched_result(output,systems);
+    return {"pcr","cuda","device_resident","true_batched_hybrid",
+        n,batch,warmups,iterations,analyze_samples(samples)};
 }
 
 }  // namespace matmul_inspector

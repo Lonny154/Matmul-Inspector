@@ -192,6 +192,41 @@ bool test_device_resident(std::size_t n,std::size_t batch) {
     return run(systems);
 }
 
+bool test_hybrid(std::size_t n,std::size_t batch) {
+    const auto systems=matmul_inspector::make_benchmark_systems(n,batch);
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+    const auto global=matmul_inspector::solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    matmul_inspector::CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.make_device_resident();
+    for (int repeat=0; repeat<2; ++repeat) {
+        if (repeat) workspace.reset_from_device();
+        workspace.execute_hybrid();
+        std::vector<double> hybrid(n*batch);
+        workspace.download(hybrid);
+        for (std::size_t system=0; system<batch; ++system) {
+            const auto cpu=matmul_inspector::solve_pcr(
+                systems[system].lower,systems[system].diag,
+                systems[system].upper,systems[system].rhs);
+            for (std::size_t equation=0; equation<n; ++equation) {
+                const auto value=hybrid[system*n+equation];
+                if (std::abs(value-systems[system].expected[equation])>1e-9 ||
+                    std::abs(value-cpu[equation])>1e-9 ||
+                    std::abs(value-global[system][equation])>1e-9) {
+                    std::cerr << "Hybrid PCR mismatch for N=" << n << " B=" << batch
+                              << " system=" << system << " equation=" << equation << '\n';
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 }  // namespace
 
 int main() {
@@ -233,6 +268,10 @@ int main() {
             return 1;
         }
     }
+    for (const auto& [n,batch] : std::vector<std::pair<std::size_t,std::size_t>>{
+             {127,3},{256,5},{257,3},{512,3},{1024,3},{4096,3}}) {
+        if (!test_hybrid(n,batch)) return 1;
+    }
 
     const auto systems=matmul_inspector::make_benchmark_systems(33,3);
     const auto kernel=matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,3,1);
@@ -245,6 +284,8 @@ int main() {
         matmul_inspector::benchmark_cuda_pcr_true_batched_reuse(systems,2,1);
     const auto resident=
         matmul_inspector::benchmark_cuda_pcr_device_resident(systems,2,1);
+    const auto hybrid=
+        matmul_inspector::benchmark_cuda_pcr_hybrid_device_resident(systems,2,1);
     if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
         kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
         kernel.batch_execution!="serial_host_loop" ||
@@ -258,7 +299,11 @@ int main() {
         batched_end_to_end.batch_execution!="true_batched_gpu" ||
         batched_end_to_end.timing_scope!="end_to_end" ||
         batched_end_to_end.timing.samples.size()!=3 || batched_end_to_end.timing.median_ms<=0 ||
-        reuse.size()!=5 || resident.size()!=2) {
+        reuse.size()!=5 || resident.size()!=2 ||
+        hybrid.batch_execution!="true_batched_hybrid" ||
+        hybrid.timing_scope!="device_resident" || hybrid.system_size!=33 ||
+        hybrid.batch_size!=3 || hybrid.timing.samples.size()!=3 ||
+        hybrid.timing.median_ms<=0) {
         std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
         return 1;
     }
