@@ -20,4 +20,8 @@ TridiagonalBenchmarkResult benchmark_cuda_pcr_true_batched_kernel_only(
 TridiagonalBenchmarkResult benchmark_cuda_pcr_true_batched_end_to_end(
     const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
 
+// Returns allocation_setup, h2d, kernel_only, d2h, and reusable_end_to_end rows.
+std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_true_batched_reuse(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups);
+
 }  // namespace matmul_inspector

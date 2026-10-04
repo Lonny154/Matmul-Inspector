@@ -1,5 +1,6 @@
 #include "cuda_tridiagonal.hpp"
 #include "cuda_tridiagonal_benchmark.hpp"
+#include "cuda_tridiagonal_workspace.hpp"
 #include "tridiagonal.hpp"
 
 #include <cuda_runtime.h>
@@ -8,6 +9,7 @@
 #include <chrono>
 #include <cstdio>
 #include <memory>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -261,11 +263,19 @@ FlatBatch flatten_systems(const std::vector<TridiagonalSystem>& systems) {
 }
 
 struct PreparedBatchedPcr {
-    explicit PreparedBatchedPcr(FlatBatch input)
-        : flat(std::move(input)), total(flat.n*flat.batch),
+    PreparedBatchedPcr(std::size_t n,std::size_t batch)
+        : flat{n,batch,{}, {}, {}, {}}, total(n*batch),
           device_a(total), device_b(total), device_c(total), device_d(total),
           device_next_a(total), device_next_b(total), device_next_c(total),
-          device_next_d(total), device_x(total) {
+          device_next_d(total), device_x(total) {}
+    explicit PreparedBatchedPcr(FlatBatch input)
+        : PreparedBatchedPcr(input.n,input.batch) {
+        upload(std::move(input));
+    }
+    void upload(FlatBatch input) {
+        if (input.n!=flat.n || input.batch!=flat.batch)
+            throw std::invalid_argument("Batched PCR workspace dimensions do not match input");
+        flat=std::move(input);
         reset();
     }
     void reset() {
@@ -350,7 +360,73 @@ benchmark::Statistics analyze_samples(const std::vector<benchmark::Sample>& samp
     return benchmark::analyze(samples,options);
 }
 
+std::size_t checked_workspace_size(std::size_t n,std::size_t batch) {
+    if (!n || !batch || n>std::numeric_limits<std::size_t>::max()/batch)
+        throw std::invalid_argument("Invalid batched PCR workspace dimensions");
+    return n;
+}
+
 }  // namespace
+
+struct CudaPcrBatchedWorkspace::Impl {
+    Impl(std::size_t n,std::size_t batch)
+        : prepared(checked_workspace_size(n,batch),batch) {}
+
+    PreparedBatchedPcr prepared;
+    bool uploaded=false;
+    bool executed=false;
+};
+
+CudaPcrBatchedWorkspace::CudaPcrBatchedWorkspace(
+    std::size_t system_size,std::size_t batch_size)
+    : impl_(std::make_unique<Impl>(system_size,batch_size)) {}
+
+CudaPcrBatchedWorkspace::~CudaPcrBatchedWorkspace() = default;
+CudaPcrBatchedWorkspace::CudaPcrBatchedWorkspace(CudaPcrBatchedWorkspace&&) noexcept = default;
+CudaPcrBatchedWorkspace& CudaPcrBatchedWorkspace::operator=(
+    CudaPcrBatchedWorkspace&&) noexcept = default;
+
+std::size_t CudaPcrBatchedWorkspace::system_size() const noexcept {
+    return impl_ ? impl_->prepared.flat.n : 0;
+}
+
+std::size_t CudaPcrBatchedWorkspace::batch_size() const noexcept {
+    return impl_ ? impl_->prepared.flat.batch : 0;
+}
+
+void CudaPcrBatchedWorkspace::upload(
+    const std::vector<std::vector<double>>& lower,
+    const std::vector<std::vector<double>>& diag,
+    const std::vector<std::vector<double>>& upper,
+    const std::vector<std::vector<double>>& rhs) {
+    impl_->prepared.upload(flatten_batch(lower,diag,upper,rhs));
+    impl_->uploaded=true;
+    impl_->executed=false;
+}
+
+void CudaPcrBatchedWorkspace::reset() {
+    if (!impl_->uploaded)
+        throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
+    impl_->prepared.reset();
+    impl_->executed=false;
+}
+
+void CudaPcrBatchedWorkspace::execute() {
+    if (!impl_->uploaded)
+        throw std::logic_error("Batched PCR workspace has no uploaded coefficients");
+    launch_prepared_batched(impl_->prepared);
+    impl_->executed=true;
+}
+
+void CudaPcrBatchedWorkspace::download(std::vector<double>& result) const {
+    if (!impl_->executed)
+        throw std::logic_error("Batched PCR workspace has not executed");
+    if (result.size()!=impl_->prepared.total)
+        throw std::invalid_argument("Batched PCR result buffer has the wrong size");
+    check_cuda(cudaMemcpy(result.data(),impl_->prepared.device_x.data(),
+                          result.size()*sizeof(double),cudaMemcpyDeviceToHost),
+               "download reusable batched PCR result");
+}
 
 std::vector<double> solve_pcr_cuda(
     const std::vector<double>& lower,
@@ -660,6 +736,120 @@ TridiagonalBenchmarkResult benchmark_cuda_pcr_true_batched_end_to_end(
     return {"pcr","cuda","end_to_end","true_batched_gpu",
         systems.front().diag.size(),systems.size(),warmups,iterations,
         analyze_samples(samples)};
+}
+
+std::vector<TridiagonalBenchmarkResult> benchmark_cuda_pcr_true_batched_reuse(
+    const std::vector<TridiagonalSystem>& systems, int iterations, int warmups) {
+    if (systems.empty() || iterations<=0 || warmups<0)
+        throw std::invalid_argument("Invalid reusable CUDA PCR benchmark configuration");
+    const auto n=systems.front().diag.size();
+    const auto batch=systems.size();
+    std::vector<std::vector<double>> lower,diag,upper,rhs;
+    lower.reserve(batch); diag.reserve(batch); upper.reserve(batch); rhs.reserve(batch);
+    for (const auto& system : systems) {
+        lower.push_back(system.lower); diag.push_back(system.diag);
+        upper.push_back(system.upper); rhs.push_back(system.rhs);
+    }
+
+    CudaPcrBatchedWorkspace workspace(n,batch);
+    workspace.upload(lower,diag,upper,rhs);
+    workspace.execute();
+    std::vector<double> output(n*batch);
+    workspace.download(output);
+    verify_batched_result(output,systems);
+
+    const auto one_shot=solve_pcr_cuda_batched(lower,diag,upper,rhs);
+    for (std::size_t system=0; system<batch; ++system) {
+        const auto begin=output.begin()+static_cast<std::ptrdiff_t>(system*n);
+        verify_tridiagonal_solution(
+            std::vector<double>(begin,begin+static_cast<std::ptrdiff_t>(n)),one_shot[system]);
+    }
+
+    auto event_samples = [&](auto&& operation) {
+        std::vector<benchmark::Sample> samples;
+        CudaEvent start,stop;
+        for (int phase=0; phase<2; ++phase) {
+            const bool warmup=phase==0;
+            const int count=warmup?warmups:iterations;
+            for (int iteration=0; iteration<count; ++iteration) {
+                check_cuda(cudaEventRecord(start.get()),"record reusable PCR component start");
+                operation();
+                check_cuda(cudaEventRecord(stop.get()),"record reusable PCR component stop");
+                check_cuda(cudaEventSynchronize(stop.get()),
+                           "synchronize reusable PCR component event");
+                float elapsed=0;
+                check_cuda(cudaEventElapsedTime(&elapsed,start.get(),stop.get()),
+                           "elapsed reusable PCR component");
+                samples.push_back({0,iteration,warmup,elapsed});
+            }
+        }
+        return samples;
+    };
+
+    std::vector<benchmark::Sample> setup_samples;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            const auto start=std::chrono::steady_clock::now();
+            auto temporary=std::make_unique<CudaPcrBatchedWorkspace>(n,batch);
+            const auto stop=std::chrono::steady_clock::now();
+            setup_samples.push_back({0,iteration,warmup,
+                std::chrono::duration<float,std::milli>(stop-start).count()});
+            temporary.reset();
+        }
+    }
+
+    const auto h2d_samples=event_samples([&] { workspace.reset(); });
+
+    std::vector<benchmark::Sample> kernel_samples;
+    CudaEvent kernel_start,kernel_stop;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            workspace.reset();
+            check_cuda(cudaEventRecord(kernel_start.get()),"record reusable PCR kernel start");
+            workspace.execute();
+            check_cuda(cudaEventRecord(kernel_stop.get()),"record reusable PCR kernel stop");
+            check_cuda(cudaEventSynchronize(kernel_stop.get()),
+                       "synchronize reusable PCR kernel event");
+            float elapsed=0;
+            check_cuda(cudaEventElapsedTime(&elapsed,kernel_start.get(),kernel_stop.get()),
+                       "elapsed reusable PCR kernel");
+            kernel_samples.push_back({0,iteration,warmup,elapsed});
+        }
+    }
+
+    const auto d2h_samples=event_samples([&] { workspace.download(output); });
+
+    std::vector<benchmark::Sample> total_samples;
+    for (int phase=0; phase<2; ++phase) {
+        const bool warmup=phase==0;
+        const int count=warmup?warmups:iterations;
+        for (int iteration=0; iteration<count; ++iteration) {
+            const auto start=std::chrono::steady_clock::now();
+            workspace.reset();
+            workspace.execute();
+            workspace.download(output);
+            const auto stop=std::chrono::steady_clock::now();
+            total_samples.push_back({0,iteration,warmup,
+                std::chrono::duration<float,std::milli>(stop-start).count()});
+        }
+    }
+    verify_batched_result(output,systems);
+
+    auto result = [&](const char* scope,const std::vector<benchmark::Sample>& samples) {
+        return TridiagonalBenchmarkResult{"pcr","cuda",scope,"true_batched_reuse",
+            n,batch,warmups,iterations,analyze_samples(samples)};
+    };
+    return {
+        result("allocation_setup",setup_samples),
+        result("h2d",h2d_samples),
+        result("kernel_only",kernel_samples),
+        result("d2h",d2h_samples),
+        result("reusable_end_to_end",total_samples)
+    };
 }
 
 }  // namespace matmul_inspector

@@ -1,5 +1,6 @@
 #include "cuda_tridiagonal.hpp"
 #include "cuda_tridiagonal_benchmark.hpp"
+#include "cuda_tridiagonal_workspace.hpp"
 #include "tridiagonal.hpp"
 
 #include <cmath>
@@ -105,6 +106,47 @@ bool test_true_batched(std::size_t n,std::size_t batch) {
     return true;
 }
 
+bool test_workspace_reuse(std::size_t n,std::size_t batch) {
+    auto systems=matmul_inspector::make_benchmark_systems(n,batch);
+    matmul_inspector::CudaPcrBatchedWorkspace workspace(n,batch);
+    auto run = [&](const std::vector<matmul_inspector::TridiagonalSystem>& input) {
+        std::vector<std::vector<double>> lower,diag,upper,rhs;
+        for (const auto& system : input) {
+            lower.push_back(system.lower); diag.push_back(system.diag);
+            upper.push_back(system.upper); rhs.push_back(system.rhs);
+        }
+        workspace.upload(lower,diag,upper,rhs);
+        workspace.execute();
+        std::vector<double> flat(n*batch);
+        workspace.download(flat);
+        const auto one_shot=matmul_inspector::solve_pcr_cuda_batched(lower,diag,upper,rhs);
+        for (std::size_t system=0; system<batch; ++system) {
+            const auto cpu=matmul_inspector::solve_pcr(
+                input[system].lower,input[system].diag,
+                input[system].upper,input[system].rhs);
+            for (std::size_t equation=0; equation<n; ++equation) {
+                const auto value=flat[system*n+equation];
+                if (std::abs(value-input[system].expected[equation])>1e-9 ||
+                    std::abs(value-cpu[equation])>1e-9 ||
+                    std::abs(value-one_shot[system][equation])>1e-9)
+                    return false;
+            }
+        }
+        return true;
+    };
+    if (!run(systems)) return false;
+
+    // Reuse the same allocation with a distinct known solution and RHS.
+    for (std::size_t system=0; system<batch; ++system) {
+        for (auto& value : systems[system].expected)
+            value += 0.25*static_cast<double>(system+1);
+        systems[system].rhs=apply_tridiagonal(
+            systems[system].lower,systems[system].diag,
+            systems[system].upper,systems[system].expected);
+    }
+    return run(systems);
+}
+
 }  // namespace
 
 int main() {
@@ -133,6 +175,14 @@ int main() {
              {1,3},{31,8},{32,8},{33,8},{33,5},{257,3}}) {
         if (!test_true_batched(n,batch)) return 1;
     }
+    for (const auto& [n,batch] : std::vector<std::pair<std::size_t,std::size_t>>{
+             {31,8},{32,8},{33,5}}) {
+        if (!test_workspace_reuse(n,batch)) {
+            std::cerr << "Reusable true-batched PCR failed for N=" << n
+                      << " B=" << batch << '\n';
+            return 1;
+        }
+    }
 
     const auto systems=matmul_inspector::make_benchmark_systems(33,3);
     const auto kernel=matmul_inspector::benchmark_cuda_pcr_kernel_only(systems,3,1);
@@ -141,6 +191,8 @@ int main() {
         matmul_inspector::benchmark_cuda_pcr_true_batched_kernel_only(systems,3,1);
     const auto batched_end_to_end=
         matmul_inspector::benchmark_cuda_pcr_true_batched_end_to_end(systems,2,1);
+    const auto reuse=
+        matmul_inspector::benchmark_cuda_pcr_true_batched_reuse(systems,2,1);
     if (kernel.backend!="cuda" || kernel.algorithm!="pcr" ||
         kernel.timing_scope!="kernel_only" || kernel.system_size!=33 || kernel.batch_size!=3 ||
         kernel.batch_execution!="serial_host_loop" ||
@@ -153,9 +205,21 @@ int main() {
         batched_kernel.timing.median_ms<=0 ||
         batched_end_to_end.batch_execution!="true_batched_gpu" ||
         batched_end_to_end.timing_scope!="end_to_end" ||
-        batched_end_to_end.timing.samples.size()!=3 || batched_end_to_end.timing.median_ms<=0) {
+        batched_end_to_end.timing.samples.size()!=3 || batched_end_to_end.timing.median_ms<=0 ||
+        reuse.size()!=5) {
         std::cerr << "CUDA PCR benchmark timing/metadata failed\n";
         return 1;
+    }
+    const std::vector<std::string> reuse_scopes{
+        "allocation_setup","h2d","kernel_only","d2h","reusable_end_to_end"};
+    for (std::size_t i=0; i<reuse.size(); ++i) {
+        if (reuse[i].batch_execution!="true_batched_reuse" ||
+            reuse[i].timing_scope!=reuse_scopes[i] || reuse[i].system_size!=33 ||
+            reuse[i].batch_size!=3 || reuse[i].timing.samples.size()!=3 ||
+            reuse[i].timing.median_ms<=0) {
+            std::cerr << "Reusable CUDA PCR timing decomposition failed\n";
+            return 1;
+        }
     }
 
     std::cout << "All CUDA PCR tests passed\n";

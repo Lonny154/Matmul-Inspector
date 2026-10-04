@@ -85,15 +85,20 @@ int main(int argc,char** argv) {
                 << matmul_inspector::tridiagonal_benchmark_csv_row(
                        matmul_inspector::benchmark_cuda_pcr_true_batched_end_to_end(
                            systems,iterations,warmups));
+            for (const auto& result :
+                 matmul_inspector::benchmark_cuda_pcr_true_batched_reuse(
+                     systems,iterations,warmups))
+                csv << matmul_inspector::tridiagonal_benchmark_csv_row(result);
 #endif
             std::cout << "N=" << n << " B=" << batch << " complete\n";
         }
         std::ofstream methodology(output/"methodology.txt");
         methodology << "CPU: steady_clock around a full batch solve, including output/work allocations.\n"
-                    << "batch_size: number of independent systems in one sample; batch_execution identifies serial_host_loop or true_batched_gpu execution.\n"
+                    << "batch_size: number of independent systems in one sample; batch_execution identifies serial_host_loop, true_batched_gpu, or true_batched_reuse.\n"
                     << "CUDA kernel_only: CUDA events around PCR kernels for the full system count; allocation, coefficient reset copies, and result copies excluded.\n"
                     << "CUDA end_to_end: steady_clock including allocation, H2D, kernels, synchronization, D2H, and cleanup.\n"
-                    << "serial_host_loop launches each system separately; true_batched_gpu launches each PCR stage once over batch_size * system_size equations.\n";
+                    << "serial_host_loop launches each system separately; true_batched_gpu launches each PCR stage once over batch_size * system_size equations.\n"
+                    << "true_batched_reuse owns persistent device buffers: allocation_setup uses steady_clock; h2d, kernel_only, and d2h use CUDA events; reusable_end_to_end uses steady_clock around reset, kernels, and download but excludes workspace allocation and cleanup.\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "tridiagonal-benchmark: " << error.what() << '\n';
