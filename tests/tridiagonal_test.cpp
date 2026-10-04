@@ -7,8 +7,85 @@
 
 namespace {
 
+    std::vector<double> apply_tridiagonal(
+    const std::vector<double>& lower,
+    const std::vector<double>& diag,
+    const std::vector<double>& upper,
+    const std::vector<double>& x) {
+
+    const std::size_t n = diag.size();
+    std::vector<double> rhs(n, 0.0);
+
+    for (std::size_t i = 0; i < n; ++i) {
+        rhs[i] += diag[i] * x[i];
+
+        if (i > 0) {
+            rhs[i] += lower[i - 1] * x[i - 1];
+        }
+
+        if (i + 1 < n) {
+            rhs[i] += upper[i] * x[i + 1];
+        }
+    }
+
+    return rhs;
+}
+
 bool approximately_equal(double a, double b, double tolerance = 1e-12) {
     return std::abs(a - b) <= tolerance;
+}
+
+bool test_size(std::size_t n) {
+    std::vector<double> lower(n > 0 ? n - 1 : 0, -1.0);
+    std::vector<double> diag(n, 4.0);
+    std::vector<double> upper(n > 0 ? n - 1 : 0, -1.0);
+
+    std::vector<double> expected(n);
+
+    for (std::size_t i = 0; i < n; ++i) {
+        expected[i] = static_cast<double>(i + 1);
+    }
+
+    const auto rhs =
+        apply_tridiagonal(lower, diag, upper, expected);
+
+    const auto thomas =
+        matmul_inspector::solve_thomas(
+            lower, diag, upper, rhs);
+
+    const auto pcr =
+        matmul_inspector::solve_pcr(
+            lower, diag, upper, rhs);
+
+    constexpr double tolerance = 1e-10;
+
+    for (std::size_t i = 0; i < n; ++i) {
+        if (!approximately_equal(
+                thomas[i], expected[i], tolerance)) {
+
+            std::cerr
+                << "Thomas failed for n=" << n
+                << " at index " << i
+                << ": expected " << expected[i]
+                << ", got " << thomas[i] << '\n';
+
+            return false;
+        }
+
+        if (!approximately_equal(
+                pcr[i], expected[i], tolerance)) {
+
+            std::cerr
+                << "PCR failed for n=" << n
+                << " at index " << i
+                << ": expected " << expected[i]
+                << ", got " << pcr[i] << '\n';
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool test_known_system() {
@@ -86,6 +163,30 @@ bool test_zero_pivot() {
     return false;
 }
 
+bool test_pcr_known_system() {
+    const std::vector<double> lower{-1.0, -1.0, -1.0};
+    const std::vector<double> diag{2.0, 2.0, 2.0, 2.0};
+    const std::vector<double> upper{-1.0, -1.0, -1.0};
+    const std::vector<double> rhs{0.0, 0.0, 0.0, 5.0};
+
+    const std::vector<double> expected{1.0, 2.0, 3.0, 4.0};
+
+    const auto actual =
+        matmul_inspector::solve_pcr(lower, diag, upper, rhs);
+
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        if (!approximately_equal(actual[i], expected[i])) {
+            std::cerr
+                << "PCR known-system mismatch at index " << i
+                << ": expected " << expected[i]
+                << ", got " << actual[i] << '\n';
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace
 
 int main() {
@@ -103,6 +204,20 @@ int main() {
 
     if (!test_zero_pivot()) {
         return 1;
+    }
+
+    if (!test_pcr_known_system()) {
+        return 1;
+    }
+
+    const std::vector<std::size_t> sizes{
+        1, 2, 3, 4, 7, 8, 15, 16, 31, 32, 100
+    };
+
+    for (const auto n : sizes) {
+        if (!test_size(n)) {
+            return 1;
+        }
     }
 
     std::cout << "All Thomas solver tests passed\n";
