@@ -433,3 +433,19 @@ python3 scripts/compare_hardware.py --process-captures results/process-a results
 Create `process-b` with the same configuration on another machine. See the
 [capture workflow](docs/cross_hardware.md#fresh-process-reproducibility-captures)
 for CUDA/matrix examples, compatibility rules, artifacts and interpretation.
+
+### NKI GEMM variants
+
+In an AWS Neuron/NKI environment, compare the full-tiled and caller-pretransposed
+GEMM kernels with deterministic inputs and CSV output:
+
+```bash
+python3 scripts/nki_gemm_benchmark.py \
+  --shapes 128x128x512,256x512x1024 \
+  --warmups 1 --iterations 3 --output results/nki-gemm
+```
+
+Local simulator checks record correctness and error metrics. Simulator wall-clock
+timing is explicitly labeled and is not Trainium performance. See
+[NKI GEMM benchmarking](docs/nki_gemm_benchmarking.md) for shape constraints,
+Cartesian grids, artifacts, and the hardware-backend extension point.
