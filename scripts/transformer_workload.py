@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from triton_fc1 import triton_gemm
+from triton_fc1 import FC1_CONFIG, FC2_CONFIG, QKV_CONFIG, triton_gemm
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ class MiniTransformerBlock(nn.Module):
         self.fc2_weight_t = self.fc2.weight.T.contiguous()
 
     @staticmethod
-    def _project(x, pytorch_layer, triton_weight, use_triton):
+    def _project(x, pytorch_layer, triton_weight, use_triton, config):
         if not use_triton:
             return pytorch_layer(x)
         if triton_weight is None:
@@ -81,7 +81,7 @@ class MiniTransformerBlock(nn.Module):
 
         shape = x.shape
         x_2d = x.reshape(-1, shape[-1])
-        output = triton_gemm(x_2d, triton_weight)
+        output = triton_gemm(x_2d, triton_weight, config)
         return output.reshape(*shape[:-1], triton_weight.shape[1])
 
     def forward(self, x, projections=ProjectionSelection()):
@@ -97,6 +97,7 @@ class MiniTransformerBlock(nn.Module):
                 self.qkv,
                 self.qkv_weight_t,
                 projections.qkv,
+                QKV_CONFIG,
             )
 
         q, k, v = qkv.chunk(3, dim=-1)
@@ -125,6 +126,7 @@ class MiniTransformerBlock(nn.Module):
                 self.fc1,
                 self.fc1_weight_t,
                 projections.fc1,
+                FC1_CONFIG,
             )
 
         with torch.cuda.nvtx.range("gelu"):
@@ -136,6 +138,7 @@ class MiniTransformerBlock(nn.Module):
                 self.fc2,
                 self.fc2_weight_t,
                 projections.fc2,
+                FC2_CONFIG,
             )
 
         return mlp + residual
@@ -166,6 +169,7 @@ def validate_projections(model, x, projections, atol, rtol):
                 qkv_input,
                 model.qkv,
                 model.qkv_weight_t,
+                QKV_CONFIG,
             ),
             (
                 "fc1",
@@ -173,6 +177,7 @@ def validate_projections(model, x, projections, atol, rtol):
                 fc1_input,
                 model.fc1,
                 model.fc1_weight_t,
+                FC1_CONFIG,
             ),
             (
                 "fc2",
@@ -180,13 +185,20 @@ def validate_projections(model, x, projections, atol, rtol):
                 fc2_input,
                 model.fc2,
                 model.fc2_weight_t,
+                FC2_CONFIG,
             ),
         )
-        for name, enabled, projection_input, layer, weight_t in checks:
+        for name, enabled, projection_input, layer, weight_t, config in checks:
             if not enabled:
                 continue
             reference = layer(projection_input)
-            candidate = model._project(projection_input, layer, weight_t, True)
+            candidate = model._project(
+                projection_input,
+                layer,
+                weight_t,
+                True,
+                config,
+            )
             results.append(
                 compare_tensors(name, reference, candidate, atol=atol, rtol=rtol)
             )
@@ -269,19 +281,40 @@ def benchmark_selected_projections(
         fc2_input = F.gelu(model.fc1(fc1_input))
 
     checks = (
-        ("qkv", projections.qkv, qkv_input, model.qkv, model.qkv_weight_t),
-        ("fc1", projections.fc1, fc1_input, model.fc1, model.fc1_weight_t),
-        ("fc2", projections.fc2, fc2_input, model.fc2, model.fc2_weight_t),
+        (
+            "qkv",
+            projections.qkv,
+            qkv_input,
+            model.qkv,
+            model.qkv_weight_t,
+            QKV_CONFIG,
+        ),
+        (
+            "fc1",
+            projections.fc1,
+            fc1_input,
+            model.fc1,
+            model.fc1_weight_t,
+            FC1_CONFIG,
+        ),
+        (
+            "fc2",
+            projections.fc2,
+            fc2_input,
+            model.fc2,
+            model.fc2_weight_t,
+            FC2_CONFIG,
+        ),
     )
     results = {}
-    for name, enabled, projection_input, layer, weight_t in checks:
+    for name, enabled, projection_input, layer, weight_t, config in checks:
         if not enabled:
             continue
         samples = {"pytorch": [], "triton": []}
         functions = {
             "pytorch": lambda layer=layer, value=projection_input: layer(value),
-            "triton": lambda value=projection_input, layer=layer, weight=weight_t: (
-                model._project(value, layer, weight, True)
+            "triton": lambda value=projection_input, layer=layer, weight=weight_t, cfg=config: (
+                model._project(value, layer, weight, True, cfg)
             ),
         }
         for repeat in range(repeats):

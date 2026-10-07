@@ -15,10 +15,21 @@ class TritonGemmConfig:
     group_size_m: int = 1
 
 
-# This is the tuned FC1 configuration. The other Transformer projections use
-# the same kernel/configuration initially so this milestone changes only which
-# GEMMs are dispatched through Triton, not the established FC1 kernel math.
-DEFAULT_CONFIG = TritonGemmConfig()
+# Keep the established FC1 configuration unchanged. QKV was selected by the
+# controlled RTX 4060 Ti projection study; tuning remains hardware-specific.
+# FC2 retains the original configuration because no candidate passed the
+# repeatability rule.
+FC1_CONFIG = TritonGemmConfig()
+QKV_CONFIG = TritonGemmConfig(
+    block_m=64,
+    block_n=64,
+    block_k=64,
+    num_warps=4,
+    num_stages=2,
+    group_size_m=1,
+)
+FC2_CONFIG = FC1_CONFIG
+DEFAULT_CONFIG = FC1_CONFIG
 
 
 @triton.jit
@@ -173,4 +184,4 @@ def triton_gemm(a, b, config=DEFAULT_CONFIG):
 
 def triton_fc1(a, b):
     """Backward-compatible name for the original FC1 integration."""
-    return triton_gemm(a, b)
+    return triton_gemm(a, b, FC1_CONFIG)
