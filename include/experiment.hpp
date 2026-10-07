@@ -13,6 +13,7 @@
 namespace experiment {
 
 struct Shape { std::size_t m, n, k; };
+std::string resolved_kernel(const std::string& requested, Shape shape);
 struct Config {
     operation::Kind operation = operation::Kind::matmul;
     std::string mode = "compare";

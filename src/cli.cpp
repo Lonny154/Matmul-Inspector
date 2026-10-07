@@ -45,8 +45,16 @@ private:
 
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
 CudaMatmulKernel cuda_kernel(const std::string& name) {
+    if (name == "cublas") return CudaMatmulKernel::cublas;
     if (name == "naive") return CudaMatmulKernel::naive;
     if (name == "tiled") return CudaMatmulKernel::tiled;
+    if (name == "register-blocked-2x2")
+        return CudaMatmulKernel::register_blocked_2x2;
+    if (name == "register-blocked-4x4")
+        return CudaMatmulKernel::register_blocked_4x4;
+    if (name == "register-blocked-auto") return CudaMatmulKernel::register_blocked_auto;
+    if (name == "register-blocked-4x2")
+        return CudaMatmulKernel::register_blocked_4x2;
     if (name == "cuda-naive-fma") return CudaMatmulKernel::naive_fma;
     if (name == "cuda-naive-no-fma") return CudaMatmulKernel::naive_no_fma;
     if (name == "cuda-naive-reordered") return CudaMatmulKernel::naive_reordered;
@@ -66,6 +74,7 @@ std::string capture_output(const Matrix& matrix, const Config& config, const Sha
         << ",\"K\":" << shape.k << ",\"operation\":" << json_string(operation::name(config.operation)) << ",\"kernel\":" << json_string(kernel)
         << ",\"seed\":" << config.seed << ",\"seed_b\":" << config.seed_b
         << ",\"generator\":" << json_string(generator(config))
+        << ",\"resolved_kernel\":" << json_string(resolved_kernel(kernel,shape))
         << ",\"contraction_mode\":" << json_string(contraction_mode(kernel))
         << ",\"accumulation_mode\":" << json_string(accumulation_mode(kernel,config.operation,threads))
         << ",\"reduction_block_size\":" << (kernel == "cuda-tree" ? threads : 0)
@@ -214,9 +223,11 @@ int run_cli(const std::vector<std::string>& arguments) {
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
             if (needs_gpu) {
                 available = cuda_available(&reason);
-                // Optional probes are outside measured execution and do not make a run fail.
+                // Device probes are outside timing; cuBLAS setup also verifies its required math policy.
                 if (available) {
                     for (const auto& entry : cuda_metadata()) values[entry.first] = entry.second;
+                    if (config.reference == "cublas" || config.candidate == "cublas")
+                        for (const auto& entry : cublas_metadata()) values[entry.first] = entry.second;
                     auto driver = command_output("nvidia-smi --query-gpu=driver_version --format=csv,noheader");
                     if (!driver.empty()) values["nvidia_driver_version"] = driver.substr(0, driver.find('\n'));
                 }
@@ -247,13 +258,23 @@ int run_cli(const std::vector<std::string>& arguments) {
                     if (config.operation == operation::Kind::matmul)
                         std::cout << "M=" << shape.m << " N=" << shape.n << " K=" << shape.k << '\n';
                     else std::cout << "length=" << shape.k << '\n';
+                    if (config.reference == "register-blocked-auto" || config.candidate == "register-blocked-auto")
+                        std::cout << "Experimental dispatch: reference " << config.reference << " -> "
+                            << resolved_kernel(config.reference,shape) << "; candidate " << config.candidate
+                            << " -> " << resolved_kernel(config.candidate,shape) << '\n';
                     Row candidate;
                     candidate.shape = shape;
                     candidate.kernel = config.candidate;
                     candidate.reference = config.reference;
                     candidate.reduction_block_size=config.reduction_block_size;
                     candidate.reference_block_size=config.reference_block_size;
-                    candidate.tile_size = config.candidate == "tiled" ? 16 : 0;
+                    candidate.tile_size =
+                        (config.candidate == "tiled" ||
+                        config.candidate == "register-blocked-2x2" ||
+                        config.candidate == "register-blocked-4x4" ||
+                        config.candidate == "register-blocked-4x2" || config.candidate == "register-blocked-auto")
+                            ? 16
+                            : 0;
                     if (config.mode == "crossover") {
 #ifdef MATMUL_INSPECTOR_HAS_CUDA
                         auto cpu = repeated([&] { return benchmark::cpu_matmul(a, b, config.iterations, config.warmups); }, config);
@@ -382,7 +403,9 @@ int run_cli(const std::vector<std::string>& arguments) {
                         reference.kernel = config.reference;
                         reference.output_sha256 = candidate.reference_sha256;
                         reference.output_file = candidate.reference_output_file;
-                        reference.tile_size = config.reference == "tiled" ? 16 : 0;
+                        reference.tile_size = (config.reference == "tiled" ||
+                            config.reference == "register-blocked-2x2" || config.reference == "register-blocked-4x4" ||
+                            config.reference == "register-blocked-4x2" || config.reference == "register-blocked-auto") ? 16 : 0;
                         reference.timing = ref.timing;
                         reference.speedup = reference.timing.mean_ms > 0 ? 1 : 0;
                         reference.median_speedup = reference.timing.median_ms > 0 ? 1 : 0;

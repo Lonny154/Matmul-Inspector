@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.17)
 
 if(POLICY CMP0104)
     # Let modern CMake select the compiler's default architecture. Users can
@@ -69,9 +69,10 @@ target_link_libraries(inspector PUBLIC comparison)
 set(MATMUL_INSPECTOR_CUDA_BUILT OFF)
 if(MATMUL_INSPECTOR_ENABLE_CUDA AND CMAKE_CUDA_COMPILER)
     set(MATMUL_INSPECTOR_CUDA_BUILT ON)
+    find_package(CUDAToolkit 11.0 REQUIRED)
     add_library(cuda_matmul src/cuda_matmul.cu)
     set_target_properties(cuda_matmul PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON)
-    target_link_libraries(cuda_matmul PUBLIC matrix benchmark operation)
+    target_link_libraries(cuda_matmul PUBLIC matrix benchmark operation CUDA::cublas)
     target_compile_definitions(cuda_matmul PUBLIC MATMUL_INSPECTOR_HAS_CUDA=1)
     if(MATMUL_INSPECTOR_WARNINGS AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
         if(MSVC)
