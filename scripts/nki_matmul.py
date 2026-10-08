@@ -46,8 +46,7 @@ def main():
     a = rng.standard_normal((16, 16), dtype=np.float32)
     b = rng.standard_normal((16, 16), dtype=np.float32)
 
-    simulated_kernel = nki.simulate(matmul_kernel)
-    c_nki = simulated_kernel(a, b)
+    c_nki = matmul_kernel(a, b)
 
     c_ref = a @ b
 
