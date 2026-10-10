@@ -107,6 +107,18 @@ class NkiArtifactComparisonTests(unittest.TestCase):
             self.assertTrue((output / "comparison.json").is_file())
             self.assertTrue((output / "report.md").is_file())
             self.assertTrue((output / "mlir" / "normalized.diff").is_file())
+            report = (output / "report.md").read_text()
+            self.assertIn("| Raw MLIR | different |", report)
+            self.assertIn("| Canonical MLIR | identical |", report)
+            self.assertIn("## MLIR comparison", report)
+            self.assertIn("## DMA comparison", report)
+            self.assertIn("Both DMA reports contained valid parsed descriptor tables with no descriptor data rows", report)
+            self.assertIn("## NEFF files", report)
+            self.assertIn("`7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed`", report)
+            self.assertIn("| Baseline | 3 |", report)
+            self.assertIn("## Conclusions", report)
+            self.assertIn("critical paths", report)
+            self.assertNotIn("criticalpaths", report)
             with self.assertRaises(FileExistsError):
                 compare.run([str(baseline), str(candidate), "--output", str(output)])
 

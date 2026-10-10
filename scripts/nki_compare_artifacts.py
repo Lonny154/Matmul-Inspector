@@ -302,16 +302,57 @@ def render_report(result: dict[str, Any]) -> str:
              f"- Provenance compatible: **{str(comp['provenance']['compatible']).lower()}**", "",
              "## Evidence summary", "",
              "| Layer | Result |", "|---|---|",
+             f"| Raw MLIR | {_state(comp['mlir'].get('raw', {})) if comp['mlir'].get('status') == 'compared' else 'unavailable'} |",
              f"| Canonical MLIR | {_state(comp['mlir'].get('canonical', {})) if comp['mlir'].get('status') == 'compared' else 'unavailable'} |",
              f"| Instruction counts | {_state(comp['instructions'])} |",
              f"| DMA statistics | {_state(comp['dma'])} |",
              f"| NEFF bytes | {_state(comp['neff'], 'byte_identical')} |", ""]
+    if comp["mlir"].get("status") == "compared":
+        raw = comp["mlir"]["raw"]
+        canonical = comp["mlir"]["canonical"]
+        lines += ["## MLIR comparison", "",
+                  "| Representation | Result | Changed lines | Additions | Deletions |",
+                  "|---|---|---:|---:|---:|",
+                  f"| Raw | {_state(raw)} | {raw['changed_lines']} | {raw['additions']} | {raw['deletions']} |",
+                  f"| Canonical | {_state(canonical)} | {canonical['changed_lines']} | {canonical['additions']} | {canonical['deletions']} |", ""]
     if comp["instructions"].get("status") == "compared":
         lines += ["## Instruction counts", "", "| Opcode | Baseline | Candidate | Delta |",
                   "|---|---:|---:|---:|"]
         lines += [f"| {row['name']} | {row['baseline']} | {row['candidate']} | {row['delta']:+d} |"
                   for row in comp["instructions"]["opcodes"]]
         lines.append("")
+    if comp["dma"].get("status") == "compared":
+        baseline_dma = comp["dma"]["baseline"]
+        candidate_dma = comp["dma"]["candidate"]
+        baseline_rows = sum(len(rows) for rows in baseline_dma["sections"].values())
+        candidate_rows = sum(len(rows) for rows in candidate_dma["sections"].values())
+        baseline_descriptor_rows = sum(
+            len(rows) for name, rows in baseline_dma["sections"].items() if "descriptors" in name
+        )
+        candidate_descriptor_rows = sum(
+            len(rows) for name, rows in candidate_dma["sections"].items() if "descriptors" in name
+        )
+        lines += ["## DMA comparison", "",
+                  f"DMA equality: **{_state(comp['dma'])}**. This result compares the parsed section rows, "
+                  "total descriptor fields, reported total size, and normalized full-text SHA-256.", "",
+                  "| Metric | Baseline | Candidate |", "|---|---:|---:|",
+                  f"| Parsed table rows | {baseline_rows} | {candidate_rows} |",
+                  f"| Parsed descriptor rows | {baseline_descriptor_rows} | {candidate_descriptor_rows} |",
+                  f"| Total descriptors | {baseline_dma['total_descriptors']} | {candidate_dma['total_descriptors']} |",
+                  f"| Reported total size | {baseline_dma['total_size_reported']} | {candidate_dma['total_size_reported']} |",
+                  f"| Normalized text SHA-256 | `{baseline_dma['normalized_sha256']}` | `{candidate_dma['normalized_sha256']}` |", ""]
+        if (baseline_descriptor_rows == candidate_descriptor_rows == 0
+                and baseline_dma["total_descriptors"] == candidate_dma["total_descriptors"] == 0):
+            lines += ["Both DMA reports contained valid parsed descriptor tables with no descriptor data rows. Equality therefore means "
+                      "that the empty descriptor summaries, zero totals, other parsed table rows, and normalized report text matched; "
+                      "it is not a claim that no data movement occurred.", ""]
+    if comp["neff"].get("status") == "compared":
+        baseline_neff = comp["neff"]["baseline"]
+        candidate_neff = comp["neff"]["candidate"]
+        lines += ["## NEFF files", "", "| Capture | Size (bytes) | SHA-256 |",
+                  "|---|---:|---|",
+                  f"| Baseline | {baseline_neff['size_bytes']} | `{baseline_neff['sha256']}` |",
+                  f"| Candidate | {candidate_neff['size_bytes']} | `{candidate_neff['sha256']}` |", ""]
     baseline_bench = result["baseline"]["benchmark"]
     candidate_bench = result["candidate"]["benchmark"]
     if baseline_bench.get("status") == "present" or candidate_bench.get("status") == "present":
@@ -322,7 +363,34 @@ def render_report(result: dict[str, Any]) -> str:
                   f"| NeuronCore p50 (µs) | {percentile(baseline_bench, 'nc_latency_us', '50')} | {percentile(candidate_bench, 'nc_latency_us', '50')} |",
                   f"| NeuronCore p99 (µs) | {percentile(baseline_bench, 'nc_latency_us', '99')} | {percentile(candidate_bench, 'nc_latency_us', '99')} |",
                   f"| Runtime p50 (µs) | {percentile(baseline_bench, 'runtime_latency_us', '50')} | {percentile(candidate_bench, 'runtime_latency_us', '50')} |", ""]
-    lines += ["## Interpretation limits", "",
+    conclusions = []
+    if comp["mlir"].get("status") == "compared":
+        raw_identical = comp["mlir"]["raw"]["identical"]
+        canonical_identical = comp["mlir"]["canonical"]["identical"]
+        if raw_identical == canonical_identical:
+            verb = "is identical" if raw_identical else "differs"
+            conclusions.append(
+                f"The raw MLIR {verb}, and the canonical MLIR {verb} under the documented normalization."
+            )
+        else:
+            conclusions.append(
+                f"The raw MLIR {_state(comp['mlir']['raw'])}, while the canonical MLIR is "
+                f"{_state(comp['mlir']['canonical'])} under the documented normalization."
+            )
+    if comp["instructions"].get("status") == "compared" and comp["dma"].get("status") == "compared":
+        conclusions.append(
+            f"Aggregate instruction counts are {_state(comp['instructions'])}, and the captured DMA summaries are "
+            f"{_state(comp['dma'])}; these observations do not establish identical execution schedules."
+        )
+    if comp["neff"].get("status") == "compared":
+        conclusions.append(
+            f"The NEFF files are {_state(comp['neff'], 'byte_identical')} at the byte level; this alone does not "
+            "identify which executable instructions or metadata differ."
+        )
+    if not conclusions:
+        conclusions.append("The available artifacts are insufficient for a cross-layer conclusion.")
+    lines += ["## Conclusions", ""] + [f"- {conclusion}" for conclusion in conclusions] + ["",
+              "## Interpretation limits", "",
               "Canonical MLIR equality applies only after removing source locations and normalizing the entry-point symbol. "
               "Aggregate opcode and DMA equality does not establish identical instruction ordering, scheduling, or critical paths. "
               "NEFF comparison establishes only byte identity or difference; it is not a machine-code disassembly. "
