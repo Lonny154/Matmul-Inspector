@@ -55,7 +55,7 @@ jobs:
       - name: Install build tools
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends cmake g++ git python3 ca-certificates
+          apt-get install -y --no-install-recommends cmake g++ git python3 python3-numpy ca-certificates
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -69,9 +69,6 @@ jobs:
           cmake --build build --parallel 2
       - name: Inspect controlled FP32 instructions (no GPU required)
         run: python3 scripts/verify_fp.py --binary build/libcuda_matmul.a --report build/fp_verification.json
-        - name: Install Python test dependencies
-        run: python3 -m pip install numpy
-      - name: Run CPU tests only
-        run: ctest --test-dir build -L cpu --output-on-failure
+
       - name: Run CPU tests only
         run: ctest --test-dir build -L cpu --output-on-failure
