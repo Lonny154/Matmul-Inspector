@@ -473,3 +473,21 @@ Local simulator checks record correctness and error metrics. Simulator wall-cloc
 timing is explicitly labeled and is not Trainium performance. See
 [NKI GEMM benchmarking](docs/nki_gemm_benchmarking.md) for shape constraints,
 Cartesian grids, artifacts, and the hardware-backend extension point.
+
+### Compare NKI compiler artifacts
+
+Compare two saved NKI compiler captures without an NKI installation or Trainium
+hardware:
+
+```bash
+python3 scripts/nki_compare_artifacts.py \
+  artifacts/nki-bf16_1024_n512 artifacts/nki-bf16_1024_kblocked \
+  --output results/nki-compiler-comparison
+```
+
+The report keeps normalized MLIR, aggregate instruction counts, DMA summaries,
+NEFF byte identity, provenance, and optional benchmark evidence as distinct layers.
+It does not infer identical final schedules from matching counts or interpret a
+different NEFF hash as a disassembly result. See the
+[NKI compiler-artifact comparison guide](docs/nki_compiler_artifact_comparison.md)
+for supported inputs, normalization rules, outputs, and limitations.
