@@ -264,6 +264,9 @@ if(BUILD_TESTING)
         add_test(NAME nki-gemm-benchmark-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/nki_gemm_benchmark_test.py")
         set_tests_properties(nki-gemm-benchmark-tests PROPERTIES LABELS "cpu")
+        add_test(NAME nki-compiler-artifact-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/nki_compare_artifacts_test.py")
+        set_tests_properties(nki-compiler-artifact-tests PROPERTIES LABELS "cpu")
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
