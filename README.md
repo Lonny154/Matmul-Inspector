@@ -491,3 +491,25 @@ It does not infer identical final schedules from matching counts or interpret a
 different NEFF hash as a disassembly result. See the
 [NKI compiler-artifact comparison guide](docs/nki_compiler_artifact_comparison.md)
 for supported inputs, normalization rules, outputs, and limitations.
+
+### Inspect and compare NVIDIA PTX
+
+The CPU-only PTX inspector lists kernels and device functions, classifies
+instructions, records PTX register/shared-memory declarations, and compares raw,
+normalized, and structural results:
+
+```bash
+python3 scripts/ptx_inspector.py inspect \
+  --input artifacts/cuda/baseline.ptx --output results/ptx-baseline
+
+python3 scripts/ptx_inspector.py compare \
+  --baseline artifacts/cuda/baseline.ptx \
+  --candidate artifacts/cuda/optimized.ptx \
+  --kernel my_kernel --output results/ptx-comparison
+```
+
+The tool requires no GPU, CUDA runtime, `nvcc`, or third-party Python packages.
+PTX declarations are not final physical register allocation, hardware resource
+usage, or occupancy estimates, and static instruction counts do not predict
+performance. See [PTX compiler analysis](docs/ptx_compiler_analysis.md) for kernel
+selection, normalization, output formats, and parser limitations.
