@@ -32,6 +32,8 @@ jobs:
       - name: Install optional report plotting dependency
         if: matrix.compiler == 'g++' && matrix.build_type == 'Release'
         run: python3 -m pip install -r scripts/requirements-report.txt
+      - name: Install Python test dependencies
+        run: python3 -m pip install numpy
       - name: Test
         run: ctest --test-dir build -L cpu --output-on-failure
       - name: Exercise result capture without a GPU
@@ -67,5 +69,9 @@ jobs:
           cmake --build build --parallel 2
       - name: Inspect controlled FP32 instructions (no GPU required)
         run: python3 scripts/verify_fp.py --binary build/libcuda_matmul.a --report build/fp_verification.json
+        - name: Install Python test dependencies
+        run: python3 -m pip install numpy
+      - name: Run CPU tests only
+        run: ctest --test-dir build -L cpu --output-on-failure
       - name: Run CPU tests only
         run: ctest --test-dir build -L cpu --output-on-failure
