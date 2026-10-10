@@ -37,6 +37,9 @@ endif()
 add_library(numeric src/numeric.cpp)
 target_include_directories(numeric PUBLIC include)
 
+add_library(tridiagonal src/tridiagonal.cpp)
+target_include_directories(tridiagonal PUBLIC include)
+
 add_library(matrix src/matrix.cpp)
 target_include_directories(matrix PUBLIC include)
 
@@ -63,11 +66,41 @@ add_library(benchmark src/benchmark.cpp)
 target_link_libraries(benchmark PUBLIC matrix)
 target_include_directories(benchmark PUBLIC include)
 
+add_library(tridiagonal_benchmark
+    src/tridiagonal_benchmark.cpp
+    src/tridiagonal_benchmark_cli.cpp
+)
+target_include_directories(tridiagonal_benchmark PUBLIC include)
+target_link_libraries(tridiagonal_benchmark PUBLIC tridiagonal benchmark)
+
 add_library(inspector src/inspector.cpp)
 target_link_libraries(inspector PUBLIC comparison)
 
 set(MATMUL_INSPECTOR_CUDA_BUILT OFF)
 if(MATMUL_INSPECTOR_ENABLE_CUDA AND CMAKE_CUDA_COMPILER)
+    add_library(cuda_tridiagonal src/cuda_tridiagonal.cu)
+    set_target_properties(cuda_tridiagonal PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+    )
+    target_include_directories(cuda_tridiagonal PUBLIC include)
+    target_compile_definitions(
+        cuda_tridiagonal
+        PUBLIC MATMUL_INSPECTOR_HAS_CUDA=1
+    )
+    target_link_libraries(cuda_tridiagonal PUBLIC tridiagonal_benchmark benchmark)
+
+    if(MATMUL_INSPECTOR_WARNINGS AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+        if(MSVC)
+            target_compile_options(
+                cuda_tridiagonal PRIVATE -Xcompiler=/W4
+            )
+        else()
+            target_compile_options(
+                cuda_tridiagonal PRIVATE -Xcompiler=-Wall,-Wextra
+            )
+        endif()
+    endif()
     set(MATMUL_INSPECTOR_CUDA_BUILT ON)
     find_package(CUDAToolkit 11.0 REQUIRED)
     add_library(cuda_matmul src/cuda_matmul.cu)
@@ -127,6 +160,12 @@ if(TARGET cuda_matmul)
     target_link_libraries(matmul-inspector PRIVATE cuda_matmul)
 endif()
 
+add_executable(tridiagonal-benchmark src/tridiagonal_benchmark_main.cpp)
+target_link_libraries(tridiagonal-benchmark PRIVATE tridiagonal_benchmark)
+if(TARGET cuda_tridiagonal)
+    target_link_libraries(tridiagonal-benchmark PRIVATE cuda_tridiagonal)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(summation-tests tests/summation_test.cpp)
@@ -159,6 +198,11 @@ if(BUILD_TESTING)
     add_executable(numeric-tests tests/numeric_test.cpp)
     target_link_libraries(numeric-tests PRIVATE numeric)
     add_test(NAME numeric-tests COMMAND numeric-tests)
+
+    add_executable(tridiagonal-tests tests/tridiagonal_test.cpp)
+    target_link_libraries(tridiagonal-tests PRIVATE tridiagonal tridiagonal_benchmark)
+    add_test(NAME tridiagonal-tests COMMAND tridiagonal-tests)
+    set_tests_properties(tridiagonal-tests PROPERTIES LABELS "cpu")
 
     add_executable(matrix-tests tests/matrix_test.cpp)
     target_link_libraries(matrix-tests PRIVATE inspector)
@@ -220,6 +264,27 @@ if(BUILD_TESTING)
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
+        add_executable(
+            cuda-tridiagonal-tests
+            tests/cuda_tridiagonal_test.cpp
+        )
+
+        target_link_libraries(
+            cuda-tridiagonal-tests
+            PRIVATE cuda_tridiagonal tridiagonal
+        )
+
+        add_test(
+            NAME cuda-tridiagonal-tests
+            COMMAND cuda-tridiagonal-tests
+        )
+
+        set_tests_properties(
+            cuda-tridiagonal-tests
+            PROPERTIES
+                SKIP_RETURN_CODE 77
+                LABELS "gpu"
+        )
         add_executable(cuda-vector-tests tests/cuda_vector_test.cpp)
         target_link_libraries(cuda-vector-tests PRIVATE cuda_matmul experiment)
         add_test(NAME cuda-vector-tests COMMAND cuda-vector-tests)
