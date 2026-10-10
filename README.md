@@ -457,3 +457,19 @@ top search candidates with a longer run, and writes the accepted selections to
 `summary.json`. A candidate is accepted only when all paired repeats beat
 PyTorch and the median paired ratio is at least 1.02. FC1 is excluded from this
 search and retains its established configuration.
+
+### NKI GEMM variants
+
+In an AWS Neuron/NKI environment, compare the full-tiled and caller-pretransposed
+GEMM kernels with deterministic inputs and CSV output:
+
+```bash
+python3 scripts/nki_gemm_benchmark.py \
+  --shapes 128x128x512,256x512x1024 \
+  --warmups 1 --iterations 3 --output results/nki-gemm
+```
+
+Local simulator checks record correctness and error metrics. Simulator wall-clock
+timing is explicitly labeled and is not Trainium performance. See
+[NKI GEMM benchmarking](docs/nki_gemm_benchmarking.md) for shape constraints,
+Cartesian grids, artifacts, and the hardware-backend extension point.

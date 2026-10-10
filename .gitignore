@@ -38,3 +38,29 @@ triton_cache*/
 
 # Local benchmark logs
 transformer_repeatability*.txt
+.venv-nki/
+*.ncu-rep
+# Generated study/reference documents
+docs/*.html
+docs/*.pdf
+
+# Nsight Compute / profiler text output
+ncu_*.txt
+
+# AWS Neuron generated artifacts
+artifacts/
+artifacts/nki-*/
+*.neff
+*.ntff
+*.pftrace
+
+# Generated accelerator artifacts
+cache_*/
+triton_cache*/
+*.cubin
+*.ptx
+*.nsys-rep
+*.sqlite
+
+# Local benchmark logs
+transformer_repeatability*.txt
