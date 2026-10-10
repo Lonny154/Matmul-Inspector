@@ -277,3 +277,91 @@ These results are specific to the tested Trainium1 hardware, matrix dimensions, 
 - Integrate configurable tile sweeps and hardware profiling into Matmul Inspector.
 - Compare one-core and multi-core execution performance.
 
+## Optimization Experiment: Logical K Blocking — October 10, 2026
+
+### Objective
+
+Investigate whether reorganizing the K-dimension accumulation loop improves NeuronCore execution latency for a 1024×1024 BF16 GEMM on AWS Trainium1.
+
+### Experimental Setup
+
+- **Hardware:** AWS EC2 `trn1.2xlarge`, one NeuronCore
+- **Workload:** 1024×1024 dense matrix multiplication
+- **Input precision:** BF16
+- **Accumulation:** FP32 in PSUM
+- **Output precision:** FP32
+- **Physical tile dimensions:** 128×512×128
+- **Baseline:** Eight consecutive K-tile iterations
+- **Experimental:** Four logical K blocks, each containing two physical K-tile iterations
+- **Benchmark:** `neuron-bench exec`
+- **Settings:** 20 warmups, 200 work iterations
+- **Repetitions:** Five randomized rounds per configuration
+
+### Performance Results
+
+| Metric | Baseline | K-blocked |
+|---|---:|---:|
+| Mean NeuronCore p50 | 93 µs | 93 µs |
+| MATMUL instructions | 128 | 128 |
+| LDWEIGHTS instructions | 80 | 80 |
+| EVENT_SEMAPHORE instructions | 36 | 36 |
+| COPY instructions | 16 | 16 |
+| DMA statistics | Identical | Identical |
+| NEFF SHA-256 | Different | Different |
+
+**Observed speedup:** 1.000×
+
+**Observed latency reduction:** 0.0%
+
+All five benchmark rounds reported identical NeuronCore p50 latencies at the available integer-microsecond resolution.
+
+### Numerical Correctness
+
+The K-blocked implementation passed numerical validation against FP32 matrix multiplication using BF16-rounded inputs.
+
+- Maximum absolute error: `5.340576e-05`
+- Mean absolute error: `3.5062462e-06`
+- Tolerance: `rtol=1e-3`, `atol=1e-3`
+- **Correctness: PASS**
+
+### Compiler Intermediate Representation Analysis
+
+The baseline and K-blocked kernels generated different NEFF SHA-256 hashes.
+
+An initial comparison of their `module.mlir` files produced 1,680 lines of textual differences.
+
+After removing source-location metadata and normalizing kernel function names:
+
+- **Normalized MLIR difference lines:** 0
+- **Normalized MLIR identical:** True
+- **Hardware opcode counts:** Identical
+- **DMA statistics:** Identical
+
+This provides strong evidence that the two source-level K-loop organizations were lowered into equivalent operations at the captured MLIR compilation stage.
+
+Different NEFF hashes prevent concluding that the final executable binaries were byte-identical.
+
+### Conclusion
+
+**Logical K blocking did not produce a measurable performance improvement for the tested 1024×1024 BF16 GEMM.**
+
+Reorganizing eight K iterations into four groups of two preserved numerical correctness but did not change the normalized MLIR representation, hardware instruction counts, DMA statistics, or reported NeuronCore p50 latency.
+
+The experiment demonstrates that source-level loop restructuring does not necessarily alter the compiler's intermediate operations or improve hardware execution.
+
+These conclusions apply to the tested workload, kernel implementation, hardware, and compiler environment.
+
+### Artifacts
+
+- `scripts/nki_k_blocking_experiment.py`
+- `scripts/nki_k_blocking_sweep.py`
+- `artifacts/nki-bf16_1024_n512/`
+- `artifacts/nki-bf16_1024_kblocked/`
+- `artifacts/nki-k-blocking-sweep-20261010T132953Z/`
+
+### Future Work
+
+- Examine final hardware instruction ordering and scheduling.
+- Investigate additional architecture-level optimization opportunities.
+- Extend benchmarking to larger GEMM workloads.
+- Integrate normalized MLIR comparisons into Matmul Inspector.
