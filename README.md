@@ -434,6 +434,30 @@ Create `process-b` with the same configuration on another machine. See the
 [capture workflow](docs/cross_hardware.md#fresh-process-reproducibility-captures)
 for CUDA/matrix examples, compatibility rules, artifacts and interpretation.
 
+### Transformer projection study
+
+The miniature FP16 Transformer supports independent Triton QKV, FC1 and FC2
+selection. Weights are transposed once before timing, and enabled projections
+are checked against PyTorch before alternating CUDA-event measurements:
+
+```bash
+.venv/bin/python scripts/transformer_workload.py \
+  --triton-qkv --triton-fc1 --triton-fc2 --benchmark-projections
+```
+
+The QKV/FC2-only controlled search is reproducible with:
+
+```bash
+.venv/bin/python scripts/transformer_projection_autotune.py \
+  --output results/transformer-autotune
+```
+
+It records every correctness and timing result in `autotune.csv`, verifies the
+top search candidates with a longer run, and writes the accepted selections to
+`summary.json`. A candidate is accepted only when all paired repeats beat
+PyTorch and the median paired ratio is at least 1.02. FC1 is excluded from this
+search and retains its established configuration.
+
 ### NKI GEMM variants
 
 In an AWS Neuron/NKI environment, compare the full-tiled and caller-pretransposed
