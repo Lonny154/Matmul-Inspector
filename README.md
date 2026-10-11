@@ -513,3 +513,29 @@ PTX declarations are not final physical register allocation, hardware resource
 usage, or occupancy estimates, and static instruction counts do not predict
 performance. See [PTX compiler analysis](docs/ptx_compiler_analysis.md) for kernel
 selection, normalization, output formats, and parser limitations.
+
+### Inspect and compare NVIDIA SASS
+
+The CPU-only SASS inspector analyzes saved `nvdisasm` text, separates primary
+kernels from embedded helper functions, records physical register-allocation
+metadata, preserves instruction addresses in JSON, and compares raw full files
+separately from normalized selected-function structure:
+
+```bash
+python3 scripts/sass_inspector.py inspect \
+  --input artifacts/cuda/matmul.sass --kernel mi_naive_fma \
+  --output results/sass-fma
+
+python3 scripts/sass_inspector.py compare \
+  --baseline artifacts/cuda/matmul.sass \
+  --candidate artifacts/cuda/matmul.sass \
+  --baseline-kernel mi_naive_fma \
+  --candidate-kernel mi_naive_no_fma \
+  --output results/sass-fma-vs-no-fma
+```
+
+Inspection itself requires no GPU, CUDA toolkit, or third-party Python package;
+generating the input remains a separate CUDA-toolchain step. Static SASS evidence
+does not establish occupancy, runtime behavior, or performance. See the
+[CUDA PTX/SASS FMA case study](docs/cuda_ptx_sass_fma_case_study.md) for parsing,
+normalization, validation, and interpretation details.
