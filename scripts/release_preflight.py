@@ -24,18 +24,14 @@ except ModuleNotFoundError:  # Python 3.10 compatibility for the CPU test matrix
 PROJECT_NAME = "matmul-inspector"
 LICENSE_EXPRESSION = "Apache-2.0"
 TAG_PATTERN = re.compile(r"^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
-RECOVERY_MODE = "recover-v0.1.0-from-c9d93c0"
-RECOVERY_TAG_REF = "refs/tags/v0.1.0"
-RECOVERY_TAG_OBJECT = "6b7a2aeaeb62c1d6f8d8edf7641b1cffe0a36e7e"
-RECOVERY_SOURCE_COMMIT = "c9d93c0c7f9967b67e3da0776ccf0e67ee518e55"
-RECOVERY_VERSION = "0.1.0"
 
 
 def normalized_name(value: str) -> str:
     return re.sub(r"[-_.]+", "-", value).lower()
 
 
-def project_metadata_source(source: str) -> dict[str, str]:
+def project_metadata(path: Path) -> dict[str, str]:
+    source = path.read_text(encoding="utf-8")
     if tomllib is not None:
         data = tomllib.loads(source)
         project = data.get("project")
@@ -54,10 +50,6 @@ def project_metadata_source(source: str) -> dict[str, str]:
     if values["license"] != LICENSE_EXPRESSION:
         raise ValueError(f"unexpected license expression: {values['license']!r}")
     return values
-
-
-def project_metadata(path: Path) -> dict[str, str]:
-    return project_metadata_source(path.read_text(encoding="utf-8"))
 
 
 def fallback_project_table(source: str) -> dict[str, str]:
@@ -98,64 +90,16 @@ def git_output(root: Path, *arguments: str) -> str:
 
 
 def release_preflight(
-    *, event_name: str, ref: str, sha: str, root: Path, main_ref: str,
-    recovery_mode: str = "build-only",
+    *, event_name: str, ref: str, sha: str, root: Path, main_ref: str
 ) -> dict[str, str]:
     metadata = project_metadata(root / "pyproject.toml")
     result = {
         "expected_version": metadata["version"],
         "publish_allowed": "false",
-        "recovery_allowed": "false",
         "validation_mode": "build-only",
-        "source_commit": git_output(root, "rev-parse", f"{sha}^{{commit}}"),
     }
     if event_name == "workflow_dispatch":
-        if recovery_mode == "build-only":
-            return result
-        if recovery_mode != RECOVERY_MODE:
-            raise ValueError(f"unsupported recovery mode: {recovery_mode!r}")
-        if ref != "refs/heads/main":
-            raise ValueError("v0.1.0 recovery must be dispatched from refs/heads/main")
-        controller_commit = result["source_commit"]
-        main_commit = git_output(root, "rev-parse", f"{main_ref}^{{commit}}")
-        if controller_commit != main_commit:
-            raise ValueError(
-                f"workflow controller {controller_commit} does not match {main_ref} {main_commit}"
-            )
-        tag_object = git_output(root, "rev-parse", RECOVERY_TAG_REF)
-        if tag_object != RECOVERY_TAG_OBJECT:
-            raise ValueError(
-                f"v0.1.0 tag object is {tag_object}, expected {RECOVERY_TAG_OBJECT}"
-            )
-        if git_output(root, "cat-file", "-t", tag_object) != "tag":
-            raise ValueError("v0.1.0 must remain an annotated tag object")
-        source_commit = git_output(root, "rev-parse", f"{RECOVERY_TAG_REF}^{{commit}}")
-        if source_commit != RECOVERY_SOURCE_COMMIT:
-            raise ValueError(
-                f"v0.1.0 resolves to {source_commit}, expected {RECOVERY_SOURCE_COMMIT}"
-            )
-        ancestry = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", source_commit, main_ref],
-            cwd=root,
-            check=False,
-        )
-        if ancestry.returncode != 0:
-            raise ValueError(f"recovery source {source_commit} is not verified in {main_ref}")
-        tagged_metadata = project_metadata_source(
-            git_output(root, "show", f"{source_commit}:pyproject.toml")
-        )
-        if tagged_metadata["version"] != RECOVERY_VERSION:
-            raise ValueError("recovery source metadata does not declare version 0.1.0")
-        result.update(
-            expected_version=RECOVERY_VERSION,
-            recovery_allowed="true",
-            validation_mode="v0.1.0-recovery",
-            source_commit=source_commit,
-            recovery_tag_object=tag_object,
-        )
         return result
-    if recovery_mode != "build-only":
-        raise ValueError("recovery mode is valid only for workflow_dispatch")
     if event_name != "push":
         raise ValueError(f"unsupported release event: {event_name!r}")
     match = TAG_PATTERN.fullmatch(ref)
@@ -296,7 +240,6 @@ def build_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--sha", required=True)
     preflight.add_argument("--root", type=Path, default=Path.cwd())
     preflight.add_argument("--main-ref", default="origin/main")
-    preflight.add_argument("--recovery-mode", default="build-only")
     preflight.add_argument("--github-output", type=Path)
     artifacts = commands.add_parser("artifacts")
     artifacts.add_argument("--directory", type=Path, required=True)
@@ -314,7 +257,6 @@ def run(arguments: Sequence[str] | None = None) -> int:
             sha=args.sha,
             root=args.root.resolve(),
             main_ref=args.main_ref,
-            recovery_mode=args.recovery_mode,
         )
         if args.github_output:
             write_outputs(args.github_output, result)
