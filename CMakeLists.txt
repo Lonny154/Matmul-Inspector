@@ -279,6 +279,9 @@ if(BUILD_TESTING)
         add_test(NAME python-packaging-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/python_packaging_test.py")
         set_tests_properties(python-packaging-tests PROPERTIES LABELS "cpu")
+        add_test(NAME release-workflow-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/release_workflow_test.py")
+        set_tests_properties(release-workflow-tests PROPERTIES LABELS "cpu")
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
