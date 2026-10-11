@@ -202,7 +202,26 @@ class WorkflowConfigurationTests(unittest.TestCase):
         self.assertIn(
             "artifact-ids: ${{ needs.build-and-verify.outputs.artifact_id }}", self.publish
         )
+        self.assertIn("merge-multiple: true", self.publish)
         self.assertNotIn("actions/checkout@", self.publish)
+
+    def test_publish_rejects_nested_or_unexpected_download_layout(self):
+        download = self.publish.index("actions/download-artifact@")
+        verify = self.publish.index("Verify downloaded distribution layout")
+        upload = self.publish.index("pypa/gh-action-pypi-publish@")
+        self.assertLess(download, verify)
+        self.assertLess(verify, upload)
+        for requirement in (
+            "shopt -s nullglob dotglob",
+            "entries=(dist/*)",
+            "wheels=(dist/*.whl)",
+            "sdists=(dist/*.tar.gz)",
+            "${#entries[@]} != 2",
+            "${#wheels[@]} != 1",
+            "${#sdists[@]} != 1",
+            '[[ ! -f "$entry" || -L "$entry" ]]',
+        ):
+            self.assertIn(requirement, self.publish)
 
     def test_actions_are_pinned_to_commit_shas(self):
         uses = re.findall(r"^\s*uses:\s*[^@\s]+@([^\s]+)", self.workflow, re.MULTILINE)

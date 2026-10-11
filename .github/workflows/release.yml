@@ -111,6 +111,26 @@ jobs:
         with:
           artifact-ids: ${{ needs.build-and-verify.outputs.artifact_id }}
           path: dist
+          merge-multiple: true
+      - name: Verify downloaded distribution layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob dotglob
+          entries=(dist/*)
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          if (( ${#entries[@]} != 2 || ${#wheels[@]} != 1 || ${#sdists[@]} != 1 )); then
+            printf 'Expected exactly one wheel and one source distribution directly in dist/.\n' >&2
+            printf 'Found: %s\n' "${entries[@]:-<nothing>}" >&2
+            exit 1
+          fi
+          for entry in "${entries[@]}"; do
+            if [[ ! -f "$entry" || -L "$entry" ]]; then
+              printf 'Rejected non-regular or nested distribution entry: %s\n' "$entry" >&2
+              exit 1
+            fi
+          done
       - name: Publish with PyPI Trusted Publishing
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         with:
