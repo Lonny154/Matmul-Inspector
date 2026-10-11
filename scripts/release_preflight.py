@@ -12,9 +12,13 @@ import re
 import subprocess
 import sys
 import tarfile
-import tomllib
 from typing import Sequence
 import zipfile
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 compatibility for the CPU test matrix.
+    tomllib = None
 
 
 PROJECT_NAME = "matmul-inspector"
@@ -27,10 +31,14 @@ def normalized_name(value: str) -> str:
 
 
 def project_metadata(path: Path) -> dict[str, str]:
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
-    project = data.get("project")
-    if not isinstance(project, dict):
-        raise ValueError("pyproject.toml has no [project] table")
+    source = path.read_text(encoding="utf-8")
+    if tomllib is not None:
+        data = tomllib.loads(source)
+        project = data.get("project")
+        if not isinstance(project, dict):
+            raise ValueError("pyproject.toml has no [project] table")
+    else:
+        project = fallback_project_table(source)
     values = {}
     for field in ("name", "version", "license"):
         value = project.get(field)
@@ -41,6 +49,33 @@ def project_metadata(path: Path) -> dict[str, str]:
         raise ValueError(f"unexpected project name: {values['name']!r}")
     if values["license"] != LICENSE_EXPRESSION:
         raise ValueError(f"unexpected license expression: {values['license']!r}")
+    return values
+
+
+def fallback_project_table(source: str) -> dict[str, str]:
+    """Read required scalar fields on Python 3.10; reject ambiguity."""
+    in_project = False
+    values = {}
+    field_pattern = re.compile(r'^(name|version|license)\s*=\s*"([^"\r\n]+)"\s*(?:#.*)?$')
+    for raw_line in source.splitlines():
+        line = raw_line.strip()
+        if line == "[project]":
+            if in_project:
+                raise ValueError("pyproject.toml has conflicting [project] tables")
+            in_project = True
+            continue
+        if in_project and line.startswith("["):
+            break
+        if not in_project or not line or line.startswith("#"):
+            continue
+        match = field_pattern.fullmatch(line)
+        if match:
+            field, value = match.groups()
+            if field in values:
+                raise ValueError(f"pyproject.toml has conflicting project.{field} values")
+            values[field] = value
+    if not in_project:
+        raise ValueError("pyproject.toml has no [project] table")
     return values
 
 

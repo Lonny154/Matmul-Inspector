@@ -86,6 +86,21 @@ class ReleasePreflightTests(unittest.TestCase):
         self.assertEqual(result["publish_allowed"], "true")
         self.assertEqual(result["tagged_commit"], self.main_commit)
 
+    def test_python_310_metadata_fallback_is_fail_closed(self):
+        parser = release.tomllib
+        try:
+            release.tomllib = None
+            self.assertEqual(
+                release.project_metadata(self.root / "pyproject.toml")["version"], "0.1.0"
+            )
+            (self.root / "pyproject.toml").write_text(
+                PYPROJECT + 'version = "0.2.0"\n', encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "conflicting project.version"):
+                release.project_metadata(self.root / "pyproject.toml")
+        finally:
+            release.tomllib = parser
+
     def test_manual_dispatch_is_always_build_only_even_on_release_tag(self):
         result = self.preflight(event="workflow_dispatch", sha="not-a-commit")
         self.assertEqual(result["publish_allowed"], "false")
