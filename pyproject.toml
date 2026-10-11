@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matmul-inspector"
+version = "0.1.0"
+description = "CPU-only compiler-artifact analysis tools for numerical kernel experiments"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Daniel Lonneman"}]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+keywords = ["cuda", "ptx", "sass", "trainium", "compiler-analysis"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Compilers",
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/Lonny154/Matmul-Inspector"
+Issues = "https://github.com/Lonny154/Matmul-Inspector/issues"
+
+[project.scripts]
+matmul-inspector = "matmul_inspector.cli:main"
+matmul-inspector-python = "matmul_inspector.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["matmul_inspector*"]

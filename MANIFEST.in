@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include NOTICE
+include pyproject.toml
+recursive-include src/matmul_inspector *.py
+prune .github
+prune artifacts
+prune docs
+prune results
+prune scripts
+prune tests
+recursive-exclude src *.cpp *.cu *.cuh *.h *.hpp
+global-exclude AGENTS.md project_context.md *.ptx *.cubin *.neff *.ntff *.pftrace *.pyc

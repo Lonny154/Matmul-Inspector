@@ -9,6 +9,43 @@ permissions:
   contents: read
 
 jobs:
+  python-package:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install distribution build frontend
+        run: python -m pip install build
+      - name: Build wheel and source distribution
+        run: python -m build --outdir dist
+      - name: Audit distribution contents
+        run: python tests/distribution_contents_test.py dist/*.whl dist/*.tar.gz
+      - name: Smoke-test clean wheel installation outside the checkout
+        run: |
+          python -m venv /tmp/matmul-inspector-wheel
+          /tmp/matmul-inspector-wheel/bin/python -m pip install --no-deps dist/*.whl
+          python tests/installed_package_smoke.py \
+            --python /tmp/matmul-inspector-wheel/bin/python \
+            --command /tmp/matmul-inspector-wheel/bin/matmul-inspector \
+            --alias /tmp/matmul-inspector-wheel/bin/matmul-inspector-python
+      - name: Smoke-test clean sdist installation outside the checkout
+        if: matrix.python-version == '3.13'
+        run: |
+          python -m venv /tmp/matmul-inspector-sdist
+          /tmp/matmul-inspector-sdist/bin/python -m pip install --no-deps dist/*.tar.gz
+          python tests/installed_package_smoke.py \
+            --python /tmp/matmul-inspector-sdist/bin/python \
+            --command /tmp/matmul-inspector-sdist/bin/matmul-inspector \
+            --alias /tmp/matmul-inspector-sdist/bin/matmul-inspector-python
+
   cpu:
     runs-on: ubuntu-24.04
     strategy:
