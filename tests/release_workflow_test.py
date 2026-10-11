@@ -71,26 +71,14 @@ class ReleasePreflightTests(unittest.TestCase):
         git(self.root, "commit", "-m", "initial")
         self.main_commit = git(self.root, "rev-parse", "HEAD")
         git(self.root, "tag", "-a", "v0.1.0", "-m", "release")
-        self.production_constants = (
-            release.RECOVERY_TAG_OBJECT,
-            release.RECOVERY_SOURCE_COMMIT,
-        )
-        release.RECOVERY_TAG_OBJECT = git(self.root, "rev-parse", "refs/tags/v0.1.0")
-        release.RECOVERY_SOURCE_COMMIT = self.main_commit
 
     def tearDown(self):
-        release.RECOVERY_TAG_OBJECT, release.RECOVERY_SOURCE_COMMIT = (
-            self.production_constants
-        )
         self.temp.cleanup()
 
-    def preflight(
-        self, event="push", ref="refs/tags/v0.1.0", sha=None,
-        recovery_mode="build-only",
-    ):
+    def preflight(self, event="push", ref="refs/tags/v0.1.0", sha=None):
         return release.release_preflight(
             event_name=event, ref=ref, sha=sha or self.main_commit,
-            root=self.root, main_ref="main", recovery_mode=recovery_mode,
+            root=self.root, main_ref="main",
         )
 
     def test_valid_tag_push_requires_exact_commit_on_main(self):
@@ -113,48 +101,10 @@ class ReleasePreflightTests(unittest.TestCase):
         finally:
             release.tomllib = parser
 
-    def test_normal_manual_dispatch_is_build_only_even_on_release_tag(self):
-        result = self.preflight(event="workflow_dispatch")
+    def test_manual_dispatch_is_always_build_only_even_on_release_tag(self):
+        result = self.preflight(event="workflow_dispatch", sha="not-a-commit")
         self.assertEqual(result["publish_allowed"], "false")
-        self.assertEqual(result["recovery_allowed"], "false")
         self.assertEqual(result["validation_mode"], "build-only")
-
-    def test_exact_recovery_verifies_controller_tag_and_source(self):
-        result = self.preflight(
-            event="workflow_dispatch", ref="refs/heads/main",
-            recovery_mode=release.RECOVERY_MODE,
-        )
-        self.assertEqual(result["publish_allowed"], "false")
-        self.assertEqual(result["recovery_allowed"], "true")
-        self.assertEqual(result["source_commit"], self.main_commit)
-        self.assertEqual(result["validation_mode"], "v0.1.0-recovery")
-
-    def test_recovery_rejects_unknown_mode_ref_and_stale_controller(self):
-        with self.assertRaisesRegex(ValueError, "unsupported recovery mode"):
-            self.preflight(event="workflow_dispatch", recovery_mode="recover-anything")
-        with self.assertRaisesRegex(ValueError, "dispatched from refs/heads/main"):
-            self.preflight(event="workflow_dispatch", recovery_mode=release.RECOVERY_MODE)
-        git(self.root, "commit", "--allow-empty", "-m", "new main")
-        with self.assertRaisesRegex(ValueError, "does not match"):
-            self.preflight(
-                event="workflow_dispatch", ref="refs/heads/main",
-                recovery_mode=release.RECOVERY_MODE,
-            )
-
-    def test_recovery_rejects_changed_tag_object_or_peeled_commit(self):
-        release.RECOVERY_TAG_OBJECT = "0" * 40
-        with self.assertRaisesRegex(ValueError, "tag object"):
-            self.preflight(
-                event="workflow_dispatch", ref="refs/heads/main",
-                recovery_mode=release.RECOVERY_MODE,
-            )
-        release.RECOVERY_TAG_OBJECT = git(self.root, "rev-parse", "refs/tags/v0.1.0")
-        release.RECOVERY_SOURCE_COMMIT = "1" * 40
-        with self.assertRaisesRegex(ValueError, "resolves to"):
-            self.preflight(
-                event="workflow_dispatch", ref="refs/heads/main",
-                recovery_mode=release.RECOVERY_MODE,
-            )
 
     def test_invalid_tag_and_version_mismatch_fail_closed(self):
         for ref in ("refs/heads/main", "refs/tags/v0.1", "refs/tags/v0.1.0-rc1",
@@ -233,8 +183,7 @@ class WorkflowConfigurationTests(unittest.TestCase):
         self.assertIn("workflow_dispatch:", self.trigger)
         self.assertNotIn("pull_request:", self.trigger)
         self.assertNotIn("branches:", self.trigger)
-        self.assertIn("default: build-only", self.trigger)
-        self.assertEqual(self.trigger.count("recover-v0.1.0-from-c9d93c0"), 2)
+        self.assertNotIn("inputs:", self.trigger)
 
     def test_publish_guards_and_environment(self):
         for guard in ("publish_allowed == 'true'", "github.event_name == 'push'",
@@ -242,28 +191,8 @@ class WorkflowConfigurationTests(unittest.TestCase):
                       "needs.build-and-verify.result == 'success'"):
             self.assertIn(guard, self.publish)
         self.assertRegex(self.publish, r"environment:\s+name: pypi")
-        for recovery_guard in (
-            "recovery_allowed == 'true'",
-            "github.event_name == 'workflow_dispatch'",
-            "github.ref == 'refs/heads/main'",
-            "inputs.mode == 'recover-v0.1.0-from-c9d93c0'",
-        ):
-            self.assertIn(recovery_guard, self.publish)
-
-    def test_recovery_uses_fixed_source_and_verifies_head_before_build(self):
-        self.assertIn("git checkout --detach", self.build)
-        self.assertIn('actual="$(git rev-parse HEAD^{commit})"', self.build)
-        self.assertIn('expected="${{ steps.preflight.outputs.source_commit }}"', self.build)
-        self.assertLess(self.build.index("Verify packaging source commit"),
-                        self.build.index("python -m build"))
-        self.assertIn(
-            'RECOVERY_TAG_OBJECT = "6b7a2aeaeb62c1d6f8d8edf7641b1cffe0a36e7e"',
-            (ROOT / "scripts" / "release_preflight.py").read_text(encoding="utf-8"),
-        )
-        self.assertIn(
-            'RECOVERY_SOURCE_COMMIT = "c9d93c0c7f9967b67e3da0776ccf0e67ee518e55"',
-            (ROOT / "scripts" / "release_preflight.py").read_text(encoding="utf-8"),
-        )
+        self.assertNotIn("workflow_dispatch", self.publish)
+        self.assertNotIn("recovery", self.workflow.lower())
 
     def test_oidc_only_in_publish_and_no_permanent_credential(self):
         self.assertNotIn("id-token: write", self.build)

@@ -123,16 +123,13 @@ Failures stop before artifact upload or publishing; publication does not use
 
 ### Manual build-only validation
 
-Before approving the first release, open **Actions → PyPI release → Run workflow**
-and select the `build-only` mode on the branch or commit to validate. A normal
-manual run is labeled
+Before approving a release, open **Actions → PyPI release → Run workflow**
+and select the branch or commit to validate. A manual run is labeled
 **BUILD-ONLY**. It performs the complete build and verification pipeline and
 uploads inspectable distributions, but its preflight always emits
 `publish_allowed=false`. This remains true even if the manual run is invoked
 against a tag. The publish job is skipped, the `pypi` environment is not entered,
-and no OIDC publishing token is requested. The sole exception is the narrowly
-fixed v0.1.0 recovery mode described below; no user-supplied ref, version, SHA,
-artifact ID, or URL is accepted by that mode.
+and no OIDC publishing token is requested.
 
 Review the build job summary for the two filenames, byte sizes, and SHA-256 hashes.
 Download the `validated-release-distributions` artifact and independently check:
@@ -154,55 +151,33 @@ create and push the approved version tag:
 ```sh
 git switch main
 git pull --ff-only origin main
-git tag -a v0.1.0 -m "Matmul Inspector v0.1.0"
-git push origin v0.1.0
+version=1.2.3  # replace with the approved project version
+git tag -a "v${version}" -m "Matmul Inspector v${version}"
+git push origin "v${version}"
 ```
 
 Do not use this procedure until tag creation and publication are explicitly
 approved. The tag push starts a new workflow run that rebuilds from the tagged
 source and repeats every validation. The GitHub `pypi` environment applies its
 deployment tag restriction and any configured protection rules. GitHub then
-requests a short-lived OIDC identity for the publish job. PyPI's pending trusted
-publisher matches the repository, `release.yml` workflow, and `pypi` environment;
-on the first successful publication it creates the `matmul-inspector` project
-and records that release.
+requests a short-lived OIDC identity for the publish job. PyPI's trusted
+publisher matches the repository, `release.yml` workflow, and `pypi` environment,
+then records the approved release.
 
 Production PyPI is intentionally separate from any future TestPyPI workflow.
 TestPyPI configuration must not be assumed and is not used as a fallback.
 
-### Temporary v0.1.0 recovery mode
+### v0.1.0 publication history
 
-The original v0.1.0 tag-triggered run validated its archives but failed during
-publication because the downloaded files were nested below `dist/`. The tag must
-not be moved or recreated. The temporary recovery choice
-`recover-v0.1.0-from-c9d93c0` is therefore hard-coded to the existing annotated
-tag object `6b7a2aeaeb62c1d6f8d8edf7641b1cffe0a36e7e` and its peeled source commit
-`c9d93c0c7f9967b67e3da0776ccf0e67ee518e55`.
+Version 0.1.0 was successfully published to production PyPI and independently
+installed in a clean environment. Its initial publishing job encountered an
+artifact-layout problem after validated distributions were downloaded into a
+nested directory. The workflow was corrected to merge downloads directly into
+`dist/`, retain strict layout validation, and a one-time recovery procedure
+completed publication. That temporary recovery capability has been removed.
 
-Before an approved recovery run, an administrator must temporarily allow the
-protected `pypi` GitHub environment to deploy from the `main` branch in addition
-to its release-tag rule. This is a manual repository-setting change; the workflow
-does not change GitHub or PyPI configuration. Then dispatch the workflow from
-the current `main` branch and select exactly `recover-v0.1.0-from-c9d93c0`.
-
-The recovery preflight freshly fetches `origin/main` and the v0.1.0 tag, requires
-the workflow controller SHA to equal `origin/main`, verifies both fixed tag
-identities and ancestry, reads version 0.1.0 metadata from the tagged commit,
-and only then checks out that source commit in detached-HEAD mode. The workflow
-checks `HEAD` again immediately before building. Publication has a separate
-authorization branch for this exact manual event and still uses only the two
-validated archives uploaded by the build job in the same run. The flat `dist/`
-layout check, protected environment, and publish-job-only OIDC permission remain
-mandatory. Every other manual input remains build-only or fails closed.
-
-After a successful publication and clean installation verification:
-
-1. Remove the temporary `main` deployment allowance from the `pypi` environment.
-2. Remove the recovery input, constants, preflight branch, checkout step, publish
-   authorization branch, recovery tests, and this subsection through normal PR
-   review. Preserve the ordinary `build-only` manual workflow.
-3. Do not move, delete, or recreate `v0.1.0`; retain its annotated tag object and
-   peeled source commit as release provenance.
+Future publication remains limited to approved release-tag pushes. Ordinary
+manual workflow runs are build-only and cannot publish.
 
 ### Post-publication and failure handling
 
@@ -233,13 +208,14 @@ a GitHub Release only after PyPI contents and clean installation are verified.
 - [x] Runtime dependencies remain empty.
 - [x] License the project under Apache License 2.0 and include `LICENSE` and
   `NOTICE` in both distribution formats.
-- [ ] Confirm `matmul-inspector` availability through the PyPI publication workflow.
+- [x] Confirm `matmul-inspector` 0.1.0 availability on production PyPI.
 - [ ] Review distribution metadata and project URLs.
 - [ ] Run and review the manual BUILD-ONLY release workflow.
 - [ ] Optional future work: configure and validate a separate TestPyPI workflow.
-- [ ] Publish the approved archives to PyPI.
-- [ ] Create the approved `v0.1.0` Git tag and GitHub release.
-- [ ] Run post-publication installation and CLI smoke tests from PyPI.
+- [x] Publish the approved 0.1.0 archives to PyPI.
+- [x] Create the approved `v0.1.0` Git tag.
+- [ ] Create a GitHub release if separately approved.
+- [x] Run post-publication installation and CLI smoke tests from PyPI.
 
 The licensing blocker is resolved: the package declares the SPDX expression
 `Apache-2.0`, and both distribution formats carry the license and project notice.
