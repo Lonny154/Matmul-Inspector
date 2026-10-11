@@ -539,3 +539,26 @@ generating the input remains a separate CUDA-toolchain step. Static SASS evidenc
 does not establish occupancy, runtime behavior, or performance. See the
 [CUDA PTX/SASS FMA case study](docs/cuda_ptx_sass_fma_case_study.md) for parsing,
 normalization, validation, and interpretation details.
+
+### Combine compiler and benchmark evidence
+
+Create one CPU-only report from saved PTX comparison, SASS comparison, and
+benchmark artifacts without recompiling or rerunning a GPU workload:
+
+```bash
+python3 scripts/compiler_performance_report.py \
+  --ptx-comparison results/ptx-fma-comparison/comparison.json \
+  --sass-comparison results/sass-fma-comparison/comparison.json \
+  --benchmark results/fma-vs-no-fma-sass \
+  --reference-map ptx=mi_naive_fma,sass=mi_naive_fma,benchmark=cuda-naive-fma \
+  --candidate-map ptx=mi_naive_no_fma,sass=mi_naive_no_fma,benchmark=cuda-naive-no-fma \
+  --output results/unified-fma-study
+```
+
+The explicit maps state intended reference/candidate correspondence; they do not
+prove that separate artifacts came from the same compilation. The report verifies
+build linkage only from stronger shared build or binary identifiers and otherwise
+labels it unverified. Completion, file completeness, numerical correctness, and
+metric availability remain separate statuses. See
+[compiler-to-performance reporting](docs/compiler_performance_reporting.md) for
+the schema, partial-input behavior, and interpretation limits.

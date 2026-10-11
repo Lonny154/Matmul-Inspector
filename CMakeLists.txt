@@ -273,6 +273,9 @@ if(BUILD_TESTING)
         add_test(NAME sass-inspector-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/sass_inspector_test.py")
         set_tests_properties(sass-inspector-tests PROPERTIES LABELS "cpu")
+        add_test(NAME compiler-performance-report-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiler_performance_report_test.py")
+        set_tests_properties(compiler-performance-report-tests PROPERTIES LABELS "cpu")
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)
