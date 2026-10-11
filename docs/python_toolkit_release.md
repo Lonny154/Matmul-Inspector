@@ -106,7 +106,7 @@ run. Only this job has `id-token: write`, and it enters the protected GitHub
 environment named `pypi` before invoking PyPA's publishing action. No PyPI token
 or password is stored in the repository.
 
-Production publication requires all of the following:
+Normal production publication requires all of the following:
 
 1. The event is a tag push, not a pull request, branch push, or manual dispatch.
 2. The ref exactly matches `vMAJOR.MINOR.PATCH` with no prerelease suffix or
@@ -124,12 +124,15 @@ Failures stop before artifact upload or publishing; publication does not use
 ### Manual build-only validation
 
 Before approving the first release, open **Actions → PyPI release → Run workflow**
-and select the branch or commit to validate. A manual run is labeled
+and select the `build-only` mode on the branch or commit to validate. A normal
+manual run is labeled
 **BUILD-ONLY**. It performs the complete build and verification pipeline and
 uploads inspectable distributions, but its preflight always emits
 `publish_allowed=false`. This remains true even if the manual run is invoked
 against a tag. The publish job is skipped, the `pypi` environment is not entered,
-and no OIDC publishing token is requested.
+and no OIDC publishing token is requested. The sole exception is the narrowly
+fixed v0.1.0 recovery mode described below; no user-supplied ref, version, SHA,
+artifact ID, or URL is accepted by that mode.
 
 Review the build job summary for the two filenames, byte sizes, and SHA-256 hashes.
 Download the `validated-release-distributions` artifact and independently check:
@@ -166,6 +169,40 @@ and records that release.
 
 Production PyPI is intentionally separate from any future TestPyPI workflow.
 TestPyPI configuration must not be assumed and is not used as a fallback.
+
+### Temporary v0.1.0 recovery mode
+
+The original v0.1.0 tag-triggered run validated its archives but failed during
+publication because the downloaded files were nested below `dist/`. The tag must
+not be moved or recreated. The temporary recovery choice
+`recover-v0.1.0-from-c9d93c0` is therefore hard-coded to the existing annotated
+tag object `6b7a2aeaeb62c1d6f8d8edf7641b1cffe0a36e7e` and its peeled source commit
+`c9d93c0c7f9967b67e3da0776ccf0e67ee518e55`.
+
+Before an approved recovery run, an administrator must temporarily allow the
+protected `pypi` GitHub environment to deploy from the `main` branch in addition
+to its release-tag rule. This is a manual repository-setting change; the workflow
+does not change GitHub or PyPI configuration. Then dispatch the workflow from
+the current `main` branch and select exactly `recover-v0.1.0-from-c9d93c0`.
+
+The recovery preflight freshly fetches `origin/main` and the v0.1.0 tag, requires
+the workflow controller SHA to equal `origin/main`, verifies both fixed tag
+identities and ancestry, reads version 0.1.0 metadata from the tagged commit,
+and only then checks out that source commit in detached-HEAD mode. The workflow
+checks `HEAD` again immediately before building. Publication has a separate
+authorization branch for this exact manual event and still uses only the two
+validated archives uploaded by the build job in the same run. The flat `dist/`
+layout check, protected environment, and publish-job-only OIDC permission remain
+mandatory. Every other manual input remains build-only or fails closed.
+
+After a successful publication and clean installation verification:
+
+1. Remove the temporary `main` deployment allowance from the `pypi` environment.
+2. Remove the recovery input, constants, preflight branch, checkout step, publish
+   authorization branch, recovery tests, and this subsection through normal PR
+   review. Preserve the ordinary `build-only` manual workflow.
+3. Do not move, delete, or recreate `v0.1.0`; retain its annotated tag object and
+   peeled source commit as release provenance.
 
 ### Post-publication and failure handling
 
