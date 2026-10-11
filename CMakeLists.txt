@@ -276,6 +276,9 @@ if(BUILD_TESTING)
         add_test(NAME compiler-performance-report-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiler_performance_report_test.py")
         set_tests_properties(compiler-performance-report-tests PROPERTIES LABELS "cpu")
+        add_test(NAME python-packaging-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/python_packaging_test.py")
+        set_tests_properties(python-packaging-tests PROPERTIES LABELS "cpu")
     endif()
 
     if(TARGET cuda_matmul AND MATMUL_INSPECTOR_GPU_TESTS)

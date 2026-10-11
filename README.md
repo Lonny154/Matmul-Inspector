@@ -20,6 +20,73 @@ Inspector reports them, CUDA executes kernels, and experiment code records runs.
 See [Experimental findings](docs/findings.md) for a concise summary of the
 main performance, floating-point, reproducibility, and cross-hardware results.
 
+## Python toolkit
+
+The planned v0.1.0 package provides the CPU-only compiler-artifact tools without
+requiring the native benchmark, CUDA, a GPU, or AWS Neuron:
+
+```sh
+pip install matmul-inspector
+```
+
+This is the target installation command; the package has not yet been published
+to PyPI. Until publication, install a locally built wheel or source distribution.
+Linux with Python 3.10–3.13 is the configured CI support matrix. Local clean-install
+validation currently covers Python 3.13; broader support remains provisional until
+that CI matrix runs successfully.
+
+Installed commands:
+
+```sh
+matmul-inspector --version
+matmul-inspector ptx inspect --help
+matmul-inspector ptx compare --help
+matmul-inspector sass inspect --help
+matmul-inspector sass compare --help
+matmul-inspector nki --help
+matmul-inspector report --help
+```
+
+The package also installs `matmul-inspector-python` as an unambiguous alias for
+the Python dispatcher. The native C++ source build continues to produce an
+executable named `matmul-inspector`; neither executable is renamed or replaced.
+Your shell runs the first matching executable on `PATH`. The alias identifies the
+installed Python entry point only while the intended Python environment is active
+or its absolute executable path is used. Check resolution when both are present:
+
+```sh
+command -v matmul-inspector
+command -v matmul-inspector-python
+matmul-inspector-python --version
+```
+
+Five-minute artifact-analysis example:
+
+```sh
+matmul-inspector-python ptx inspect \
+  --input capture.ptx --output ptx-inspection
+matmul-inspector-python sass inspect \
+  --input capture.sass --output sass-inspection
+matmul-inspector-python nki baseline-artifacts candidate-artifacts \
+  --output nki-comparison
+matmul-inspector-python report \
+  --ptx-comparison ptx-comparison/comparison.json \
+  --sass-comparison sass-comparison/comparison.json \
+  --benchmark benchmark-run --output unified-report
+```
+
+These commands analyze existing text and result artifacts. CUDA or Trainium tools
+and hardware are needed only to generate hardware-specific artifacts or execute
+benchmarks; they are not Python package dependencies. Existing direct script
+commands remain supported from a source checkout. See the
+[Python toolkit release guide](docs/python_toolkit_release.md) for clean-build
+validation, the native-command name collision, and the v0.1.0 release checklist.
+
+## License
+
+Matmul Inspector is licensed under the [Apache License 2.0](LICENSE). The project
+copyright notice is recorded in [NOTICE](NOTICE).
+
 ## Build
 
 Requires CMake 3.17+ and a C++17 compiler. Python 3 enables additional integration
@@ -50,6 +117,9 @@ first configuration. No local installation path is built into CMake. On CMake
 3.18+, set `-DCMAKE_CUDA_ARCHITECTURES=...` for your intended target(s); otherwise
 the compiler default is used. The selected architecture is captured in metadata.
 The optional `cuda_matmul` target exports `MATMUL_INSPECTOR_HAS_CUDA=1`.
+
+This source-build workflow is independent of the lightweight Python toolkit. The
+native executable is not bundled into the wheel and is not installed by pip.
 
 Use `-DCMAKE_BUILD_TYPE=Debug` for debugging, Release for timing. Multi-config
 builds also need `--config Release` for build/CTest. Warnings default to ON
