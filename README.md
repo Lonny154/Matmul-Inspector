@@ -1,634 +1,250 @@
-# Matmul-Inspector
+# Matmul Inspector
 
-Matmul-Inspector is a C++17/CUDA laboratory for inspecting floating-point matrix
-multiplication and recording reproducible experiments. It exposes values, physical
-addresses, IEEE-754 bits, ULP distances and tolerances alongside kernel timing.
-Its goal is transparent numerical analysis, not a replacement for a tuned BLAS.
+**See what your GPU or AI-accelerator compiler actually produced.**
 
-Floating-point operations round. Changing accumulation order, FMA contraction or
-compiler settings can change bits without producing an unacceptable numerical
-error. A seed alone is insufficient provenance: source, build flags, hardware,
-driver and timing method also matter.
+Matmul Inspector turns saved NVIDIA PTX, NVIDIA SASS, and AWS Neuron NKI compiler
+artifacts into readable JSON and Markdown reports. This matters because a small
+source change can disappear in an intermediate representation, produce different
+machine instructions, change numerical results, or affect performance—and none
+of those outcomes can safely be inferred from another.
 
-The CPU implementation is a sequential FP32 reference. The naive CUDA kernel
-assigns one thread per output; the 16x16 tiled kernel stages A and B in shared
-memory. Both retain a single accumulator and increasing-K order, support strided
-storage, and handle partial tiles. No Tensor Cores, mixed precision, tree reductions
-or cuBLAS are used. Matrix owns layout, numeric/comparison code analyzes values,
-Inspector reports them, CUDA executes kernels, and experiment code records runs.
-
-See [Experimental findings](docs/findings.md) for a concise summary of the
-main performance, floating-point, reproducibility, and cross-hardware results.
-
-## Python toolkit
-
-The planned v0.1.0 package provides the CPU-only compiler-artifact tools without
-requiring the native benchmark, CUDA, a GPU, or AWS Neuron:
+Install the CPU-only Python toolkit from [PyPI](https://pypi.org/project/matmul-inspector/):
 
 ```sh
-pip install matmul-inspector
-```
-
-This is the target installation command; the package has not yet been published
-to PyPI. Until publication, install a locally built wheel or source distribution.
-Linux with Python 3.10–3.13 is the configured CI support matrix. Local clean-install
-validation currently covers Python 3.13; broader support remains provisional until
-that CI matrix runs successfully.
-
-Installed commands:
-
-```sh
-matmul-inspector --version
-matmul-inspector ptx inspect --help
-matmul-inspector ptx compare --help
-matmul-inspector sass inspect --help
-matmul-inspector sass compare --help
-matmul-inspector nki --help
-matmul-inspector report --help
-```
-
-The package also installs `matmul-inspector-python` as an unambiguous alias for
-the Python dispatcher. The native C++ source build continues to produce an
-executable named `matmul-inspector`; neither executable is renamed or replaced.
-Your shell runs the first matching executable on `PATH`. The alias identifies the
-installed Python entry point only while the intended Python environment is active
-or its absolute executable path is used. Check resolution when both are present:
-
-```sh
-command -v matmul-inspector
-command -v matmul-inspector-python
+python -m pip install matmul-inspector==0.1.0
 matmul-inspector-python --version
 ```
 
-Five-minute artifact-analysis example:
+Version 0.1.0 supports Python 3.10–3.13 and has no mandatory CUDA, AWS Neuron,
+GPU, or native-library dependency. Hardware and vendor toolchains are needed to
+*generate* artifacts and run benchmarks, not to inspect saved artifacts.
 
-```sh
-matmul-inspector-python ptx inspect \
-  --input capture.ptx --output ptx-inspection
-matmul-inspector-python sass inspect \
-  --input capture.sass --output sass-inspection
-matmul-inspector-python nki baseline-artifacts candidate-artifacts \
-  --output nki-comparison
-matmul-inspector-python report \
-  --ptx-comparison ptx-comparison/comparison.json \
-  --sass-comparison sass-comparison/comparison.json \
-  --benchmark benchmark-run --output unified-report
+## Why Matmul Inspector?
+
+Kernel work crosses several evidence layers:
+
+```text
+source -- compilation --> compiler IR / PTX -- lowering --> SASS / NEFF
+SASS / NEFF -- execution -------------------------------> numerical outputs
+            `-- timed/profiled execution ---------------> performance measurements
 ```
 
-These commands analyze existing text and result artifacts. CUDA or Trainium tools
-and hardware are needed only to generate hardware-specific artifacts or execute
-benchmarks; they are not Python package dependencies. Existing direct script
-commands remain supported from a source checkout. See the
-[Python toolkit release guide](docs/python_toolkit_release.md) for clean-build
-validation, the native-command name collision, and the v0.1.0 release checklist.
+A source-level optimization may be canonicalized away. A PTX instruction need
+not map one-to-one to a hardware instruction. Fewer static instructions do not
+guarantee fewer dynamically executed instructions or lower latency. A faster run
+is not successful if it violates the required numerical tolerance.
+
+Matmul Inspector keeps these layers separate while making them easy to compare.
+
+## Quick start: compare two PTX modules
+
+This CPU-only example compares one fused multiply-add instruction with separate
+multiply and add instructions. It demonstrates a **static PTX difference**; it
+does not show the final machine code or predict performance.
+
+The inline PTX fixtures are synthetic inputs for static analysis, not executable
+numerical kernels. They contain no initialized inputs or observable stored output.
+
+Create the fused module:
+
+```sh
+cat > fused.ptx <<'PTX'
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry update_value()
+{
+    .reg .f32 %f<4>;
+    fma.rn.f32 %f3, %f1, %f2, %f0;
+    ret;
+}
+PTX
+```
+
+Create the separate-operation module:
+
+```sh
+cat > separate.ptx <<'PTX'
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry update_value()
+{
+    .reg .f32 %f<5>;
+    mul.rn.f32 %f3, %f1, %f2;
+    add.rn.f32 %f4, %f3, %f0;
+    ret;
+}
+PTX
+```
+
+Compare them with the explicit Python entry point:
+
+```sh
+matmul-inspector-python ptx compare \
+  --baseline fused.ptx \
+  --candidate separate.ptx \
+  --kernel update_value \
+  --output comparison
+```
+
+The command writes `comparison/comparison.json`, `comparison/report.md`, two
+normalized PTX files, and a bounded unified diff. With the published 0.1.0 wheel,
+the generated Markdown and JSON report:
+
+| Selected-entry observation | Fused baseline | Separate candidate | Delta |
+|---|---:|---:|---:|
+| `fma.rn.f32` | 1 | 0 | -1 |
+| `mul.rn.f32` | 0 | 1 | +1 |
+| `add.rn.f32` | 0 | 1 | +1 |
+| Arithmetic instructions | 1 | 2 | +1 |
+| PTX-declared `f32` registers | 4 | 5 | +1 |
+
+PTX registers are virtual declarations, not final physical register allocation,
+hardware resource use, or occupancy. The output directory must not already exist;
+this protects previous reports from accidental overwrite.
+
+The package also installs `matmul-inspector`. The native C++ source build uses
+the same name, so `matmul-inspector-python` is the unambiguous Python command when
+both are on `PATH`.
+
+## See it in action: FMA versus No-FMA
+
+A controlled CUDA 13.3 experiment on an NVIDIA GeForce RTX 4060 Ti compared an
+explicit fused multiply-add kernel with one using separate round-to-nearest
+multiply and add operations. Inspection of the captured `sm_89` SASS found:
+
+| Static selected-function observation | FMA | No-FMA |
+|---|---:|---:|
+| `FFMA` | 5 | 0 |
+| `FMUL` | 0 | 5 |
+| `FADD` | 0 | 5 |
+| Compiler-recorded registers/thread | 28 | 28 |
+
+This is hardware-specific final-machine-code evidence for that build. These are
+static instruction counts, not dynamic execution counts. The inspector also kept
+embedded division helpers separate from the selected kernel.
+
+The same study recorded CUDA-event kernel timings and numerical comparisons:
+
+| Square size | FMA median | No-FMA median | No-FMA vs FMA | No-FMA tolerance failures |
+|---:|---:|---:|---:|---:|
+| 256 | 0.034816 ms | 0.034752 ms | -0.18% | 0 |
+| 512 | 0.260848 ms | 0.246784 ms | -5.39% | 25 |
+| 1024 | 2.299328 ms | 2.364848 ms | +2.85% | 1,332 |
+
+The timing direction changes with size, measurements used fixed
+reference-before-candidate order, and the candidate fails the configured tolerance
+at larger sizes. The static instruction difference therefore does **not** establish
+the cause of any timing difference or demonstrate a successful optimization.
+See the [PTX/SASS FMA case study](docs/cuda_ptx_sass_fma_case_study.md) and
+[floating-point experiment report](docs/floating_point_experiments.md) for the
+capture conditions, methodology, numerical evidence, and limitations.
+
+## Capabilities
+
+| Area | What it does | Availability |
+|---|---|---|
+| NVIDIA PTX | Inspect entries, instructions, virtual registers, shared-memory declarations, and conservative text/structure diffs | Python package |
+| NVIDIA SASS | Inspect saved `nvdisasm` text, physical-register metadata, instruction addresses, and kernel/helper boundaries | Python package |
+| AWS Neuron NKI | Compare MLIR, opcode/DMA summaries, NEFF hashes and sizes, provenance, and optional benchmark summaries | Python package |
+| Unified reporting | Combine PTX, SASS, and benchmark evidence while separating identity mapping, provenance, completion, and correctness | Python package |
+| Numerical laboratory | Compare FP32 results, ULPs, tolerances, accumulation order, FMA contraction, reductions, and saved experiments | Native source build |
+| Performance laboratory | Run CPU/CUDA benchmarks, reliability analysis, crossover studies, roofline models, and reproducibility captures | Native source build and scripts |
+| Research experiments | Triton Transformer projections and Trainium NKI GEMM studies | Source checkout; additional toolchains/hardware |
+
+Direct script entry points remain available from a source checkout, but the
+installed dispatcher is normally simpler:
+
+```sh
+matmul-inspector-python ptx --help
+matmul-inspector-python sass --help
+matmul-inspector-python nki --help
+matmul-inspector-python report --help
+```
+
+## How artifact comparison works
+
+1. Read existing artifacts without modifying them.
+2. Parse identities, instructions, declarations, metadata, and available resource
+   records without guessing across ambiguous boundaries.
+3. Preserve raw hashes and apply only documented conservative normalization.
+4. Compare full-file text separately from selected-kernel structure.
+5. Write deterministic structured JSON and a concise Markdown evidence report.
+6. Keep compiler observations, numerical correctness, benchmark completion, and
+   performance measurements independently labeled.
+
+Output directories are never overwritten. Unknown or unavailable information is
+reported rather than silently treated as equal, empty, or successful.
+
+## Native C++/CUDA laboratory
+
+The native executable is not bundled in the Python wheel. Build it from a source
+checkout with CMake 3.17+ and a C++17 compiler:
+
+```sh
+cmake -S . -B build-cpu \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMATMUL_INSPECTOR_ENABLE_CUDA=OFF
+cmake --build build-cpu --parallel
+ctest --test-dir build-cpu -L cpu --output-on-failure
+./build-cpu/matmul-inspector compare \
+  --reference cpu --candidate cpu --sizes 4,17 --seed 42 \
+  --output results/cpu-check
+```
+
+Enable CUDA with `-DMATMUL_INSPECTOR_ENABLE_CUDA=ON` when a supported toolkit is
+available. The laboratory includes naive and tiled matmul, controlled FMA and
+accumulation-order variants, correctness comparisons, benchmark distributions,
+CPU/GPU crossover analysis, reductions, and reproducible artifact capture. It is
+an experimental laboratory, not a replacement for a tuned BLAS.
+
+## Documentation and reproducible experiments
+
+- [Experimental findings](docs/findings.md) — concise results and qualifications
+- [Benchmark methodology](docs/benchmarking.md) — timing boundaries, trials,
+  bootstrap intervals, and reliability flags
+- [Floating-point experiments](docs/floating_point_experiments.md) — contraction,
+  reordering, correctness, and replay
+- [PTX compiler analysis](docs/ptx_compiler_analysis.md)
+- [CUDA PTX/SASS FMA case study](docs/cuda_ptx_sass_fma_case_study.md)
+- [NKI compiler-artifact comparison](docs/nki_compiler_artifact_comparison.md)
+- [Compiler-to-performance reporting](docs/compiler_performance_reporting.md)
+- [Trainium1 NKI GEMM case study](docs/trainium1_nki_gemm_case_study.md)
+- [NKI GEMM benchmarking](docs/nki_gemm_benchmarking.md)
+- [Roofline methodology](docs/roofline.md)
+- [Cross-hardware comparison](docs/cross_hardware.md) and
+  [reproducibility](docs/reproducibility.md)
+- [Summation methods](docs/summation.md), [operations](docs/operations.md), and
+  [tridiagonal benchmarking](docs/tridiagonal_benchmarking.md)
+- [Transformer optimization study](docs/transformer_optimization.md)
+- [Checked-in RTX 4060 Ti floating-point captures](results/examples/rtx4060ti-controlled-fp/README.md)
+
+## Requirements and limitations
+
+- Saved-artifact analysis supports Linux and Python 3.10–3.13 and uses only the
+  Python standard library.
+- Creating PTX/CUBIN/SASS requires NVIDIA compiler tools; running CUDA benchmarks
+  additionally requires compatible hardware and drivers.
+- Creating NKI/NEFF/profiler captures requires an AWS Neuron environment and, for
+  hardware measurements, Trainium. Comparing saved captures does not.
+- PTX is an intermediate representation; SASS is hardware-specific machine code.
+- Static counts do not establish dynamic execution, scheduling, stalls, traffic,
+  occupancy, or performance causality.
+- Conservative normalized equality is not proof of binary or semantic equality.
+- Benchmark conclusions apply only to their recorded hardware, software, inputs,
+  timing boundaries, and numerical acceptance criteria.
+
+## Contributing
+
+Bug reports and focused contributions are welcome through
+[GitHub Issues](https://github.com/Lonny154/Matmul-Inspector/issues). Preserve
+reproducible inputs and outputs, report correctness independently from timing,
+and avoid optimization claims without controlled measurements.
 
 ## License
 
 Matmul Inspector is licensed under the [Apache License 2.0](LICENSE). The project
 copyright notice is recorded in [NOTICE](NOTICE).
-
-## Build
-
-Requires CMake 3.17+ and a C++17 compiler. Python 3 enables additional integration
-checks and experiment replay; the executable itself needs no Python or third-party
-JSON/statistics libraries. Linux is the exercised platform; unavailable optional
-metadata on other platforms is recorded as `unknown`.
-
-CPU-only (no NVIDIA software or GPU needed):
-
-```sh
-cmake -S . -B build-cpu -DCMAKE_BUILD_TYPE=Release -DMATMUL_INSPECTOR_ENABLE_CUDA=OFF
-cmake --build build-cpu --parallel
-ctest --test-dir build-cpu -L cpu --output-on-failure
-```
-
-CUDA, when a supported compiler/toolkit is available:
-
-```sh
-cmake -S . -B build-cuda -DCMAKE_BUILD_TYPE=Release -DMATMUL_INSPECTOR_ENABLE_CUDA=ON
-cmake --build build-cuda --parallel
-ctest --test-dir build-cuda --output-on-failure
-```
-
-CUDA detection defaults to ON and falls back to CPU-only if unavailable. Check
-configure output: requesting ON does not force CUDA installation. If necessary,
-point `CUDACXX` or `-DCMAKE_CUDA_COMPILER=/path/to/nvcc` at your compiler on the
-first configuration. No local installation path is built into CMake. On CMake
-3.18+, set `-DCMAKE_CUDA_ARCHITECTURES=...` for your intended target(s); otherwise
-the compiler default is used. The selected architecture is captured in metadata.
-The optional `cuda_matmul` target exports `MATMUL_INSPECTOR_HAS_CUDA=1`.
-
-This source-build workflow is independent of the lightweight Python toolkit. The
-native executable is not bundled into the wheel and is not installed by pip.
-
-Use `-DCMAKE_BUILD_TYPE=Debug` for debugging, Release for timing. Multi-config
-builds also need `--config Release` for build/CTest. Warnings default to ON
-(`MATMUL_INSPECTOR_WARNINGS`); no fast-math flags are added. `BUILD_TESTING=OFF`
-disables tests; `MATMUL_INSPECTOR_GPU_TESTS=OFF` omits GPU test registration while
-still compiling CUDA. GPU tests have the `gpu` label and return skip code 77 when
-hardware/runtime is unavailable. Normal CI never requires an NVIDIA GPU.
-
-## Roofline analysis of existing results
-
-Supply explicit ordinary-FP32 compute and memory-bandwidth ceilings; the tool never
-infers specifications from a GPU name. This example uses illustrative assumptions:
-
-```sh
-python3 scripts/roofline.py --input results/reliability-smoke \
-  --peak-fp32-tflops 10 --memory-bandwidth-gbps 100 \
-  --source-note "Illustrative limits, not GPU specifications" \
-  --output results/roofline-smoke --report
-```
-
-Outputs are `roofline.csv`, `roofline_metadata.json`, and optionally a roofline plot
-and Markdown report. Only CUDA kernel-only timings are eligible; median latency
-is the default. The traffic model is `4*(MK+KN+MN)` bytes, **not measured DRAM
-traffic**. Source results, numerical diagnostics, and provenance are preserved.
-See [roofline methodology and units](docs/roofline.md) for assumptions and caveats.
-
-## Benchmark reliability
-
-Benchmark and crossover modes retain raw warmup/measurement samples and support
-`--trials`, `--bootstrap-samples`, `--confidence-level`, `--bootstrap-seed`, and
-`--percentiles`. Medians are primary; legacy mean-based columns remain available.
-
-```sh
-./build-cuda/matmul-inspector benchmark --sizes 4,64,256 \
-  --warmups 3 --iterations 50 --trials 5 --seed 42 \
-  --bootstrap-samples 2000 --confidence-level 0.95 --output results/reliability
-python3 scripts/report.py results/reliability
-```
-
-Reports include distributions, per-iteration traces, median bootstrap intervals,
-trial variation and heuristic stability flags. `timing_samples.csv`,
-`timing_statistics.csv`, and `pairwise.csv` extend existing artifacts. CI overlap
-is **not** a significance test. See [benchmark methodology](docs/benchmarking.md)
-for bootstrap assumptions, thresholds, timing boundaries and practical pitfalls.
-
-## CPU/GPU crossover
-
-```sh
-./build-cuda/matmul-inspector crossover --candidate tiled \
-  --sizes 1,2,4,8,16,32,64,128,256 --seed 42 \
-  --warmups 3 --iterations 20 --output results/crossover-tiled
-python3 scripts/report.py results/crossover-tiled
-
-# Same sweep and optional report in one command (requires matplotlib):
-python3 scripts/crossover.py --executable build-cuda/matmul-inspector \
-  --candidate naive --sizes 2,4,8,16,32,64,128,256 --seed 42 \
-  --warmups 3 --iterations 20 --output results/crossover-naive --report
-```
-
-The baseline is the existing **single-threaded FP32 CPU matmul**, not a tuned BLAS.
-Each run tests one existing CUDA candidate; repeat with another candidate in a new
-run directory. Square sizes are configurable, sorted, and must be unique. CPU,
-GPU kernel-only, and GPU end-to-end use the same inputs and sample counts.
-
-- `host_matmul`: steady-clock timing of CPU matmul, including host output allocation
-  and zero initialization; input generation and comparison are excluded.
-- `kernel_only`: existing CUDA-event timing, excluding allocation and transfers.
-  This assumes inputs already on device and is not a host-to-host comparison.
-- `end_to_end`: steady-clock timing of the synchronous CUDA wrapper, including its
-  validation/device queries, host output allocation, device allocations, pageable
-  H2D copies, output initialization, launch, synchronization, D2H copy and device
-  frees. No pinned memory, transfer overlap or buffer reuse is introduced.
-
-An extra untimed GPU priming call precedes each GPU timing mode in each trial, even with zero
-warmups, to exclude initial context/module setup. Previous host-output destruction,
-statistics, hashing, saved-output capture and numerical comparison are outside all
-samples. Sizes run ascending; CPU then kernel-only then end-to-end, without order
-randomization. Very small CPU timings can approach timer overhead.
-
-`summary.csv` adds `backend` and `timing_mode`; its existing speedup remains
-mean-based. **`crossover.csv` uses CPU median / GPU median** and marks the first
-sampled size with strictly lower GPU latency separately for each mode. Ties are
-not wins; missing/zero medians are unavailable. No interpolation, exact crossover,
-or sustained win beyond that point is claimed. `metadata.json`, `console.txt`,
-numerical diagnostics and optional `--save-output` retain the existing conventions.
-Numerical tolerance failures remain failures even when GPU execution is faster.
-
-Reports include logarithmic CPU/GPU latency and speedup plots, a 1× parity line,
-first sampled wins and largest-size speedups. Crossover depends on CPU/GPU,
-implementation, compiler, clocks/load, tested sizes and transfer assumptions.
-Replay supports crossover metadata through `scripts/reproduce.py`; current
-cross-hardware aggregation deliberately rejects crossover runs rather than mixing
-timing modes. CUDA-unavailable runs record a skip and return 77. Optional plotting
-dependencies and report output rules are described below.
-
-## Reports from saved results
-
-Generate plots without running benchmarks or requiring a GPU:
-
-```sh
-python3 -m pip install -r scripts/requirements-report.txt
-python3 scripts/report.py results/examples/rtx4060ti-controlled-fp/benchmark-no-fma
-```
-
-Open `<run>/report/report.md` for latency, GFLOP/s, recorded kernel speedup,
-and bitwise-divergence/tolerance-failure plots. Shapes use explicit M×N×K
-labels, including rectangular matrices. Numerical fractions use full-summary
-aggregates, never the bounded mismatch samples. Older/missing optional fields
-produce warnings and skipped plots; compare-only runs need no timings.
-Matplotlib is optional for the project build. `--output <new-directory>` selects
-another report location; existing directories are never overwritten. Source
-artifacts are read only. These plots summarize a capture, not a hardware ranking.
-
-## Correctness comparison
-
-```sh
-# Naive CUDA reference vs tiled CUDA candidate, including a partial tile
-./build-cuda/matmul-inspector compare --sizes 4,256,257 --seed 42
-
-# Rectangular CPU vs GPU comparison
-./build-cuda/matmul-inspector compare --m 17 --n 19 --k 33 --reference cpu --candidate tiled --atol 1e-6 --rtol 1e-5
-
-# Exercise the same analysis/artifact workflow without a GPU
-./build-cpu/matmul-inspector compare --reference cpu --candidate cpu --sizes 4,17 --seed 42 --output results/cpu-check
-```
-
-Compare mode performs no timing. It reports bitwise equality, divergent element
-count, overall tolerance pass, and first bitwise/numerical divergence independently.
-Each divergence includes row/column, reference and candidate values, 32-bit IEEE
-patterns, ULP distance, absolute/relative errors, tolerance and element pass/fail.
-The report uses `expected` for reference and `actual` for candidate. Kernels may
-be `cpu`, `naive`, `tiled`, `cuda-naive-fma`, `cuda-naive-no-fma`, or
-`cuda-naive-reordered`. Bitwise mismatch alone is not a correctness failure.
-Aggregate reports include divergent percentage, max/mean divergent ULP, maximum
-absolute/relative error, tolerance-failure count/percentage and ULP bins.
-
-## Controlled floating-point experiments
-
-FMA contraction rounds `a*b+c` once instead of rounding multiply and add separately.
-Arithmetic reordering changes association: `(a+b)+c` can differ from `a+(b+c)`.
-These are separate experiments, with the same FP32 inputs in each comparison:
-
-```sh
-./build-cuda/matmul-inspector compare --reference cuda-naive-fma --candidate cuda-naive-no-fma --sizes 4,256,257,1024 --seed 42 --output results/contraction
-./build-cuda/matmul-inspector compare --reference cuda-naive-fma --candidate cuda-naive-reordered --sizes 4,256,257,1024 --seed 42 --output results/association
-./build-cuda/matmul-inspector compare --reference cuda-naive-fma --candidate cuda-naive-reordered --input cancellation --sizes 4 --output results/cancellation
-./build-cuda/matmul-inspector benchmark --reference naive --candidate cuda-naive-no-fma --sizes 4,256,257,1024 --seed 42 --warmups 3 --iterations 50 --output results/no-fma-timing
-```
-
-Use the explicit FMA reference for attribution: the original `naive` kernel keeps
-compiler-default behavior. The two controlled sequential variants share a body;
-CUDA round-to-nearest intrinsics force fused versus separate arithmetic. Reordering
-keeps FMA but uses deterministic even/odd accumulators in one thread per output.
-No global fast-math flags are enabled. Python 3 and `cuobjdump` inspect embedded PTX
-at build time; the CLI refuses controlled runs without successful verification.
-Keep a PTX target when setting CUDA architectures (for example `89`, not only
-`89-real`). Ordinary CPU/naive/tiled builds remain usable without verification tools.
-
-On the measured RTX 4060 Ti/NVCC 13.3 build, the original naive and explicit-FMA
-kernels matched bitwise at all four sizes. At 1024², no-FMA diverged in 85.72% of
-outputs (1,332 tolerance failures), and reordering in 95.36% (17,839 failures).
-These are measurements against the selected reference and tolerance, not proof
-that one algorithm is closer to exact arithmetic. See the
-[full experiment report](docs/floating_point_experiments.md) for instruction
-verification, fixtures, ULP/error tables, timing statistics and replay commands.
-
-## Benchmark and capture results
-
-```sh
-./build-cuda/matmul-inspector benchmark --sizes 4,256,257,1024 --seed 42 --warmups 3 --iterations 50 --output results/my-run
-```
-
-Benchmark mode measures the selected reference then candidate using CUDA events
-(defaults: naive then tiled; CPU kernels are unavailable in benchmark mode). It emphasizes mean,
-median, minimum, population standard deviation, GFLOP/s and speedup. Input creation,
-allocation, initialization, host/device transfers and warmups are excluded.
-Comparison, statistics, console output and artifact writing happen outside timed
-execution. An untimed post-run comparison records numerical agreement in the CSV.
-Detailed divergence reports are available through compare mode and mismatch CSV.
-
-`--sizes` accepts square sizes; alternatively use all of `--m`, `--n`, `--k` for
-one rectangular configuration. A's default seed is 42; B's is `seed + 81` modulo
-2^32, overridable with `--seed-b`. Both seeds and generator version are saved.
-No global RNG state is used. Defaults: 3 warmups, 20 iterations, atol=1e-6,
-rtol=1e-5. See `--help` for strict argument rules. No arguments preserves the
-original 2x3 times 3x2 CPU/GPU demo; `--benchmark-cuda [iterations]` remains an alias.
-
-A new result directory contains:
-
-```text
-metadata.json   # configuration, provenance, environment, method and completion status
-summary.csv     # one row per configuration/kernel, timings and comparison results
-mismatches.csv  # bounded row-major mismatch samples; default cap 100 per configuration
-console.txt     # experiment stdout/stderr, including dirty-tree warnings
-```
-
-Existing result directories are never overwritten. Dirty sources are allowed, but
-print **WARNING: DIRTY SOURCE TREE OR BUILD** and set `git_dirty: true`. The commit
-hash alone cannot reconstruct such a run. Build-time and runtime Git state are
-recorded separately. Optional metadata failures do not prevent execution.
-
-Metadata includes UTC timestamp, commit/dirty state, build type, C++ and CUDA
-compiler versions/flags, CUDA architecture/runtime, NVIDIA driver version, GPU and
-compute capability, CPU/OS, dimensions, dtype, kernel/tile, seeds, counts,
-tolerances and timing methodology. See [artifact/provenance details](docs/experiments.md)
-for exact semantics, unknown values, exit codes and remaining limitations.
-
-## Compare collected runs across machines
-
-Every compare/benchmark output now has a SHA-256 fingerprint of its logical FP32
-bits (little-endian, excluding padding). Use `--save-output` to retain optional
-binary matrices for detailed comparison later; hashing/capture is outside timing.
-
-```sh
-./build-cuda/matmul-inspector benchmark --reference naive --candidate cuda-naive-fma --sizes 4,256,257,1024 --seed 42 --save-output --output results/cross-hardware/baseline
-# After replaying and collecting a second machine's result directory:
-python3 scripts/compare_hardware.py results/cross-hardware/baseline results/cross-hardware/second-machine --comparator build-cpu/matmul-compare-outputs --output results/cross-hardware/aggregate
-```
-
-The first run is the baseline unless `--baseline` selects another supplied run.
-The tool reads hardware identity from metadata, validates configuration/source
-compatibility, keeps within-run naive speedups separate from cross-run ratios,
-and calls the existing C++ diagnostics for saved outputs. Missing hashes/matrices
-are reported explicitly. Dirty or different source is flagged and suppresses
-cross-run timing ratios. There is no remote execution or automatic hardware ranking.
-See the [cross-hardware workflow and binary format](docs/cross_hardware.md) for
-CPU-only validation, exact second-machine replay commands, compatibility rules,
-aggregate artifacts and interpretation limits.
-
-## Experimental findings
-
-A concise summary of the project's main numerical, performance, and
-cross-hardware results is available in
-[Experimental findings](docs/findings.md).
-
-## Replay the example
-
-The small [RTX 4060 Ti example](results/examples/rtx4060ti-naive-vs-tiled/README.md)
-is a real capture from the new infrastructure. Its source was dirty; treat it as
-an example of the format, not a fully reconstructible or universal baseline.
-Build your binary first, then replay its configuration into a new directory:
-
-```sh
-python3 scripts/reproduce.py results/examples/rtx4060ti-naive-vs-tiled/metadata.json --executable build-cuda/matmul-inspector --output results/replay
-```
-
-Use `--dry-run` to print the command without execution. Replay reconstructs the
-configuration and inputs, not the original source, compiler or hardware. Preserve
-the source commit and build settings along with artifacts for publication.
-
-## Original hardware-specific measurement
-
-The preceding tiled-kernel milestone measured the following on an RTX 4060 Ti
-with CUDA 13.3.73, Release `-O3`, compiler-default compute_75/sm_75 target. This is
-the original historical table, not the fresh example capture linked above:
-
-| Size | Naive ms | Tiled ms | Speedup | Naive GFLOP/s | Tiled GFLOP/s |
-| ---- | -------: | -------: | ------: | ------------: | ------------: |
-| 4 | 0.010227 | 0.007928 | 1.290x | 0.0125 | 0.0161 |
-| 256 | 0.036686 | 0.027884 | 1.316x | 914.64 | 1203.35 |
-| 257 | 0.046489 | 0.037900 | 1.227x | 730.26 | 895.75 |
-| 1024 | 2.573123 | 1.213059 | 2.121x | 834.58 | 1770.30 |
-
-All tested sizes were bitwise identical between naive and 16x16 tiled CUDA.
-Both kernels' generated code used FP32 FMA; no fast-math flags were enabled.
-CUDA events measured 50 iterations after three warmups, excluding memory allocation
-and host/device transfers. Tiny matrix timings are dominated by launch/scheduling
-effects. GPU clocks, contention, driver scheduling and caches affect larger cases
-as well. These are example measurements, not universal speedup claims or valid
-cross-hardware comparisons. See [NVIDIA's floating-point guidance](https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html).
-
-## Numerical conventions and storage
-
-Absolute error is `abs(candidate-reference)`. Relative error divides by
-`abs(reference)`; the original reporting convention returns zero when reference
-is zero, so use absolute error/tolerance near zero. Numerical acceptance uses:
-
-```text
-abs(candidate-reference) <= max(atol, rtol * max(abs(candidate), abs(reference)))
-```
-
-Exact equality is accepted first; NaN operands never pass. Signed zeros compare
-numerically equal with ULP distance zero, though their bits differ. ULP ordering
-is sign-aware; adjacent same-sign floats are one ULP apart. NaN distance is
-UINT32_MAX. The original bit mapping gives signed zeros adjacent keys, so distances
-crossing zero include that extra key except for equal zeros. Equal infinities pass;
-unequal infinities now explicitly fail tolerance. Aggregate ULP/errors exclude
-nonfinite pairs and report their counts separately. The original zero-reference
-relative-error convention is retained and flagged by a separate counter. Generated
-benchmark inputs are bounded finite floats. These conventions are covered by tests.
-
-`Matrix(rows, cols)` is packed row-major; `Matrix(rows, cols, row_stride)` permits
-padding. Strides are in floats and must be at least cols. `data()` includes padding;
-logical indexing, Inspector, CPU matmul and both CUDA kernels respect the stride.
-`matmul(a,b,stride)` and `cuda_matmul(a,b,stride,kernel)` select padded outputs.
-The experiment CLI uses packed storage; API tests exercise padded layouts.
-
-## Repository and tests
-
-Existing kernel/storage files stay in `include/` and `src/`. New comparison,
-benchmark statistics and experiment modules sit alongside them, with build
-provenance scripts in `cmake/`, replay in `scripts/`, documentation in `docs/`,
-and only small curated artifacts under `results/examples/`. Other generated
-results and build directories are ignored by Git.
-
-CPU tests cover numeric helpers, negative ULP ordering, tolerances, bitwise equality,
-strides, diagnostics, deterministic inputs, parsing, statistics, JSON/CSV escaping,
-output protection and Git metadata. GPU tests separately cover partial tiles,
-padded/non-square matrices, numerical agreement, timings and validation, plus
-explicit arithmetic host models, repeated reordered results, sensitive inputs and
-artifact replay. CPU tests also check aggregate/special-value statistics and
-instruction-verifier rejection paths.
-GitHub Actions tests GCC/Clang Debug/Release CPU builds and has a separate CUDA
-container job that compiles kernels and runs CPU tests without assuming a GPU.
-
-### Dot product and sum reduction
-
-Select `--operation dot` or `--operation reduction_sum` with `--size LENGTH`
-(or several `--sizes`). Matmul remains the default. Both operations share the
-existing diagnostics, seeded inputs, timing statistics, artifacts and replay.
-
-```bash
-build/matmul-inspector benchmark --operation dot --size 1000000 --seed 42 \
-  --atol 0.01 --rtol 0.001 --save-output --output results/dot-run
-build/matmul-inspector benchmark --operation reduction_sum --size 1000003 --seed 42 \
-  --atol 0.01 --rtol 0.001 --save-output --output results/sum-run
-python3 scripts/report.py results/dot-run
-```
-
-The serial CPU reference and deterministic CUDA tree can differ numerically.
-These example tolerances are explicit exploratory settings, not guarantees;
-CPU host versus GPU kernel-only speedup is not end-to-end offload speedup.
-See [supported operations](docs/operations.md) for semantics, timing boundaries,
-scalar output encoding, replay and operation-specific roofline models.
-
-### Reduction-order reproducibility
-
-Compare serial/reverse FP32 accumulation and CUDA trees at blocks 64/128/256/512
-using deterministic fixtures, FP64 analysis references, and repeated execution:
-
-```bash
-python3 scripts/reproducibility.py --executable build/matmul-inspector \
-  --operation reduction_sum --sizes 257,1024,100003 \
-  --fixtures random_uniform,cancellation --block-sizes 64,128,256,512 \
-  --repeats 3 --output results/reduction-study
-```
-
-Produces numerical CSV/JSON, three focused plots and a Markdown report. These
-experiments distinguish repeat determinism from agreement across reduction
-orders; FP64 accumulation is not exact. See [reproducibility experiments](docs/reproducibility.md)
-for fixtures, direct comparisons, CPU-only execution, artifacts and replay.
-
-### Stable summation and error attribution
-
-Compare forward/reverse, pairwise, Kahan, Neumaier and FP64 accumulation, with
-optional unchanged CUDA trees:
-
-```bash
-python3 scripts/summation_analysis.py --executable build/matmul-inspector \
-  --sizes 257,1024,100003 --fixtures random_uniform,cancellation,large_dynamic_range \
-  --cuda --block-sizes 64,128,256,512 --output results/summation-study
-```
-
-The report separates error versus FP64 from bitwise matches to its rounded FP32
-target, including zero-baseline and infinite-improvement cases. FP64 is an
-analysis reference, not an exact sum. See [summation methods and metrics](docs/summation.md)
-for CPU-only usage, dot multiplication precision, artifacts and replay.
-
-### Fresh-process reproducibility
-
-Capture independent launches, then compare portable captures offline:
-
-```sh
-python3 scripts/process_reproducibility.py --executable build/matmul-inspector \
-  --operation reduction_sum --size 257 --fixture cancellation \
-  --method neumaier_fp32 --process-repeats 3 --output results/process-a
-python3 scripts/compare_hardware.py --process-captures results/process-a results/process-b \
-  --comparator build/matmul-compare-outputs --output results/process-comparison
-```
-
-Create `process-b` with the same configuration on another machine. See the
-[capture workflow](docs/cross_hardware.md#fresh-process-reproducibility-captures)
-for CUDA/matrix examples, compatibility rules, artifacts and interpretation.
-
-### Transformer projection study
-
-The miniature FP16 Transformer supports independent Triton QKV, FC1 and FC2
-selection. Weights are transposed once before timing, and enabled projections
-are checked against PyTorch before alternating CUDA-event measurements:
-
-```bash
-.venv/bin/python scripts/transformer_workload.py \
-  --triton-qkv --triton-fc1 --triton-fc2 --benchmark-projections
-```
-
-The QKV/FC2-only controlled search is reproducible with:
-
-```bash
-.venv/bin/python scripts/transformer_projection_autotune.py \
-  --output results/transformer-autotune
-```
-
-It records every correctness and timing result in `autotune.csv`, verifies the
-top search candidates with a longer run, and writes the accepted selections to
-`summary.json`. A candidate is accepted only when all paired repeats beat
-PyTorch and the median paired ratio is at least 1.02. FC1 is excluded from this
-search and retains its established configuration.
-
-### NKI GEMM variants
-
-In an AWS Neuron/NKI environment, compare the full-tiled and caller-pretransposed
-GEMM kernels with deterministic inputs and CSV output:
-
-```bash
-python3 scripts/nki_gemm_benchmark.py \
-  --shapes 128x128x512,256x512x1024 \
-  --warmups 1 --iterations 3 --output results/nki-gemm
-```
-
-Local simulator checks record correctness and error metrics. Simulator wall-clock
-timing is explicitly labeled and is not Trainium performance. See
-[NKI GEMM benchmarking](docs/nki_gemm_benchmarking.md) for shape constraints,
-Cartesian grids, artifacts, and the hardware-backend extension point.
-
-### Compare NKI compiler artifacts
-
-Compare two saved NKI compiler captures without an NKI installation or Trainium
-hardware:
-
-```bash
-python3 scripts/nki_compare_artifacts.py \
-  artifacts/nki-bf16_1024_n512 artifacts/nki-bf16_1024_kblocked \
-  --output results/nki-compiler-comparison
-```
-
-The report keeps normalized MLIR, aggregate instruction counts, DMA summaries,
-NEFF byte identity, provenance, and optional benchmark evidence as distinct layers.
-It does not infer identical final schedules from matching counts or interpret a
-different NEFF hash as a disassembly result. See the
-[NKI compiler-artifact comparison guide](docs/nki_compiler_artifact_comparison.md)
-for supported inputs, normalization rules, outputs, and limitations.
-
-### Inspect and compare NVIDIA PTX
-
-The CPU-only PTX inspector lists kernels and device functions, classifies
-instructions, records PTX register/shared-memory declarations, and compares raw,
-normalized, and structural results:
-
-```bash
-python3 scripts/ptx_inspector.py inspect \
-  --input artifacts/cuda/baseline.ptx --output results/ptx-baseline
-
-python3 scripts/ptx_inspector.py compare \
-  --baseline artifacts/cuda/baseline.ptx \
-  --candidate artifacts/cuda/optimized.ptx \
-  --kernel my_kernel --output results/ptx-comparison
-```
-
-The tool requires no GPU, CUDA runtime, `nvcc`, or third-party Python packages.
-PTX declarations are not final physical register allocation, hardware resource
-usage, or occupancy estimates, and static instruction counts do not predict
-performance. See [PTX compiler analysis](docs/ptx_compiler_analysis.md) for kernel
-selection, normalization, output formats, and parser limitations.
-
-### Inspect and compare NVIDIA SASS
-
-The CPU-only SASS inspector analyzes saved `nvdisasm` text, separates primary
-kernels from embedded helper functions, records physical register-allocation
-metadata, preserves instruction addresses in JSON, and compares raw full files
-separately from normalized selected-function structure:
-
-```bash
-python3 scripts/sass_inspector.py inspect \
-  --input artifacts/cuda/matmul.sass --kernel mi_naive_fma \
-  --output results/sass-fma
-
-python3 scripts/sass_inspector.py compare \
-  --baseline artifacts/cuda/matmul.sass \
-  --candidate artifacts/cuda/matmul.sass \
-  --baseline-kernel mi_naive_fma \
-  --candidate-kernel mi_naive_no_fma \
-  --output results/sass-fma-vs-no-fma
-```
-
-Inspection itself requires no GPU, CUDA toolkit, or third-party Python package;
-generating the input remains a separate CUDA-toolchain step. Static SASS evidence
-does not establish occupancy, runtime behavior, or performance. See the
-[CUDA PTX/SASS FMA case study](docs/cuda_ptx_sass_fma_case_study.md) for parsing,
-normalization, validation, and interpretation details.
-
-### Combine compiler and benchmark evidence
-
-Create one CPU-only report from saved PTX comparison, SASS comparison, and
-benchmark artifacts without recompiling or rerunning a GPU workload:
-
-```bash
-python3 scripts/compiler_performance_report.py \
-  --ptx-comparison results/ptx-fma-comparison/comparison.json \
-  --sass-comparison results/sass-fma-comparison/comparison.json \
-  --benchmark results/fma-vs-no-fma-sass \
-  --reference-map ptx=mi_naive_fma,sass=mi_naive_fma,benchmark=cuda-naive-fma \
-  --candidate-map ptx=mi_naive_no_fma,sass=mi_naive_no_fma,benchmark=cuda-naive-no-fma \
-  --output results/unified-fma-study
-```
-
-The explicit maps state intended reference/candidate correspondence; they do not
-prove that separate artifacts came from the same compilation. The report verifies
-build linkage only from stronger shared build or binary identifiers and otherwise
-labels it unverified. Completion, file completeness, numerical correctness, and
-metric availability remain separate statuses. See
-[compiler-to-performance reporting](docs/compiler_performance_reporting.md) for
-the schema, partial-input behavior, and interpretation limits.
