@@ -47,12 +47,32 @@ class FakeBackend:
             }}
         rounds = [
             {"round": 1, "order": ["baseline", "candidate"],
-             "baseline_latency_ms": 2.0, "candidate_latency_ms": 1.0},
+             "baseline_latency_ms": 2.0, "candidate_latency_ms": 1.0,
+             "baseline_cuda_event_elapsed_ms_per_operation": 2.0,
+             "candidate_cuda_event_elapsed_ms_per_operation": 1.0,
+             "baseline_cuda_event_elapsed_ms_per_block": 2.0,
+             "candidate_cuda_event_elapsed_ms_per_block": 1.0,
+             "baseline_host_submission_ms_per_block": 0.2,
+             "candidate_host_submission_ms_per_block": 0.1,
+             "baseline_host_wall_ms_per_block": 2.2,
+             "candidate_host_wall_ms_per_block": 1.1},
             {"round": 2, "order": ["candidate", "baseline"],
-             "baseline_latency_ms": 2.2, "candidate_latency_ms": 1.1},
+             "baseline_latency_ms": 2.2, "candidate_latency_ms": 1.1,
+             "baseline_cuda_event_elapsed_ms_per_operation": 2.2,
+             "candidate_cuda_event_elapsed_ms_per_operation": 1.1,
+             "baseline_cuda_event_elapsed_ms_per_block": 2.2,
+             "candidate_cuda_event_elapsed_ms_per_block": 1.1,
+             "baseline_host_submission_ms_per_block": 0.2,
+             "candidate_host_submission_ms_per_block": 0.1,
+             "baseline_host_wall_ms_per_block": 2.4,
+             "candidate_host_wall_ms_per_block": 1.2},
         ]
         return {**base, "status": "success", "benchmark": {
-            "measurement": "fake steady-state time", "unit": "ms", "rounds": rounds,
+            "mode": config["benchmark"]["mode"],
+            "measurement": "fake steady-state time", "unit": "ms",
+            "units": {"cuda_event_elapsed_ms_per_operation": "ms/operation",
+                      "host_submission_ms_per_block": "ms/block",
+                      "host_wall_ms_per_block": "ms/block"}, "rounds": rounds,
             "warmups_per_implementation": 1, "iterations_per_measurement": 1,
             "baseline_summary": experiment._summary([2.0, 2.2]),
             "candidate_summary": experiment._summary([1.0, 1.1]),
@@ -106,6 +126,10 @@ class ExperimentRunnerTests(unittest.TestCase):
         self.assertEqual(saved["benchmark"]["rounds"][1]["order"], ["candidate", "baseline"])
         self.assertTrue((root / "timings.json").is_file())
         self.assertTrue((root / "timings.csv").is_file())
+        header = (root / "timings.csv").read_text(encoding="utf-8").splitlines()[0]
+        self.assertIn("benchmark_mode", header)
+        self.assertIn("baseline_host_submission_ms_per_block", header)
+        self.assertEqual(saved["config"]["benchmark"]["mode"], "allocating")
         self.assertIn("fake setup", (root / "stage.log").read_text(encoding="utf-8"))
 
     def test_correctness_failure_is_not_benchmarked(self):
@@ -140,6 +164,23 @@ class ExperimentRunnerTests(unittest.TestCase):
         self.assertFalse((root / "resolved_config.json").exists())
         self.assertFalse((root / "timings.json").exists())
         self.assertTrue((root / "result.json").is_file())
+
+    def test_omitted_mode_defaults_to_allocating_and_invalid_mode_is_rejected(self):
+        config = copy.deepcopy(experiment.DEFAULT_CONFIG)
+        config["benchmark"].pop("mode")
+        self.assertEqual(experiment.validate_config(config)["benchmark"]["mode"], "allocating")
+        config["benchmark"]["mode"] = "cuda_graph"
+        with self.assertRaisesRegex(ValueError, "benchmark.mode"):
+            experiment.validate_config(config)
+
+    def test_preallocated_mode_propagates_and_correctness_still_gates_benchmark(self):
+        self.config["benchmark"]["mode"] = "preallocated"
+        result = self.run_with(FakeBackend)
+        self.assertEqual(result["config"]["benchmark"]["mode"], "preallocated")
+        self.assertEqual(result["benchmark"]["mode"], "preallocated")
+        failed = self.run_with(CorrectnessFailureBackend)
+        self.assertEqual(failed["config"]["benchmark"]["mode"], "preallocated")
+        self.assertNotIn("benchmark", failed)
 
 
 if __name__ == "__main__":

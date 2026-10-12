@@ -25,12 +25,13 @@ from typing import Any, Callable, Mapping, Protocol, Sequence
 import uuid
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+BENCHMARK_MODES = frozenset({"allocating", "preallocated"})
 DEFAULT_CONFIG: dict[str, Any] = {
     "workload": {"m": 512, "k": 768, "n": 3072, "dtype": "float16"},
     "seed": 0,
     "correctness": {"atol": 1e-2, "rtol": 1e-2},
-    "benchmark": {"warmups": 100, "iterations": 500, "rounds": 10},
+    "benchmark": {"mode": "allocating", "warmups": 100, "iterations": 500, "rounds": 10},
     "timeout_seconds": 300.0,
     "baseline": {"implementation": "pytorch_matmul"},
     "candidate": {
@@ -41,6 +42,17 @@ DEFAULT_CONFIG: dict[str, Any] = {
         },
     },
 }
+
+
+def resolved_benchmark_mode(value: Mapping[str, Any]) -> str:
+    """Return a mode while interpreting legacy omitted fields as allocating."""
+    benchmark = value.get("benchmark") if isinstance(value, Mapping) else None
+    if isinstance(benchmark, Mapping) and isinstance(benchmark.get("mode"), str):
+        return benchmark["mode"]
+    config = value.get("config") if isinstance(value, Mapping) else None
+    if isinstance(config, Mapping):
+        return resolved_benchmark_mode(config)
+    return "allocating"
 
 
 class StageFailure(RuntimeError):
@@ -96,6 +108,12 @@ def validate_config(raw: Mapping[str, Any]) -> dict[str, Any]:
     benchmark = config["benchmark"]
     if not isinstance(benchmark, dict):
         raise ValueError("benchmark must be an object")
+    benchmark.setdefault("mode", "allocating")
+    unknown_benchmark = sorted(set(benchmark) - {"mode", "warmups", "iterations", "rounds"})
+    if unknown_benchmark:
+        raise ValueError(f"unknown benchmark fields: {', '.join(unknown_benchmark)}")
+    if benchmark["mode"] not in BENCHMARK_MODES:
+        raise ValueError("benchmark.mode must be 'allocating' or 'preallocated'")
     for field in ("warmups", "iterations", "rounds"):
         _positive_int(benchmark.get(field), f"benchmark.{field}")
     timeout = config["timeout_seconds"]
@@ -158,15 +176,24 @@ class CudaTritonBackend:
         return torch, module
 
     @staticmethod
-    def _measure(torch, function: Callable[[], Any], iterations: int) -> float:
+    def _measure(torch, function: Callable[[], Any], iterations: int) -> dict[str, float]:
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
+        wall_start = time.perf_counter_ns()
         start.record()
         for _ in range(iterations):
             function()
         end.record()
-        torch.cuda.synchronize()
-        return float(start.elapsed_time(end)) / iterations
+        submission_end = time.perf_counter_ns()
+        end.synchronize()
+        wall_end = time.perf_counter_ns()
+        elapsed = float(start.elapsed_time(end))
+        return {
+            "cuda_event_elapsed_ms_per_operation": elapsed / iterations,
+            "cuda_event_elapsed_ms_per_block": elapsed,
+            "host_submission_ms_per_block": (submission_end - wall_start) / 1e6,
+            "host_wall_ms_per_block": (wall_end - wall_start) / 1e6,
+        }
 
     def run(self, config: Mapping[str, Any], log: Callable[[str], None]) -> dict[str, Any]:
         log("prerequisite: checking PyTorch, Triton, and CUDA")
@@ -196,10 +223,48 @@ class CudaTritonBackend:
         except Exception as error:
             raise StageFailure("execution", f"input preparation failed: {error}") from error
 
+        benchmark = config["benchmark"]
+        mode = benchmark["mode"]
         parameters = config["candidate"]["parameters"]
         triton_config = kernel.TritonGemmConfig(**parameters)
-        baseline = lambda: torch.matmul(a, b)
-        candidate = lambda: kernel.triton_gemm(a, b, triton_config)
+        overwrite_verified: dict[str, bool | None] = {"baseline": None, "candidate": None}
+        if mode == "allocating":
+            baseline = lambda: torch.matmul(a, b)
+            candidate = lambda: kernel.triton_gemm(a, b, triton_config)
+            wrapper_work = {
+                "baseline": "torch.matmul allocates its output per call",
+                "candidate": "triton_gemm validates inputs, allocates output, constructs the grid, and launches per call",
+            }
+        else:
+            try:
+                baseline_output = torch.empty((workload["m"], workload["n"]),
+                                              device=a.device, dtype=a.dtype)
+                candidate_output = torch.empty_like(baseline_output)
+                grid = (kernel.triton.cdiv(workload["m"], triton_config.block_m)
+                        * kernel.triton.cdiv(workload["n"], triton_config.block_n),)
+            except Exception as error:
+                raise StageFailure("setup", f"preallocated output preparation failed: {error}") from error
+
+            def baseline():
+                return torch.matmul(a, b, out=baseline_output)
+
+            def candidate():
+                kernel.fc1_kernel[grid](
+                    a, b, candidate_output, workload["m"], workload["n"], workload["k"],
+                    a.stride(0), a.stride(1), b.stride(0), b.stride(1),
+                    candidate_output.stride(0), candidate_output.stride(1),
+                    BLOCK_M=triton_config.block_m, BLOCK_N=triton_config.block_n,
+                    BLOCK_K=triton_config.block_k, GROUP_SIZE_M=triton_config.group_size_m,
+                    num_warps=triton_config.num_warps, num_stages=triton_config.num_stages,
+                )
+                return candidate_output
+
+            baseline_output.fill_(float("nan"))
+            candidate_output.fill_(float("nan"))
+            wrapper_work = {
+                "baseline": "torch.matmul(..., out=baseline_output) dispatches per call; output allocation is outside measurement",
+                "candidate": "the prepared Triton grid launch wrapper runs per call; validation, grid construction, and output allocation are outside measurement",
+            }
         setup_ms: dict[str, float] = {}
         outputs: dict[str, Any] = {}
         for name, function in (("baseline", baseline), ("candidate", candidate)):
@@ -212,6 +277,8 @@ class CudaTritonBackend:
                 stage = "compilation" if name == "candidate" else "execution"
                 raise StageFailure(stage, f"{name} setup invocation failed: {error}") from error
             setup_ms[name] = (time.perf_counter() - started) * 1000.0
+            if mode == "preallocated":
+                overwrite_verified[name] = bool(torch.isfinite(outputs[name]).all().item())
 
         log("correctness: comparing candidate with PyTorch/cuBLAS reference")
         try:
@@ -244,6 +311,7 @@ class CudaTritonBackend:
             "reference": "pytorch_matmul (cuBLAS)",
             "candidate_accumulation": "FP32 Triton tl.dot accumulator with FP16 output",
             "reference_accumulation": "PyTorch/cuBLAS implementation-selected FP16 GEMM accumulation",
+            "preallocated_output_overwrite_verified": overwrite_verified,
         }
         partial = {
             "environment": {"device": device, "versions": versions},
@@ -257,7 +325,6 @@ class CudaTritonBackend:
                 "traceback": None,
             }}
 
-        benchmark = config["benchmark"]
         log(f"benchmark: warming each implementation {benchmark['warmups']} times")
         try:
             for function in (baseline, candidate):
@@ -269,8 +336,11 @@ class CudaTritonBackend:
                 order = ("baseline", "candidate") if round_index % 2 == 0 else ("candidate", "baseline")
                 row: dict[str, Any] = {"round": round_index + 1, "order": list(order)}
                 for name in order:
-                    row[f"{name}_latency_ms"] = self._measure(
+                    measurement = self._measure(
                         torch, baseline if name == "baseline" else candidate, benchmark["iterations"])
+                    row[f"{name}_latency_ms"] = measurement["cuda_event_elapsed_ms_per_operation"]
+                    for field, value in measurement.items():
+                        row[f"{name}_{field}"] = value
                 rows.append(row)
         except Exception as error:
             raise StageFailure("benchmark", f"CUDA-event measurement failed: {error}") from error
@@ -280,8 +350,22 @@ class CudaTritonBackend:
             raise StageFailure("benchmark", "CUDA events returned a nonfinite or non-positive latency")
         baseline_summary, candidate_summary = _summary(baseline_values), _summary(candidate_values)
         return {**partial, "status": "success", "benchmark": {
-            "measurement": "mean steady-state device elapsed time per GEMM from CUDA events",
-            "unit": "ms", "warmups_per_implementation": benchmark["warmups"],
+            "mode": mode,
+            "measurement": "steady-state block timing with CUDA events and host clocks",
+            "unit": "ms", "units": {
+                "cuda_event_elapsed_ms_per_operation": "ms/operation",
+                "cuda_event_elapsed_ms_per_block": "ms/block",
+                "host_submission_ms_per_block": "ms/block",
+                "host_wall_ms_per_block": "ms/block",
+            },
+            "timing_boundaries": {
+                "cuda_event": "device interval from an event before block submission to an event after all block operations; may include host-induced stream idle gaps",
+                "host_submission": "host wall interval from before start-event submission through end-event submission, ending before synchronization",
+                "host_wall": "host wall interval from before start-event submission through end-event completion",
+            },
+            "wrapper_work_per_call": wrapper_work,
+            "speedup_definition": "ratio of baseline round-median CUDA-event ms/operation to candidate round-median CUDA-event ms/operation",
+            "warmups_per_implementation": benchmark["warmups"],
             "iterations_per_measurement": benchmark["iterations"], "rounds": rows,
             "baseline_summary": baseline_summary, "candidate_summary": candidate_summary,
             "speedup_baseline_over_candidate": baseline_summary["median_ms"] / candidate_summary["median_ms"],
@@ -401,10 +485,18 @@ def run_experiment(raw_config: Mapping[str, Any], *, output_root: Path | str = "
     if benchmark:
         _write_json(run_directory / "timings.json", benchmark)
         with (run_directory / "timings.csv").open("w", newline="", encoding="utf-8") as stream:
-            writer = csv.DictWriter(stream, fieldnames=("round", "order", "baseline_latency_ms", "candidate_latency_ms"))
+            measurement_fields = (
+                "cuda_event_elapsed_ms_per_operation", "cuda_event_elapsed_ms_per_block",
+                "host_submission_ms_per_block", "host_wall_ms_per_block",
+            )
+            fields = ["benchmark_mode", "round", "order", "baseline_latency_ms", "candidate_latency_ms"]
+            fields += [f"{name}_{field}" for name in ("baseline", "candidate")
+                       for field in measurement_fields]
+            writer = csv.DictWriter(stream, fieldnames=fields)
             writer.writeheader()
             for row in benchmark["rounds"]:
-                writer.writerow({**row, "order": ">".join(row["order"])})
+                writer.writerow({**row, "benchmark_mode": config["benchmark"]["mode"],
+                                 "order": ">".join(row["order"])})
     return result
 
 
@@ -433,6 +525,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
         print(f"{failure['stage']} failure: {failure['message']}", file=sys.stderr)
         return 1
     benchmark = result["benchmark"]
+    print(f"benchmark mode: {benchmark['mode']}")
     print(f"baseline median: {benchmark['baseline_summary']['median_ms']:.6f} ms")
     print(f"candidate median: {benchmark['candidate_summary']['median_ms']:.6f} ms")
     print(f"speedup (baseline/candidate): {benchmark['speedup_baseline_over_candidate']:.6f}x")

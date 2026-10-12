@@ -48,6 +48,20 @@ All top-level fields printed by `--print-default-config` are required. Unknown
 fields and implementation names are rejected; arbitrary commands and generated
 source are never executed.
 
+`benchmark.mode` accepts two values:
+
+- `allocating` preserves the original paths: `torch.matmul(a, b)` and the
+  repository's `triton_gemm` wrapper allocate an output on every operation.
+- `preallocated` creates distinct reusable baseline and candidate outputs before
+  setup and timing. PyTorch uses `torch.matmul(a, b, out=...)`; Triton launches
+  the unchanged `fc1_kernel` into its prepared output. Triton's prepared launch
+  wrapper still runs per operation, but input validation, output allocation, and
+  grid construction are outside measured blocks.
+
+Omitting `benchmark.mode` is supported for compatibility and resolves to
+`allocating` in every newly saved resolved configuration and result. Unsupported
+values are rejected before GPU work begins.
+
 ## Output and measurement
 
 Each invocation creates a unique ignored directory under
@@ -66,12 +80,18 @@ Each invocation creates a unique ignored directory under
 `result.json` records the schema version, run ID, UTC timestamps, Git commit and
 dirty state, resolved configuration, implementation identities and parameters,
 dependency versions, CUDA device, setup/first-invocation wall time, correctness,
-and timing summaries. `timings.json` and `timings.csv` retain every round and its
-baseline/candidate order. The reported steady-state value is mean device elapsed
-time per GEMM in milliseconds, measured with CUDA events over the configured
-iterations. Speedup is baseline median latency divided by candidate median
-latency. A speedup close to one is only a measurement, not evidence of a useful
-optimization or an end-to-end Transformer improvement.
+and timing summaries. `timings.json` and `timings.csv` retain the benchmark mode,
+every round, its baseline/candidate order, CUDA-event elapsed milliseconds per
+operation and block, host submission milliseconds per block ending before
+synchronization, and host wall milliseconds per block through completion. The
+compatibility `baseline_latency_ms` and `candidate_latency_ms` fields remain
+aliases for CUDA-event milliseconds per operation.
+
+Ordinary CUDA-event intervals can include host-induced device idle gaps, even in
+preallocated mode, and are not labeled pure kernel execution time. Speedup keeps
+the existing estimator: baseline median CUDA-event latency divided by candidate
+median CUDA-event latency. A speedup close to one is only a measurement, not
+evidence of a useful optimization or an end-to-end Transformer improvement.
 
 The candidate is checked for shape, finite values, and explicit tolerances
 before any timed rounds. Correctness failures are never benchmarked. FP32 Triton
@@ -119,7 +139,7 @@ Batch JSON has this top-level shape:
     "workload": {"m": 512, "k": 768, "n": 3072, "dtype": "float16"},
     "seed": 0,
     "correctness": {"atol": 0.01, "rtol": 0.01},
-    "benchmark": {"warmups": 100, "iterations": 500, "rounds": 10},
+    "benchmark": {"mode": "allocating", "warmups": 100, "iterations": 500, "rounds": 10},
     "timeout_seconds": 300.0,
     "baseline": {"implementation": "pytorch_matmul"}
   },
@@ -172,12 +192,16 @@ fields. Compilation, execution, correctness, benchmark, and timeout failures do
 not stop later candidates. An interruption stops new scheduling after the active
 single runner has cleaned up its worker.
 
-Successful runs are aggregated per candidate. `median_run_speedup` is the median
-of their run-level paired speedups. Its reported spread is the median absolute
+Successful runs are aggregated per candidate and benchmark mode.
+`median_run_speedup` is the median of their run-level paired speedups. Its reported spread is the median absolute
 deviation of those same values. The descriptive ranking includes only candidates
 whose configuration is valid and whose every repetition completes correctness
 and benchmarking successfully. Slower, failed, invalid, and incomplete candidates
 remain in the artifacts; the ranking does not claim statistical significance.
+Allocating and preallocated measurements are incompatible ranking populations
+and are never combined. Legacy child results without a mode are interpreted as
+allocating; a result that does not match its batch mode is rejected from that
+batch's aggregation.
 
 Batch CLI exit codes are:
 
@@ -196,10 +220,22 @@ commands or generated source.
 ## Persistent search sessions
 
 A session fixes the objective, FC1 workload, baseline, tolerances, benchmark
-settings, allowed Triton parameter values, scheduling seed, and total experiment
-budget. One budget unit is one invocation of the single-experiment runner,
+settings including mode, allowed Triton parameter values, scheduling seed, and
+total experiment budget. One budget unit is one invocation of the single-experiment runner,
 whether it succeeds, fails correctness, fails compilation, or times out. Thus
 four candidates repeated three times cost 12 units.
+
+Create a separate preallocated 24-unit session, leaving the allocating session
+and its budget untouched, then submit the checked-in proposal:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session create \
+  --config examples/fc1_preallocated_experiment_session.json \
+  --output-root artifacts/experiment-sessions
+export SESSION=/absolute/path/printed/by/the/create/command
+PYTHONPATH=src python -m matmul_inspector.cli session submit \
+  --session "$SESSION" --proposal examples/fc1_session_proposal.json
+```
 
 Create the checked-in 24-unit example session:
 
@@ -231,9 +267,16 @@ implementation, parameter overrides, a hypothesis for each candidate, references
 to prior proposal IDs or result paths, and a repetition count. Omitted candidate
 parameters resolve to the established defaults before validation and
 fingerprinting. Candidate fingerprints include the implementation, all resolved
-parameters, and the fixed session context; changing key order or candidate name
+parameters, and the fixed session context, including benchmark mode for new
+sessions; changing key order or candidate name
 does not create a new configuration. Repeating an accepted configuration requires
 a non-empty `repeat_reason` such as `"Verify a noisy prior result."`.
+
+Session mode is immutable because proposals cannot replace shared settings.
+Legacy sessions whose fixed benchmark lacks `mode` continue to mean allocating.
+They are read without rewriting their JSON or changing their historical
+fingerprints. Context exports state the effective mode and warn that rankings
+from different modes must remain separate.
 
 Proposal files cannot change shared settings. Unsupported implementations,
 out-of-range parameters, duplicate IDs, unknown prior-result references, and
@@ -283,3 +326,22 @@ An example instruction for Codex is:
 > Read this session context, propose at most four new configurations with
 > hypotheses, submit exactly one batch within the remaining budget, and report
 > measured findings.
+
+## FC1 timing-method diagnostic
+
+The standalone diagnostic below compares the existing allocating calls,
+preallocated output calls, and (when supported) CUDA Graph replay for the fixed
+FC1 `stages2` configuration. It does not invoke the experiment/session runner,
+change a session, or participate in rankings or budgets:
+
+```sh
+python scripts/fc1_timing_diagnostic.py
+```
+
+Each graph replay contains 500 captured operations; one replay is timed per
+block. The report keeps CUDA-event time, host submission time before
+synchronization, and host wall time through completion separate. Ordinary
+CUDA-event intervals may contain host-induced stream idle gaps, while graph
+replay changes submission behavior, so the reported event intervals should not
+all be described as pure kernel execution time. Raw order and measurements are
+written beneath ignored `artifacts/fc1-timing-diagnostics/`.

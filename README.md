@@ -174,6 +174,11 @@ and failed records under the ignored `artifacts/experiments/` directory:
 PYTHONPATH=src python -m matmul_inspector.cli experiment
 ```
 
+The runner supports the compatibility-default `allocating` mode and an explicit
+`preallocated` mode with reusable PyTorch and Triton outputs. Results keep CUDA
+event, host submission, and synchronized host-wall timings separate; modes are
+not combined in rankings.
+
 See the [experiment runner guide](docs/experiment_runner.md) for configuration,
 result fields, failure behavior, and the callable Python interface.
 

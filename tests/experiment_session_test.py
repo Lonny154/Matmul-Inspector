@@ -116,6 +116,7 @@ class ExperimentSessionTests(unittest.TestCase):
         self.assertIn("git", loaded["provenance"])
         self.assertTrue((Path(created["session_directory"]) /
                          "submitted_session_config.json").is_file())
+        self.assertEqual(loaded["fixed"]["shared"]["benchmark"]["mode"], "allocating")
 
     def test_proposal_validation_rejects_shared_changes_and_out_of_range_values(self):
         state = self.create()
@@ -232,6 +233,37 @@ class ExperimentSessionTests(unittest.TestCase):
         self.assertEqual(len(context["observations"]["successful_results"]), 1)
         self.assertEqual(context["budget"]["consumed"], 1)
         self.assertFalse(list(self.root.glob(".context.json.*.tmp")))
+
+    def test_new_fingerprints_include_immutable_benchmark_mode(self):
+        allocating = self.create()
+        preallocated_config = session_config()
+        preallocated_config["shared"]["benchmark"]["mode"] = "preallocated"
+        preallocated = experiment_session.create_session(preallocated_config, output_root=self.root)
+        allocating_candidate = experiment_session.validate_proposal(
+            allocating, proposal())["candidates"][0]
+        preallocated_candidate = experiment_session.validate_proposal(
+            preallocated, proposal())["candidates"][0]
+        self.assertNotEqual(allocating_candidate["fingerprint"],
+                            preallocated_candidate["fingerprint"])
+        submitted = proposal("changed-mode")
+        submitted["shared"] = copy.deepcopy(preallocated["fixed"]["shared"])
+        with self.assertRaises(ValueError):
+            experiment_session.validate_proposal(allocating, submitted)
+        self.assertEqual(allocating["fixed"]["shared"]["benchmark"]["mode"], "allocating")
+
+    def test_legacy_session_omission_means_allocating_without_rewrite(self):
+        state = self.create()
+        directory = Path(state["session_directory"])
+        state["fixed"]["shared"]["benchmark"].pop("mode")
+        state["candidate_fingerprints"] = {"historical-fingerprint": [{"proposal_id": "old"}]}
+        experiment_session._atomic_json(directory / "session.json", state)
+        loaded = experiment_session.load_session(directory)
+        self.assertNotIn("mode", loaded["fixed"]["shared"]["benchmark"])
+        context = experiment_session.export_context(directory)
+        self.assertEqual(context["benchmark_mode"], "allocating")
+        self.assertIn("historical-fingerprint", context["candidate_fingerprints"])
+        persisted = json.loads((directory / "session.json").read_text(encoding="utf-8"))
+        self.assertNotIn("mode", persisted["fixed"]["shared"]["benchmark"])
 
 
 if __name__ == "__main__":

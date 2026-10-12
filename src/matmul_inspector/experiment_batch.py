@@ -14,10 +14,10 @@ import traceback
 from typing import Any, Callable, Mapping, Sequence
 import uuid
 
-from .experiment import DEFAULT_CONFIG, run_experiment, validate_config
+from .experiment import DEFAULT_CONFIG, resolved_benchmark_mode, run_experiment, validate_config
 
 
-BATCH_SCHEMA_VERSION = 1
+BATCH_SCHEMA_VERSION = 2
 BATCH_EXIT_SUCCESS = 0
 BATCH_EXIT_FAILURE = 1
 BATCH_EXIT_CONFIGURATION = 2
@@ -112,13 +112,22 @@ def _atomic_write_json(path: Path, value: Any) -> None:
     temporary.replace(path)
 
 
-def _entry(candidate_id: str, repetition: int | None, result: Mapping[str, Any]) -> dict[str, Any]:
+def _entry(candidate_id: str, repetition: int | None, result: Mapping[str, Any],
+           expected_mode: str = "allocating") -> dict[str, Any]:
     correctness = result.get("correctness") or {}
     benchmark = result.get("benchmark") or {}
     baseline = benchmark.get("baseline_summary") or {}
     candidate = benchmark.get("candidate_summary") or {}
     failure = result.get("failure") or {}
     status = result.get("status", "failed")
+    actual_mode = resolved_benchmark_mode(result)
+    if status == "success" and actual_mode != expected_mode:
+        status = "failed"
+        failure = {
+            "stage": "result", "exception_type": "IncompatibleBenchmarkMode",
+            "message": f"result mode {actual_mode!r} does not match batch mode {expected_mode!r}",
+            "traceback": None,
+        }
     if status == "success" and not (
             correctness.get("passed") is True
             and baseline.get("median_ms") is not None
@@ -134,6 +143,7 @@ def _entry(candidate_id: str, repetition: int | None, result: Mapping[str, Any])
     return {
         "repetition": repetition,
         "candidate_id": candidate_id,
+        "benchmark_mode": expected_mode,
         "status": status,
         "correctness_passed": correctness.get("passed"),
         "baseline_median_ms": baseline.get("median_ms"),
@@ -147,9 +157,10 @@ def _entry(candidate_id: str, repetition: int | None, result: Mapping[str, Any])
 
 
 def _failure_entry(candidate_id: str, repetition: int | None, stage: str,
-                   error: BaseException) -> dict[str, Any]:
+                   error: BaseException, benchmark_mode: str = "allocating") -> dict[str, Any]:
     return {
-        "repetition": repetition, "candidate_id": candidate_id, "status": "failed",
+        "repetition": repetition, "candidate_id": candidate_id,
+        "benchmark_mode": benchmark_mode, "status": "failed",
         "correctness_passed": None, "baseline_median_ms": None,
         "candidate_median_ms": None, "paired_speedup_baseline_over_candidate": None,
         "failure_stage": stage,
@@ -163,6 +174,7 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
                entries: Sequence[Mapping[str, Any]], planned_count: int,
                interrupted: bool) -> dict[str, Any]:
     repetitions = config["repetitions"]
+    mode = resolved_benchmark_mode(config["shared"])
     aggregates = []
     for candidate in config["candidates"]:
         identifier = candidate["id"]
@@ -177,6 +189,7 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
         complete = validation["valid"] and len(runs) == repetitions and len(successful) == repetitions
         aggregates.append({
             "candidate_id": identifier, "implementation": candidate.get("implementation"),
+            "benchmark_mode": mode,
             "parameters": candidate.get("parameters"),
             "configuration_valid": validation["valid"],
             "configuration_error": validation.get("error"),
@@ -192,6 +205,7 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
         key=lambda item: (-item["median_run_speedup"], item["candidate_id"]),
     )
     rankings = [{"rank": rank, "candidate_id": item["candidate_id"],
+                 "benchmark_mode": mode,
                  "median_run_speedup": item["median_run_speedup"]}
                 for rank, item in enumerate(ranked, 1)]
     scheduled_entries = [entry for entry in entries if entry["repetition"] is not None]
@@ -205,7 +219,7 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
     else:
         status = "success"
     return {
-        "status": status,
+        "status": status, "benchmark_mode": mode,
         "counts": {
             "valid_candidates": len(validations) - invalid_count,
             "invalid_candidates": invalid_count, "planned_experiments": planned_count,
@@ -217,14 +231,15 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
         "experiments": list(entries),
         "complete_candidate_ranking": rankings,
         "ranking_note": (
-            "Descriptive ranking by median successful run-level speedup; only candidates "
-            "with all repetitions successful are included. No statistical significance is claimed."
+            f"Descriptive ranking within benchmark mode {mode!r} by median successful run-level "
+            "speedup; only candidates with all repetitions successful are included. Rankings "
+            "from different benchmark modes are incompatible. No statistical significance is claimed."
         ),
     }
 
 
 _CSV_FIELDS = (
-    "repetition", "candidate_id", "status", "correctness_passed",
+    "benchmark_mode", "repetition", "candidate_id", "status", "correctness_passed",
     "baseline_median_ms", "candidate_median_ms",
     "paired_speedup_baseline_over_candidate", "failure_stage",
     "experiment_run_id", "result_path", "parameters_json",
@@ -293,6 +308,7 @@ def run_batch(raw_config: Mapping[str, Any], *,
         "schema_version": BATCH_SCHEMA_VERSION, "config": config,
     })
     candidates = {candidate["id"]: candidate for candidate in config["candidates"]}
+    benchmark_mode = resolved_benchmark_mode(config["shared"])
     validations: dict[str, dict[str, Any]] = {}
     valid_configs: dict[str, dict[str, Any]] = {}
     for candidate in config["candidates"]:
@@ -302,7 +318,7 @@ def run_batch(raw_config: Mapping[str, Any], *,
             validations[identifier] = {"valid": True, "error": None}
         except BaseException as error:
             validations[identifier] = {"valid": False, "error": str(error)}
-            invalid_entry = _failure_entry(identifier, None, "configuration", error)
+            invalid_entry = _failure_entry(identifier, None, "configuration", error, benchmark_mode)
             invalid_entry["parameters"] = candidate.get("parameters")
             batch["entries"].append(invalid_entry)
 
@@ -330,12 +346,14 @@ def run_batch(raw_config: Mapping[str, Any], *,
         identifier = scheduled["candidate_id"]
         try:
             result = experiment_executor(valid_configs[identifier], output_root=child_root)
-            entry = _entry(identifier, scheduled["repetition"], result)
+            entry = _entry(identifier, scheduled["repetition"], result, benchmark_mode)
         except KeyboardInterrupt as error:
-            entry = _failure_entry(identifier, scheduled["repetition"], "interruption", error)
+            entry = _failure_entry(identifier, scheduled["repetition"], "interruption", error,
+                                   benchmark_mode)
             interrupted = True
         except BaseException as error:
-            entry = _failure_entry(identifier, scheduled["repetition"], "orchestration", error)
+            entry = _failure_entry(identifier, scheduled["repetition"], "orchestration", error,
+                                   benchmark_mode)
         entry["parameters"] = candidates[identifier].get("parameters")
         batch["entries"].append({"sequence": scheduled["sequence"], **entry})
         if entry["failure_stage"] == "interruption":
@@ -373,6 +391,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
     if summary:
         counts = summary["counts"]
         print(f"status: {summary['status']}")
+        print(f"benchmark mode: {summary['benchmark_mode']}")
         print(f"experiments: {counts['successful_experiments']} succeeded, "
               f"{counts['failed_experiments']} failed, {counts['remaining_experiments']} remaining")
         for ranked in summary["complete_candidate_ranking"]:

@@ -64,8 +64,10 @@ class FakeExecutor:
             return {**base, "status": "success", "correctness": {"passed": True}}
         speedup = {"a": 1.2, "b": 0.8, "c": 1.0}[identifier]
         return {
-            **base, "status": "success", "correctness": {"passed": True},
+            **base, "status": "success", "config": copy.deepcopy(config),
+            "correctness": {"passed": True},
             "benchmark": {
+                "mode": config["benchmark"]["mode"],
                 "baseline_summary": {"median_ms": 2.0},
                 "candidate_summary": {"median_ms": 2.0 / speedup},
                 "speedup_baseline_over_candidate": speedup,
@@ -115,6 +117,36 @@ class ExperimentBatchTests(unittest.TestCase):
         expected = {json.dumps(candidate["parameters"], sort_keys=True)
                     for candidate in config["candidates"]}
         self.assertEqual(observed, expected)
+
+    def test_mode_propagates_and_is_recorded_in_summary_and_csv(self):
+        config = batch_config()
+        config["shared"]["benchmark"]["mode"] = "preallocated"
+        executor = FakeExecutor()
+        result = self.run_batch(config, executor)
+        self.assertTrue(all(call["benchmark"]["mode"] == "preallocated"
+                            for call in executor.calls))
+        self.assertEqual(result["summary"]["benchmark_mode"], "preallocated")
+        self.assertTrue(all(entry["benchmark_mode"] == "preallocated"
+                            for entry in result["entries"]))
+        header = (Path(result["batch_directory"]) / "summary.csv").read_text(
+            encoding="utf-8").splitlines()[0]
+        self.assertIn("benchmark_mode", header)
+
+    def test_result_from_an_incompatible_mode_is_not_ranked(self):
+        config = batch_config()
+        config["shared"]["benchmark"]["mode"] = "preallocated"
+
+        class LegacyExecutor(FakeExecutor):
+            def __call__(self, config, *, output_root):
+                result = super().__call__(config, output_root=output_root)
+                result.pop("config", None)
+                result["benchmark"].pop("mode", None)
+                return result
+
+        result = self.run_batch(config, LegacyExecutor())
+        self.assertEqual(result["summary"]["complete_candidate_ranking"], [])
+        self.assertTrue(all(entry["failure"]["exception_type"] == "IncompatibleBenchmarkMode"
+                            for entry in result["entries"]))
 
     def test_failure_and_unexpected_exception_do_not_stop_later_runs(self):
         executor = FakeExecutor({("a", 1): "failure", ("b", 2): "raise"})

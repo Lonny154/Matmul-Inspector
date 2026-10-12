@@ -18,7 +18,7 @@ import traceback
 from typing import Any, Callable, Iterator, Mapping, Sequence
 import uuid
 
-from .experiment import DEFAULT_CONFIG, _git_metadata, validate_config
+from .experiment import DEFAULT_CONFIG, _git_metadata, resolved_benchmark_mode, validate_config
 from .experiment_batch import run_batch
 
 
@@ -483,7 +483,9 @@ def recover_session(session: Path | str, proposal_id: str, resolution: str) -> d
 def session_status(session: Path | str) -> dict[str, Any]:
     state = load_session(session)
     return {"schema_version": state["schema_version"], "session_id": state["session_id"],
-            "objective": state["objective"], "budget": state["budget"],
+            "objective": state["objective"],
+            "benchmark_mode": resolved_benchmark_mode(state["fixed"]["shared"]),
+            "budget": state["budget"],
             "proposal_states": [{"proposal_id": proposal["proposal_id"],
                                  "state": proposal["state"], "cost": proposal["cost"],
                                  "consumed_units": proposal["consumed_units"],
@@ -507,7 +509,9 @@ def export_context(session: Path | str, output: Path | str | None = None) -> dic
             (successes if result.get("status") == "success" else failures).append(observation)
     context = {
         "schema_version": SESSION_SCHEMA_VERSION, "session_id": state["session_id"],
-        "objective": state["objective"], "fixed": state["fixed"], "budget": state["budget"],
+        "objective": state["objective"],
+        "benchmark_mode": resolved_benchmark_mode(state["fixed"]["shared"]),
+        "fixed": state["fixed"], "budget": state["budget"],
         "proposal_history": state["proposals"], "rejected_proposals": state["rejected_proposals"],
         "candidate_fingerprints": state["candidate_fingerprints"],
         "hypotheses": hypotheses,
@@ -518,6 +522,9 @@ def export_context(session: Path | str, output: Path | str | None = None) -> dic
                                   "complete_candidate_ranking", [])}
                              for proposal in state["proposals"]]},
         "limitations": ["Rankings are descriptive and do not establish statistical significance.",
+                        "Rankings from different benchmark modes must not be combined.",
+                        "Legacy sessions without benchmark.mode are interpreted as allocating "
+                        "without rewriting their records or fingerprints.",
                         "Historical experiments are not imported; this session starts fresh."],
     }
     if output is not None:
