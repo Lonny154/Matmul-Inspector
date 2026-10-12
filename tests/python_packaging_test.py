@@ -30,10 +30,10 @@ class PythonPackagingTests(unittest.TestCase):
         )
 
     def test_version_and_top_level_help(self):
-        self.assertEqual(__version__, "0.1.0")
+        self.assertEqual(__version__, "0.2.0")
         version = self.run_module("--version")
         self.assertEqual(version.returncode, 0)
-        self.assertEqual(version.stdout.strip(), "matmul-inspector 0.1.0")
+        self.assertEqual(version.stdout.strip(), "matmul-inspector 0.2.0")
         help_result = self.run_module("--help")
         self.assertEqual(help_result.returncode, 0)
         self.assertIn("native C++ benchmark executable", help_result.stdout)

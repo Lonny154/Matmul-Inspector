@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "matmul-inspector"
-version = "0.1.0"
-description = "CPU-only compiler-artifact analysis tools for numerical kernel experiments"
+version = "0.2.0"
+description = "Compiler-artifact analysis and optional GPU kernel experiment tools"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "Daniel Lonneman"}]
@@ -27,6 +27,9 @@ classifiers = [
   "Topic :: Software Development :: Compilers",
 ]
 dependencies = []
+
+[project.optional-dependencies]
+gpu = ["torch", "triton"]
 
 [project.urls]
 Repository = "https://github.com/Lonny154/Matmul-Inspector"

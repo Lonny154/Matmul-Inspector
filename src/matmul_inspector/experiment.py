@@ -11,6 +11,7 @@ import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
+import importlib
 import importlib.util
 import inspect
 import json
@@ -229,18 +230,10 @@ class CudaTritonBackend:
             raise StageFailure("prerequisite", "CUDA is unavailable; use a host with a supported NVIDIA GPU and CUDA-enabled PyTorch")
         if implementation == SOURCE_IMPLEMENTATION:
             return torch, None
-        kernel_path = Path(__file__).resolve().parents[2] / "scripts" / "triton_fc1.py"
-        if not kernel_path.is_file():
-            raise StageFailure("prerequisite", f"repository kernel is missing: {kernel_path}")
-        spec = importlib.util.spec_from_file_location("matmul_inspector_triton_fc1", kernel_path)
-        if spec is None or spec.loader is None:
-            raise StageFailure("prerequisite", f"cannot load Triton kernel: {kernel_path}")
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
         try:
-            spec.loader.exec_module(module)
+            module = importlib.import_module(".triton_fc1", package=__package__)
         except Exception as error:
-            raise StageFailure("prerequisite", f"cannot import Triton kernel: {error}") from error
+            raise StageFailure("prerequisite", f"cannot import packaged Triton kernel: {error}") from error
         return torch, module
 
     @staticmethod

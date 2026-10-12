@@ -1,7 +1,7 @@
 # CUDA/Triton experiment runner
 
 The experiment runner executes an FC1 candidate against a PyTorch/cuBLAS
-baseline. A candidate can use the registered `scripts/triton_fc1.py` kernel or
+baseline. A candidate can use the registered `matmul_inspector.triton_fc1` kernel or
 one explicitly supplied local Triton source file. No shell command is accepted.
 
 ## Run the default FC1 experiment

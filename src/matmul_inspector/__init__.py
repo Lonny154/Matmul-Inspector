@@ -1,3 +1,3 @@
-"""CPU-only compiler-artifact analysis tools from Matmul Inspector."""
+"""Compiler-artifact analysis and optional GPU experiments."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

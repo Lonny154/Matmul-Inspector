@@ -211,6 +211,23 @@ class ExperimentRunnerTests(unittest.TestCase):
         self.assertEqual(measured["host_wall_ms_per_block"], 3.0)
         self.assertEqual(measured["cuda_event_minus_host_wall_ms_per_block"], 1.0)
 
+    def test_registered_kernel_is_loaded_from_the_installed_package(self):
+        class Cuda:
+            @staticmethod
+            def is_available():
+                return True
+
+        fake_torch = type("Torch", (), {"cuda": Cuda()})()
+        packaged_kernel = object()
+        with mock.patch.dict(sys.modules, {"torch": fake_torch, "triton": object()}):
+            with mock.patch.object(experiment.importlib, "import_module",
+                                   return_value=packaged_kernel) as loader:
+                torch_module, kernel_module = experiment.CudaTritonBackend()._imports(
+                    "triton_fc1")
+        self.assertIs(torch_module, fake_torch)
+        self.assertIs(kernel_module, packaged_kernel)
+        loader.assert_called_once_with(".triton_fc1", package="matmul_inspector")
+
 
 if __name__ == "__main__":
     unittest.main()

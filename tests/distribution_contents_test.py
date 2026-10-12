@@ -17,6 +17,8 @@ FORBIDDEN_SUFFIXES = {
 PACKAGE_FILES = {
     "matmul_inspector/__init__.py", "matmul_inspector/cli.py", "matmul_inspector/ptx.py",
     "matmul_inspector/sass.py", "matmul_inspector/nki.py", "matmul_inspector/reporting.py",
+    "matmul_inspector/experiment.py", "matmul_inspector/experiment_batch.py",
+    "matmul_inspector/experiment_session.py", "matmul_inspector/triton_fc1.py",
 }
 
 

@@ -8,16 +8,18 @@ source change can disappear in an intermediate representation, produce different
 machine instructions, change numerical results, or affect performance—and none
 of those outcomes can safely be inferred from another.
 
-Install the CPU-only Python toolkit from [PyPI](https://pypi.org/project/matmul-inspector/):
+Install the Python toolkit from [PyPI](https://pypi.org/project/matmul-inspector/):
 
 ```sh
-python -m pip install matmul-inspector==0.1.0
+python -m pip install matmul-inspector==0.2.0
 matmul-inspector-python --version
 ```
 
-Version 0.1.0 supports Python 3.10–3.13 and has no mandatory CUDA, AWS Neuron,
-GPU, or native-library dependency. Hardware and vendor toolchains are needed to
-*generate* artifacts and run benchmarks, not to inspect saved artifacts.
+Version 0.2.0 supports Python 3.10–3.13. Saved-artifact analysis has no mandatory
+CUDA, AWS Neuron, GPU, or native-library dependency. The optional experiment
+commands require an NVIDIA GPU, a compatible driver, CUDA-enabled PyTorch, and
+Triton; installing Matmul Inspector does not install or configure a driver and
+does not guarantee that a particular GPU/software combination is compatible.
 
 ## Why Matmul Inspector?
 
@@ -153,7 +155,8 @@ capture conditions, methodology, numerical evidence, and limitations.
 | Unified reporting | Combine PTX, SASS, and benchmark evidence while separating identity mapping, provenance, completion, and correctness | Python package |
 | Numerical laboratory | Compare FP32 results, ULPs, tolerances, accumulation order, FMA contraction, reductions, and saved experiments | Native source build |
 | Performance laboratory | Run CPU/CUDA benchmarks, reliability analysis, crossover studies, roofline models, and reproducibility captures | Native source build and scripts |
-| Research experiments | Triton Transformer projections and Trainium NKI GEMM studies | Source checkout; additional toolchains/hardware |
+| GPU experiment runner | Single experiments, batches, persistent sessions, allocating/preallocated modes, and explicitly trusted local Triton candidates | Python package; optional PyTorch/Triton and compatible NVIDIA environment |
+| Research experiments | Additional Triton Transformer projections and Trainium NKI GEMM studies | Source checkout; additional toolchains/hardware |
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
@@ -165,13 +168,13 @@ matmul-inspector-python nki --help
 matmul-inspector-python report --help
 ```
 
-The source checkout also includes the first end-to-end CUDA/Triton experiment
-runner. It validates the established FC1 candidate, compares it with
+The installed package includes the end-to-end CUDA/Triton experiment runner. It
+validates the established packaged FC1 candidate, compares it with
 PyTorch/cuBLAS, alternates CUDA-event measurement order, and preserves successful
 and failed records under the ignored `artifacts/experiments/` directory:
 
 ```sh
-PYTHONPATH=src python -m matmul_inspector.cli experiment
+matmul-inspector-python experiment
 ```
 
 The runner supports the compatibility-default `allocating` mode and an explicit
@@ -185,10 +188,10 @@ See the [experiment runner guide](docs/experiment_runner.md) for configuration,
 result fields, failure behavior, and the callable Python interface.
 
 Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
-fresh matched baselines using the checked-in example:
+fresh matched baselines. From a source checkout, the checked-in example is:
 
 ```sh
-PYTHONPATH=src python -m matmul_inspector.cli experiment-batch \
+matmul-inspector-python experiment-batch \
   --config examples/fc1_experiment_batch.json \
   --output-root artifacts/experiment-batches
 ```
@@ -198,7 +201,7 @@ hypotheses and history, canonical duplicate detection, locking, crash recovery,
 and an enforced experiment budget without adding a model API:
 
 ```sh
-PYTHONPATH=src python -m matmul_inspector.cli session create \
+matmul-inspector-python session create \
   --config examples/fc1_experiment_session.json \
   --output-root artifacts/experiment-sessions
 ```
@@ -263,12 +266,19 @@ an experimental laboratory, not a replacement for a tuned BLAS.
 - [Transformer optimization study](docs/transformer_optimization.md)
 - [CUDA/Triton experiment runner](docs/experiment_runner.md)
 - [AI-assisted FC1 kernel search case study](docs/ai_assisted_kernel_search_case_study.md)
+- [Python toolkit release guide](docs/python_toolkit_release.md) and
+  [0.2.0 release notes](docs/release_notes_0_2_0.md)
 - [Checked-in RTX 4060 Ti floating-point captures](results/examples/rtx4060ti-controlled-fp/README.md)
 
 ## Requirements and limitations
 
 - Saved-artifact analysis supports Linux and Python 3.10–3.13 and uses only the
   Python standard library.
+- GPU experiments are optional. Follow PyTorch's platform-specific installation
+  instructions for a CUDA-enabled build, then install
+  `matmul-inspector[gpu]==0.2.0`. The extra requests PyTorch and Triton but does
+  not configure NVIDIA drivers, select a system CUDA driver, or guarantee GPU
+  compatibility. Verify `torch.cuda.is_available()` before running experiments.
 - Creating PTX/CUBIN/SASS requires NVIDIA compiler tools; running CUDA benchmarks
   additionally requires compatible hardware and drivers.
 - Creating NKI/NEFF/profiler captures requires an AWS Neuron environment and, for
