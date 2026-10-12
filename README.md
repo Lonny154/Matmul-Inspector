@@ -239,6 +239,11 @@ ctest --test-dir build-cpu -L cpu --output-on-failure
   --output results/cpu-check
 ```
 
+The CUDA source build also provides an FP32 comparison between a one-thread-per-
+system batched Thomas baseline and a one-thread-per-equation PCR baseline. It
+retains raw CUDA-event samples and correctness evidence. See the
+[CUDA Thomas versus PCR case study](docs/cuda_thomas_pcr_case_study.md).
+
 Enable CUDA with `-DMATMUL_INSPECTOR_ENABLE_CUDA=ON` when a supported toolkit is
 available. The laboratory includes naive and tiled matmul, controlled FMA and
 accumulation-order variants, correctness comparisons, benchmark distributions,
