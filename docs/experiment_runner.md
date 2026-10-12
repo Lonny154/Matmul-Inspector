@@ -192,3 +192,94 @@ Python agents can call
 the returned batch record or its `summary.json`. Agents submit only registered
 implementation names and structured parameters; batches do not execute arbitrary
 commands or generated source.
+
+## Persistent search sessions
+
+A session fixes the objective, FC1 workload, baseline, tolerances, benchmark
+settings, allowed Triton parameter values, scheduling seed, and total experiment
+budget. One budget unit is one invocation of the single-experiment runner,
+whether it succeeds, fails correctness, fails compilation, or times out. Thus
+four candidates repeated three times cost 12 units.
+
+Create the checked-in 24-unit example session:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session create \
+  --config examples/fc1_experiment_session.json \
+  --output-root artifacts/experiment-sessions
+```
+
+The command prints the new session directory. Save it as `SESSION`, then inspect
+the concise state or export complete agent-readable context:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session status --session "$SESSION"
+PYTHONPATH=src python -m matmul_inspector.cli session context \
+  --session "$SESSION" --output /tmp/fc1-session-context.json
+```
+
+Submit exactly one proposal and inspect the updated context:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session submit \
+  --session "$SESSION" --proposal examples/fc1_session_proposal.json
+PYTHONPATH=src python -m matmul_inspector.cli session context --session "$SESSION"
+```
+
+The proposal contains a unique proposal ID, candidate IDs, registered
+implementation, parameter overrides, a hypothesis for each candidate, references
+to prior proposal IDs or result paths, and a repetition count. Omitted candidate
+parameters resolve to the established defaults before validation and
+fingerprinting. Candidate fingerprints include the implementation, all resolved
+parameters, and the fixed session context; changing key order or candidate name
+does not create a new configuration. Repeating an accepted configuration requires
+a non-empty `repeat_reason` such as `"Verify a noisy prior result."`.
+
+Proposal files cannot change shared settings. Unsupported implementations,
+out-of-range parameters, duplicate IDs, unknown prior-result references, and
+over-budget proposals are rejected and recorded without consuming budget. The
+entire proposal cost is reserved atomically before execution. A nonblocking
+session lock prevents concurrent submit or recovery operations from spending the
+same budget.
+
+Session state uses these proposal states:
+
+- `accepted`: validated and fully reserved, before batch launch.
+- `running`: batch execution began; a stale value after process death requires
+  recovery rather than automatic rerun.
+- `completed`: every child experiment completed successfully.
+- `failed`: execution finished with a failure, or ambiguity was explicitly
+  reconciled without rerunning.
+- `interrupted`: the batch stopped on interruption and every launch was resolved.
+- `needs_reconciliation`: one or more invocations may have launched but lack
+  conclusive result artifacts; their units remain reserved.
+
+After a normal interruption, child artifacts identify consumed launches and the
+unstarted tail is released. Following an unexpected process failure, inspect a
+stale `running` or `needs_reconciliation` proposal:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session recover \
+  --session "$SESSION" --proposal-id PROPOSAL_ID --resolution inspect
+```
+
+Inspection incorporates any conclusive child results but never reruns them. If
+ambiguity remains, explicitly choose `--resolution consume` to conservatively
+charge all reserved units, or `--resolution release` only after establishing
+externally that they never launched. No recovery action starts GPU work.
+An `accepted` proposal with no batch artifacts is known not to have launched, so
+`--resolution inspect` releases its reservation safely.
+
+`session.json` is atomically replaced and contains provenance, budget totals,
+proposal history, fingerprints, batch links, and individual result paths.
+Accepted and recovered proposal records are also kept below `proposals/`; rejected
+submissions are stored below `rejected/`. Context export separates candidate
+hypotheses from measured observations, retains failures and slower results, and
+reuses the batch runner's descriptive rankings and variability. Historical
+artifacts are not imported in this milestone: the first session starts fresh.
+
+An example instruction for Codex is:
+
+> Read this session context, propose at most four new configurations with
+> hypotheses, submit exactly one batch within the remaining budget, and report
+> measured findings.

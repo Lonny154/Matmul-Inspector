@@ -7,7 +7,7 @@ import sys
 from typing import Sequence
 
 from . import __version__
-from . import experiment, experiment_batch, nki, ptx, reporting, sass
+from . import experiment, experiment_batch, experiment_session, nki, ptx, reporting, sass
 
 
 COMMANDS = {
@@ -17,6 +17,7 @@ COMMANDS = {
     "report": (reporting.main, "Combine saved compiler and benchmark evidence"),
     "experiment": (experiment.main, "Run a reproducible CUDA/Triton kernel experiment"),
     "experiment-batch": (experiment_batch.main, "Run a sequential batch of kernel candidates"),
+    "session": (experiment_session.main, "Manage persistent experiment search sessions"),
 }
 
 

@@ -186,6 +186,19 @@ PYTHONPATH=src python -m matmul_inspector.cli experiment-batch \
   --output-root artifacts/experiment-batches
 ```
 
+Persistent search sessions add immutable experiment settings, structured
+hypotheses and history, canonical duplicate detection, locking, crash recovery,
+and an enforced experiment budget without adding a model API:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session create \
+  --config examples/fc1_experiment_session.json \
+  --output-root artifacts/experiment-sessions
+```
+
+See the experiment runner guide for proposal, status, context, and recovery
+commands.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.

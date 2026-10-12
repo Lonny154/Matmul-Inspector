@@ -45,7 +45,8 @@ class PythonPackagingTests(unittest.TestCase):
                 (("nki", "--help"), "--subgraph"),
                 (("report", "--help"), "--reference-map"),
                 (("experiment", "--help"), "--print-default-config"),
-                (("experiment-batch", "--help"), "--output-root")):
+                (("experiment-batch", "--help"), "--output-root"),
+                (("session", "--help"), "recover")):
             result = self.run_module(*arguments)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn(expected, result.stdout)
@@ -74,7 +75,8 @@ class PythonPackagingTests(unittest.TestCase):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             self.assertEqual(cli.main([]), 0)
-        for name in ("ptx", "sass", "nki", "report", "experiment", "experiment-batch"):
+        for name in ("ptx", "sass", "nki", "report", "experiment", "experiment-batch",
+                     "session"):
             self.assertIn(name, output.getvalue())
 
 

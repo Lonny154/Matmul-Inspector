@@ -1,0 +1,19 @@
+{
+  "proposal_id": "initial-resource-sweep",
+  "candidates": [
+    {
+      "id": "fc1-stages2",
+      "implementation": "triton_fc1",
+      "parameters": {"num_stages": 2},
+      "hypothesis": "Reducing pipeline depth may lower resource use while retaining enough latency hiding."
+    },
+    {
+      "id": "fc1-k64",
+      "implementation": "triton_fc1",
+      "parameters": {"block_k": 64},
+      "hypothesis": "A wider K tile may reduce loop overhead, with a possible resource-pressure tradeoff."
+    }
+  ],
+  "prior_result_references": [],
+  "repetitions": 3
+}

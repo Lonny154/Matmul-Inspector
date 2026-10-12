@@ -285,6 +285,9 @@ if(BUILD_TESTING)
         add_test(NAME experiment-batch-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/experiment_batch_test.py")
         set_tests_properties(experiment-batch-tests PROPERTIES LABELS "cpu")
+        add_test(NAME experiment-session-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/experiment_session_test.py")
+        set_tests_properties(experiment-session-tests PROPERTIES LABELS "cpu")
         add_test(NAME release-workflow-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/release_workflow_test.py")
         set_tests_properties(release-workflow-tests PROPERTIES LABELS "cpu")
