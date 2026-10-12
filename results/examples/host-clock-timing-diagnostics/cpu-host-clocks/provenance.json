@@ -1,0 +1,36 @@
+{
+  "clocks": {
+    "clock_monotonic": {
+      "clock_id": 1,
+      "resolution_seconds": 1e-09
+    },
+    "clock_monotonic_raw": {
+      "clock_id": 4,
+      "resolution_seconds": 1e-09,
+      "supported": true
+    },
+    "perf_counter": {
+      "adjustable": false,
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "resolution_seconds": 1e-09
+    }
+  },
+  "clocksource": {
+    "available": "tsc hyperv_clocksource_tsc_page hyperv_clocksource_msr acpi_pm",
+    "current": "tsc"
+  },
+  "created_at_utc": "2026-10-12T17:21:35.576451+00:00",
+  "kernel_release": "6.18.40.1-microsoft-standard-WSL2",
+  "operating_environment": "WSL2",
+  "python": "3.13.11",
+  "source_revision": "3e4eea0c23b308bb5adce35301ae1e69c9319f57",
+  "time_adjustment_inspection": {
+    "adjtimex_available": false,
+    "chronyc_available": false,
+    "ntp_enabled": true,
+    "ntp_synchronized": true,
+    "ntpq_available": false,
+    "settings_changed": false
+  }
+}

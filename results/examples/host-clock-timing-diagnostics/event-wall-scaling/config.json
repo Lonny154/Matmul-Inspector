@@ -1,0 +1,44 @@
+{
+  "block_sizes": [
+    50,
+    500,
+    5000
+  ],
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "event_warmup_blocks": 10,
+  "implementation": "packaged preallocated Triton FC1 kernel",
+  "input_seed": 0,
+  "interpretation": "CUDA-event and host-wall values are different timer measurements. No cause or correction is assumed.",
+  "purpose": "standalone CUDA-event versus synchronized host-wall scaling diagnostic",
+  "rounds_per_block_size": 12,
+  "session_budget_impact": "none",
+  "stream": "one dedicated explicit torch.cuda.Stream for events and workload",
+  "timing_sequence": [
+    "torch.cuda.synchronize()",
+    "host_start_ns = time.perf_counter_ns()",
+    "start_event.record(explicit_stream)",
+    "submit iteration_count operations on explicit_stream",
+    "end_event.record(explicit_stream)",
+    "end_event.synchronize()",
+    "host_end_ns = time.perf_counter_ns()",
+    "start_event.elapsed_time(end_event)"
+  ],
+  "triton_parameters": {
+    "block_k": 32,
+    "block_m": 64,
+    "block_n": 128,
+    "group_size_m": 1,
+    "num_stages": 3,
+    "num_warps": 4
+  },
+  "workload": {
+    "dtype": "float16",
+    "k": 768,
+    "m": 512,
+    "n": 3072
+  },
+  "workload_warmup_operations": 100
+}

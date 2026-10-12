@@ -90,6 +90,29 @@ if(MATMUL_INSPECTOR_ENABLE_CUDA AND CMAKE_CUDA_COMPILER)
     )
     target_link_libraries(cuda_tridiagonal PUBLIC tridiagonal_benchmark benchmark)
 
+    add_library(cuda_tridiagonal_comparison src/cuda_tridiagonal_comparison.cu)
+    set_target_properties(cuda_tridiagonal_comparison PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+    )
+    target_include_directories(cuda_tridiagonal_comparison PUBLIC include)
+    target_link_libraries(cuda_tridiagonal_comparison PUBLIC tridiagonal)
+    execute_process(
+        COMMAND git rev-parse --short=12 HEAD
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE MATMUL_INSPECTOR_SOURCE_REVISION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(NOT MATMUL_INSPECTOR_SOURCE_REVISION)
+        set(MATMUL_INSPECTOR_SOURCE_REVISION "unknown")
+    endif()
+    target_compile_definitions(cuda_tridiagonal_comparison PRIVATE
+        MATMUL_INSPECTOR_SOURCE_REVISION="${MATMUL_INSPECTOR_SOURCE_REVISION}"
+        MATMUL_INSPECTOR_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+        MATMUL_INSPECTOR_CUDA_ARCHITECTURES="${CMAKE_CUDA_ARCHITECTURES}"
+    )
+
     if(MATMUL_INSPECTOR_WARNINGS AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
         if(MSVC)
             target_compile_options(
@@ -164,6 +187,10 @@ add_executable(tridiagonal-benchmark src/tridiagonal_benchmark_main.cpp)
 target_link_libraries(tridiagonal-benchmark PRIVATE tridiagonal_benchmark)
 if(TARGET cuda_tridiagonal)
     target_link_libraries(tridiagonal-benchmark PRIVATE cuda_tridiagonal)
+endif()
+if(TARGET cuda_tridiagonal_comparison)
+    add_executable(tridiagonal-comparison src/tridiagonal_comparison_main.cpp)
+    target_link_libraries(tridiagonal-comparison PRIVATE cuda_tridiagonal_comparison)
 endif()
 
 include(CTest)
