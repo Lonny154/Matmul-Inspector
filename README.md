@@ -260,6 +260,7 @@ an experimental laboratory, not a replacement for a tuned BLAS.
   [tridiagonal benchmarking](docs/tridiagonal_benchmarking.md)
 - [Transformer optimization study](docs/transformer_optimization.md)
 - [CUDA/Triton experiment runner](docs/experiment_runner.md)
+- [AI-assisted FC1 kernel search case study](docs/ai_assisted_kernel_search_case_study.md)
 - [Checked-in RTX 4060 Ti floating-point captures](results/examples/rtx4060ti-controlled-fp/README.md)
 
 ## Requirements and limitations

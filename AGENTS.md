@@ -35,3 +35,6 @@ Before starting significant development work, read:
 - Highlight uncertainty and limitations.
 - Favor readable, modular implementations.
 - Keep reports reproducible and suitable for technical case studies.
+
+## Writing Style 
+Use a friendly, straightforward, conversational writing style. Prefer short sentences and fewer commas. Split long sentences instead of adding several clauses. Avoid corporate language, overly polished phrasing, and unnecessary transitions. Fix spelling and grammar without removing my natural voice. Apply this to explanations, documentation, case studies, technical reports, and drafted messages. Keep technical details precise and include the evidence and limitations needed to support claims.
