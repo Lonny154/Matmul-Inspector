@@ -7,7 +7,7 @@ import sys
 from typing import Sequence
 
 from . import __version__
-from . import nki, ptx, reporting, sass
+from . import experiment, nki, ptx, reporting, sass
 
 
 COMMANDS = {
@@ -15,6 +15,7 @@ COMMANDS = {
     "sass": (sass.main, "Inspect or compare NVIDIA nvdisasm text"),
     "nki": (nki.main, "Compare saved AWS Neuron NKI compiler artifacts"),
     "report": (reporting.main, "Combine saved compiler and benchmark evidence"),
+    "experiment": (experiment.main, "Run a reproducible CUDA/Triton kernel experiment"),
 }
 
 

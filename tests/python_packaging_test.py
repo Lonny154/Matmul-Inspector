@@ -18,7 +18,7 @@ import nki_compare_artifacts
 import ptx_inspector
 import sass_inspector
 from matmul_inspector import __version__
-from matmul_inspector import cli, nki, ptx, reporting, sass
+from matmul_inspector import cli, experiment, nki, ptx, reporting, sass
 
 
 class PythonPackagingTests(unittest.TestCase):
@@ -43,7 +43,8 @@ class PythonPackagingTests(unittest.TestCase):
                 (("ptx", "inspect", "--help"), "--kernel"),
                 (("sass", "compare", "--help"), "--baseline-kernel"),
                 (("nki", "--help"), "--subgraph"),
-                (("report", "--help"), "--reference-map")):
+                (("report", "--help"), "--reference-map"),
+                (("experiment", "--help"), "--print-default-config")):
             result = self.run_module(*arguments)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn(expected, result.stdout)
@@ -72,7 +73,7 @@ class PythonPackagingTests(unittest.TestCase):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             self.assertEqual(cli.main([]), 0)
-        for name in ("ptx", "sass", "nki", "report"):
+        for name in ("ptx", "sass", "nki", "report", "experiment"):
             self.assertIn(name, output.getvalue())
 
 

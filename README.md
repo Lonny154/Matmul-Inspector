@@ -165,6 +165,18 @@ matmul-inspector-python nki --help
 matmul-inspector-python report --help
 ```
 
+The source checkout also includes the first end-to-end CUDA/Triton experiment
+runner. It validates the established FC1 candidate, compares it with
+PyTorch/cuBLAS, alternates CUDA-event measurement order, and preserves successful
+and failed records under the ignored `artifacts/experiments/` directory:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli experiment
+```
+
+See the [experiment runner guide](docs/experiment_runner.md) for configuration,
+result fields, failure behavior, and the callable Python interface.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
@@ -220,6 +232,7 @@ an experimental laboratory, not a replacement for a tuned BLAS.
 - [Summation methods](docs/summation.md), [operations](docs/operations.md), and
   [tridiagonal benchmarking](docs/tridiagonal_benchmarking.md)
 - [Transformer optimization study](docs/transformer_optimization.md)
+- [CUDA/Triton experiment runner](docs/experiment_runner.md)
 - [Checked-in RTX 4060 Ti floating-point captures](results/examples/rtx4060ti-controlled-fp/README.md)
 
 ## Requirements and limitations
