@@ -1,10 +1,8 @@
 # CUDA/Triton experiment runner
 
-The experiment runner executes one predefined FC1 candidate against a
-PyTorch/cuBLAS baseline. It is deliberately a small submission boundary for a
-future optimization agent: the agent supplies structured candidate parameters,
-not source code or a shell command. The only candidate currently in the registry
-is the existing `scripts/triton_fc1.py` kernel.
+The experiment runner executes an FC1 candidate against a PyTorch/cuBLAS
+baseline. A candidate can use the registered `scripts/triton_fc1.py` kernel or
+one explicitly supplied local Triton source file. No shell command is accepted.
 
 ## Run the default FC1 experiment
 
@@ -45,8 +43,7 @@ The candidate section has this form:
 ```
 
 All top-level fields printed by `--print-default-config` are required. Unknown
-fields and implementation names are rejected; arbitrary commands and generated
-source are never executed.
+fields and implementation names are rejected.
 
 `benchmark.mode` accepts two values:
 
@@ -62,6 +59,59 @@ Omitting `benchmark.mode` is supported for compatibility and resolves to
 `allocating` in every newly saved resolved configuration and result. Unsupported
 values are rejected before GPU work begins.
 
+## Trusted local source candidates
+
+`triton_source` is the one source-backed implementation type. It only supports
+`preallocated` mode. Run the checked-in computation copy with:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli experiment \
+  --config examples/fc1_source_experiment.json
+```
+
+Its source descriptor names one local Python file and the fixed interface:
+
+```json
+{
+  "implementation": "triton_source",
+  "source": {
+    "path": "examples/triton_source_fc1.py",
+    "entry_point": "matmul_into",
+    "interface_version": "matmul_into_v1"
+  },
+  "parameters": {}
+}
+```
+
+The full example supplies all six parameters. The source must define
+`matmul_into(a, b, out, parameters)`. `a` and `b` are the shared input tensors.
+`out` is a preallocated FP16 output tensor. `parameters` is a new dictionary of
+validated values. The callable must launch the configured GEMM into `out` and
+return `None`.
+
+The file must be self-contained. It may import installed runtime packages such
+as `torch`, `triton`, and `triton.language`. Candidate sibling modules, relative
+imports, dependency installation, downloads, and remote source are not
+supported.
+
+Parent-process validation resolves and reads the file but never imports it. The
+runner copies its exact bytes to `source/candidate.py`, computes SHA-256, writes
+`source_identity.json`, and executes that preserved copy in the existing worker.
+The identity includes the hash, entry point, interface version, parameters,
+original path, and preserved path. Later edits to the submitted file cannot
+change that run.
+
+The worker process and timeout provide fault containment. They are not a
+security sandbox. Candidate Python runs with the user's permissions. Only run
+trusted local source.
+
+Source candidates are checked on the benchmark seed and two separately recorded
+validation seeds. Each candidate output starts as NaNs. Shape, dtype, complete
+finite overwrite, and numerical tolerances must pass before timing. Validation
+is untimed. Finite seeded tests do not prove correctness for every possible
+input. Failures are classified as configuration, source loading, interface,
+compilation, execution, correctness, benchmark, or timeout failures.
+
 ## Output and measurement
 
 Each invocation creates a unique ignored directory under
@@ -75,6 +125,9 @@ Each invocation creates a unique ignored directory under
   timings.json
   timings.csv
   stage.log
+  source/                  # source candidates only
+    candidate.py
+  source_identity.json     # source candidates only
 ```
 
 `result.json` records the schema version, run ID, UTC timestamps, Git commit and
@@ -213,9 +266,8 @@ Batch CLI exit codes are:
 
 Python agents can call
 `matmul_inspector.experiment_batch.run_batch(config, output_root=...)` and consume
-the returned batch record or its `summary.json`. Agents submit only registered
-implementation names and structured parameters; batches do not execute arbitrary
-commands or generated source.
+the returned batch record or its `summary.json`. Batch candidates use the same
+source descriptor as a single run. Every child run preserves its own copy.
 
 ## Persistent search sessions
 
@@ -271,6 +323,39 @@ parameters, and the fixed session context, including benchmark mode for new
 sessions; changing key order or candidate name
 does not create a new configuration. Repeating an accepted configuration requires
 a non-empty `repeat_reason` such as `"Verify a noisy prior result."`.
+
+A source session must set `"implementation": "triton_source"`, use
+`preallocated` mode, and explicitly set `"allow_source_candidates": true`.
+Create and submit the examples with:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli session create \
+  --config examples/fc1_source_experiment_session.json \
+  --output-root artifacts/experiment-sessions
+export SESSION=/absolute/path/printed/by/the/create/command
+PYTHONPATH=src python -m matmul_inspector.cli session submit \
+  --session "$SESSION" --proposal examples/fc1_source_session_proposal.json
+```
+
+Submission validates and snapshots every accepted source below the session
+directory before budget reservation and batch execution. Every repetition uses
+that snapshot. Source code is still not imported during proposal validation or
+context export. A source fingerprint includes the preserved content hash, entry
+point, interface version, resolved parameters, workload, tolerances, and
+measurement settings. Filename and candidate ID are excluded. Identical bytes
+at another path are therefore duplicates. An explicit repeat remains possible
+with a recorded `repeat_reason`.
+
+The source opt-in and allowed parameter lists are configuration controls, not a
+security boundary. Obvious configuration errors do not reserve budget. Once a
+child experiment launches, source-loading, compilation, correctness, and other
+recorded failures consume a unit under the existing budget rules.
+
+Codex remains an external operator. It can write a new self-contained `.py`
+file with the documented `matmul_into` function, place that path in a proposal,
+and invoke the same CLI a person uses. Matmul Inspector validates, snapshots,
+executes, and records it. There is no model API, autonomous source-generation
+loop, remote executor, or automatic dependency installer in this workflow.
 
 Session mode is immutable because proposals cannot replace shared settings.
 Legacy sessions whose fixed benchmark lacks `mode` continue to mean allocating.

@@ -288,6 +288,9 @@ if(BUILD_TESTING)
         add_test(NAME experiment-session-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/experiment_session_test.py")
         set_tests_properties(experiment-session-tests PROPERTIES LABELS "cpu")
+        add_test(NAME experiment-source-tests COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/experiment_source_test.py")
+        set_tests_properties(experiment-source-tests PROPERTIES LABELS "cpu")
         add_test(NAME fc1-timing-diagnostic-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/fc1_timing_diagnostic_test.py")
         set_tests_properties(fc1-timing-diagnostic-tests PROPERTIES LABELS "cpu")

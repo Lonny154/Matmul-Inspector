@@ -85,6 +85,8 @@ def validate_batch_config(raw: Mapping[str, Any]) -> dict[str, Any]:
 
 def _candidate_config(shared: Mapping[str, Any], candidate: Mapping[str, Any]) -> dict[str, Any]:
     expected = {"id", "implementation", "parameters"}
+    if candidate.get("implementation") == "triton_source":
+        expected.add("source")
     if set(candidate) != expected:
         missing = sorted(expected - set(candidate))
         unknown = sorted(set(candidate) - expected)
@@ -99,6 +101,7 @@ def _candidate_config(shared: Mapping[str, Any], candidate: Mapping[str, Any]) -
         "candidate": {
             "implementation": candidate.get("implementation"),
             "parameters": candidate.get("parameters"),
+            **({"source": candidate.get("source")} if "source" in candidate else {}),
         },
     })
 
@@ -191,6 +194,9 @@ def _aggregate(config: Mapping[str, Any], validations: Mapping[str, Mapping[str,
             "candidate_id": identifier, "implementation": candidate.get("implementation"),
             "benchmark_mode": mode,
             "parameters": candidate.get("parameters"),
+            "source_identity": ({key: candidate["source"].get(key)
+                                 for key in ("sha256", "entry_point", "interface_version")}
+                                if candidate.get("source") else None),
             "configuration_valid": validation["valid"],
             "configuration_error": validation.get("error"),
             "scheduled_runs_completed": len(runs), "successful_runs": len(successful),
@@ -242,7 +248,7 @@ _CSV_FIELDS = (
     "benchmark_mode", "repetition", "candidate_id", "status", "correctness_passed",
     "baseline_median_ms", "candidate_median_ms",
     "paired_speedup_baseline_over_candidate", "failure_stage",
-    "experiment_run_id", "result_path", "parameters_json",
+    "experiment_run_id", "result_path", "parameters_json", "source_sha256",
 )
 
 
@@ -257,6 +263,7 @@ def _write_csv(path: Path, entries: Sequence[Mapping[str, Any]],
                 **{field: entry.get(field) for field in _CSV_FIELDS if field != "parameters_json"},
                 "parameters_json": json.dumps(candidates[entry["candidate_id"]].get("parameters"),
                                                sort_keys=True),
+                "source_sha256": (candidates[entry["candidate_id"]].get("source") or {}).get("sha256"),
             })
     temporary.replace(path)
 
@@ -315,12 +322,18 @@ def run_batch(raw_config: Mapping[str, Any], *,
         identifier = candidate["id"]
         try:
             valid_configs[identifier] = _candidate_config(config["shared"], candidate)
+            if candidate.get("implementation") == "triton_source":
+                candidate["source"] = valid_configs[identifier]["candidate"]["source"]
             validations[identifier] = {"valid": True, "error": None}
         except BaseException as error:
             validations[identifier] = {"valid": False, "error": str(error)}
             invalid_entry = _failure_entry(identifier, None, "configuration", error, benchmark_mode)
             invalid_entry["parameters"] = candidate.get("parameters")
             batch["entries"].append(invalid_entry)
+
+    _atomic_write_json(directory / "resolved_batch_config.json", {
+        "schema_version": BATCH_SCHEMA_VERSION, "config": config,
+    })
 
     rng = random.Random(config["scheduling_seed"])
     schedule = []

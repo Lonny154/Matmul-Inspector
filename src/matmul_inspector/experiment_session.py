@@ -18,7 +18,8 @@ import traceback
 from typing import Any, Callable, Iterator, Mapping, Sequence
 import uuid
 
-from .experiment import DEFAULT_CONFIG, _git_metadata, resolved_benchmark_mode, validate_config
+from .experiment import (DEFAULT_CONFIG, SOURCE_IMPLEMENTATION, _git_metadata,
+                         resolved_benchmark_mode, snapshot_candidate_source, validate_config)
 from .experiment_batch import run_batch
 
 
@@ -119,8 +120,8 @@ def _validate_shared(raw: Any) -> dict[str, Any]:
 
 def _validate_allowed(shared: Mapping[str, Any], implementation: Any,
                       raw: Any) -> dict[str, list[int]]:
-    if implementation != "triton_fc1":
-        raise ValueError("implementation must be 'triton_fc1'")
+    if implementation not in {"triton_fc1", SOURCE_IMPLEMENTATION}:
+        raise ValueError("implementation must be 'triton_fc1' or 'triton_source'")
     if not isinstance(raw, Mapping) or set(raw) != PARAMETER_NAMES:
         raise ValueError("allowed_parameters must contain exactly: " +
                          ", ".join(sorted(PARAMETER_NAMES)))
@@ -136,8 +137,10 @@ def _validate_allowed(shared: Mapping[str, Any], implementation: Any,
         for value in values:
             _positive_int(value, f"allowed_parameters.{name} value")
             parameters = {**defaults, name: value}
+            # Parameter constraints are shared with the registered kernel. Source
+            # paths are proposal-specific and are validated when submitted.
             validate_config({**shared, "candidate": {
-                "implementation": implementation, "parameters": parameters,
+                "implementation": "triton_fc1", "parameters": parameters,
             }})
             allowed[name].append(value)
     return allowed
@@ -148,8 +151,10 @@ def validate_session_config(raw: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("session configuration must be a JSON object")
     required = {"objective", "shared", "implementation", "allowed_parameters",
                 "total_experiment_budget", "scheduling_seed"}
-    if set(raw) != required:
+    optional = {"allow_source_candidates"}
+    if not required <= set(raw) or set(raw) - required - optional:
         missing, unknown = sorted(required - set(raw)), sorted(set(raw) - required)
+        unknown = sorted(set(raw) - required - optional)
         details = ([f"missing: {', '.join(missing)}"] if missing else [])
         details += ([f"unknown: {', '.join(unknown)}"] if unknown else [])
         raise ValueError("invalid session fields (" + "; ".join(details) + ")")
@@ -158,6 +163,13 @@ def validate_session_config(raw: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("objective must be a non-empty string")
     shared = _validate_shared(raw["shared"])
     implementation = raw["implementation"]
+    allow_source = raw.get("allow_source_candidates", False)
+    if not isinstance(allow_source, bool):
+        raise ValueError("allow_source_candidates must be a boolean")
+    if implementation == SOURCE_IMPLEMENTATION and not allow_source:
+        raise ValueError("triton_source sessions require allow_source_candidates=true")
+    if implementation == SOURCE_IMPLEMENTATION and shared["benchmark"]["mode"] != "preallocated":
+        raise ValueError("triton_source sessions require benchmark.mode='preallocated'")
     allowed = _validate_allowed(shared, implementation, raw["allowed_parameters"])
     total = _positive_int(raw["total_experiment_budget"], "total_experiment_budget")
     seed = raw["scheduling_seed"]
@@ -165,7 +177,7 @@ def validate_session_config(raw: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("scheduling_seed must be a non-negative integer")
     return {"objective": objective.strip(), "shared": shared, "implementation": implementation,
             "allowed_parameters": allowed, "total_experiment_budget": total,
-            "scheduling_seed": seed}
+            "scheduling_seed": seed, "allow_source_candidates": allow_source}
 
 
 def _environment() -> dict[str, Any]:
@@ -199,7 +211,8 @@ def create_session(raw_config: Mapping[str, Any], *,
         "session_directory": str(directory), "objective": config["objective"],
         "fixed": {"shared": config["shared"], "implementation": config["implementation"],
                   "allowed_parameters": config["allowed_parameters"],
-                  "scheduling_seed": config["scheduling_seed"]},
+                  "scheduling_seed": config["scheduling_seed"],
+                  "allow_source_candidates": config["allow_source_candidates"]},
         "budget": {"total": config["total_experiment_budget"], "consumed": 0,
                    "reserved": 0, "remaining": config["total_experiment_budget"]},
         "proposals": [], "rejected_proposals": [], "candidate_fingerprints": {},
@@ -215,6 +228,8 @@ def _resolve_candidate(state: Mapping[str, Any], raw: Any, index: int) -> dict[s
     if not isinstance(raw, Mapping):
         raise ValueError(f"candidates[{index}] must be an object")
     allowed_fields = {"id", "implementation", "parameters", "hypothesis", "repeat_reason"}
+    if state["fixed"]["implementation"] == SOURCE_IMPLEMENTATION:
+        allowed_fields.add("source")
     unknown = sorted(set(raw) - allowed_fields)
     required = {"id", "implementation", "parameters", "hypothesis"}
     missing = sorted(required - set(raw))
@@ -229,9 +244,11 @@ def _resolve_candidate(state: Mapping[str, Any], raw: Any, index: int) -> dict[s
     if unknown_parameters:
         raise ValueError(f"candidate {identifier}: unknown parameters: {', '.join(unknown_parameters)}")
     parameters = {**DEFAULT_CONFIG["candidate"]["parameters"], **raw["parameters"]}
-    validate_config({**state["fixed"]["shared"], "candidate": {
+    candidate_config = {
         "implementation": raw["implementation"], "parameters": parameters,
-    }})
+        **({"source": raw.get("source")} if raw["implementation"] == SOURCE_IMPLEMENTATION else {}),
+    }
+    resolved_config = validate_config({**state["fixed"]["shared"], "candidate": candidate_config})
     for name, value in parameters.items():
         if value not in state["fixed"]["allowed_parameters"][name]:
             raise ValueError(f"candidate {identifier}: {name}={value} is outside allowed values")
@@ -241,12 +258,24 @@ def _resolve_candidate(state: Mapping[str, Any], raw: Any, index: int) -> dict[s
     repeat_reason = raw.get("repeat_reason")
     if repeat_reason is not None and (not isinstance(repeat_reason, str) or not repeat_reason.strip()):
         raise ValueError(f"candidate {identifier}: repeat_reason must be non-empty when provided")
-    payload = {"implementation": raw["implementation"], "parameters": parameters,
-               "shared": state["fixed"]["shared"]}
+    source = resolved_config["candidate"].get("source")
+    if source:
+        payload = {
+            "implementation": raw["implementation"], "parameters": parameters,
+            "source_sha256": source["sha256"], "entry_point": source["entry_point"],
+            "interface_version": source["interface_version"],
+            "shared": state["fixed"]["shared"],
+        }
+    else:
+        # Keep this exact legacy payload so old registered-candidate identities
+        # and duplicate detection remain stable.
+        payload = {"implementation": raw["implementation"], "parameters": parameters,
+                   "shared": state["fixed"]["shared"]}
     fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {"id": identifier, "implementation": raw["implementation"],
             "parameters": parameters, "hypothesis": hypothesis.strip(),
             "repeat_reason": repeat_reason.strip() if repeat_reason else None,
+            **({"source": source} if source else {}),
             "fingerprint": fingerprint}
 
 
@@ -348,6 +377,22 @@ def submit_proposal(session: Path | str, raw_proposal: Mapping[str, Any], *,
             _record_rejection(directory, state, raw_proposal, error)
             raise SessionError(str(error)) from error
 
+        if state["fixed"]["implementation"] == SOURCE_IMPLEMENTATION:
+            source_directory = directory / "sources" / proposal["proposal_id"]
+            try:
+                for candidate in proposal["candidates"]:
+                    full_config = {**state["fixed"]["shared"], "candidate": {
+                        "implementation": candidate["implementation"],
+                        "parameters": candidate["parameters"],
+                        "source": candidate["source"],
+                    }}
+                    preserved = snapshot_candidate_source(
+                        full_config, source_directory / f"{candidate['id']}.py")
+                    candidate["source"] = preserved["candidate"]["source"]
+            except BaseException as error:
+                _record_rejection(directory, state, raw_proposal, error)
+                raise SessionError(str(error)) from error
+
         record = {**proposal, "state": "accepted", "accepted_at_utc": _now(),
                   "reserved_units": proposal["cost"], "consumed_units": 0,
                   "batch_directory": None, "batch_summary_path": None, "results": [],
@@ -373,7 +418,9 @@ def submit_proposal(session: Path | str, raw_proposal: Mapping[str, Any], *,
             "shared": state["fixed"]["shared"],
             "candidates": [{"id": candidate["id"],
                             "implementation": candidate["implementation"],
-                            "parameters": candidate["parameters"]}
+                            "parameters": candidate["parameters"],
+                            **({"source": candidate["source"]}
+                               if candidate.get("source") else {})}
                            for candidate in proposal["candidates"]],
             "scheduling_seed": state["fixed"]["scheduling_seed"] + len(state["proposals"]) - 1,
             "repetitions": proposal["repetitions"],
