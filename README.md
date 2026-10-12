@@ -177,6 +177,15 @@ PYTHONPATH=src python -m matmul_inspector.cli experiment
 See the [experiment runner guide](docs/experiment_runner.md) for configuration,
 result fields, failure behavior, and the callable Python interface.
 
+Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
+fresh matched baselines using the checked-in example:
+
+```sh
+PYTHONPATH=src python -m matmul_inspector.cli experiment-batch \
+  --config examples/fc1_experiment_batch.json \
+  --output-root artifacts/experiment-batches
+```
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
