@@ -286,6 +286,8 @@ class CudaTritonBackend:
             "cuda_event_elapsed_ms_per_block": elapsed,
             "host_submission_ms_per_block": (submission_end - wall_start) / 1e6,
             "host_wall_ms_per_block": (wall_end - wall_start) / 1e6,
+            "cuda_event_minus_host_wall_ms_per_block": (
+                elapsed - (wall_end - wall_start) / 1e6),
         }
 
     def run(self, config: Mapping[str, Any], log: Callable[[str], None]) -> dict[str, Any]:
@@ -484,6 +486,15 @@ class CudaTritonBackend:
                 for _ in range(benchmark["warmups"]):
                     function()
                 torch.cuda.synchronize()
+            log("benchmark: recording unranked timing-boundary control blocks")
+            boundary_check = {}
+            for name, function in (("baseline", baseline), ("candidate", candidate)):
+                measurement = self._measure(torch, function, benchmark["iterations"])
+                boundary_check[name] = {
+                    **measurement,
+                    "cuda_event_not_greater_than_synchronized_host_wall": (
+                        measurement["cuda_event_minus_host_wall_ms_per_block"] <= 0.0),
+                }
             rows = []
             for round_index in range(benchmark["rounds"]):
                 order = ("baseline", "candidate") if round_index % 2 == 0 else ("candidate", "baseline")
@@ -510,11 +521,25 @@ class CudaTritonBackend:
                 "cuda_event_elapsed_ms_per_block": "ms/block",
                 "host_submission_ms_per_block": "ms/block",
                 "host_wall_ms_per_block": "ms/block",
+                "cuda_event_minus_host_wall_ms_per_block": "ms/block",
             },
             "timing_boundaries": {
                 "cuda_event": "device interval from an event before block submission to an event after all block operations; may include host-induced stream idle gaps",
                 "host_submission": "host wall interval from before start-event submission through end-event submission, ending before synchronization",
                 "host_wall": "host wall interval from before start-event submission through end-event completion",
+            },
+            "timing_boundary_check": {
+                "purpose": "unranked pre-measurement check using the same operations per block",
+                "placement": [
+                    "host wall start", "CUDA start-event record", "operation submissions",
+                    "CUDA end-event record", "host submission end", "end-event synchronize",
+                    "host wall end", "CUDA elapsed-time query",
+                ],
+                "interpretation": (
+                    "A positive event-minus-wall value is a concrete cross-timer discrepancy. "
+                    "The placement brackets event completion, but the discrepancy alone does "
+                    "not identify its cause."),
+                "measurements": boundary_check,
             },
             "wrapper_work_per_call": wrapper_work,
             "speedup_definition": "ratio of baseline round-median CUDA-event ms/operation to candidate round-median CUDA-event ms/operation",
@@ -655,6 +680,7 @@ def run_experiment(raw_config: Mapping[str, Any], *, output_root: Path | str = "
             measurement_fields = (
                 "cuda_event_elapsed_ms_per_operation", "cuda_event_elapsed_ms_per_block",
                 "host_submission_ms_per_block", "host_wall_ms_per_block",
+                "cuda_event_minus_host_wall_ms_per_block",
             )
             fields = ["benchmark_mode", "round", "order", "baseline_latency_ms", "candidate_latency_ms"]
             fields += [f"{name}_{field}" for name in ("baseline", "candidate")

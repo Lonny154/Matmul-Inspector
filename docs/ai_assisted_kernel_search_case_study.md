@@ -8,10 +8,13 @@ was supplied, executed registered implementations, persisted raw measurements,
 and enforced an immutable 24-unit session budget.
 
 This was a Codex-operated parameter search, not autonomous model-API execution.
-Codex did not generate or modify kernel source. Every candidate used the existing
-`scripts/triton_fc1.py` computation with a different allowed parameter tuple.
-The primary result is validation of an evidence-preserving experimentation
-framework; it is not a successful kernel optimization.
+In the primary 24-unit session, Codex did not generate or modify kernel source.
+Every candidate used the existing `scripts/triton_fc1.py` computation with a
+different allowed parameter tuple. A later six-unit follow-up exercised the new
+trusted-source interface with one reviewed source variant. Neither session was
+autonomous model-API execution. The primary result is validation of an
+evidence-preserving experimentation framework; it is not a successful kernel
+optimization.
 
 **No meaningful speedup was demonstrated.**
 
@@ -153,6 +156,38 @@ median candidate CUDA-event ms/operation
 The session ranking then takes the median of these run-level ratios. It is a
 descriptive estimator, not a significance test or confidence interval.
 
+### Timer-boundary limitation found in saved measurements
+
+The measurement-method diagnostic exposed one unresolved concern. CUDA-event
+duration exceeded synchronized host-wall duration in every one of its 120 raw
+blocks. Median excess was about `0.42–0.44 ms`, depending on mode and
+implementation. Different clock domains are a possible factor, but that fact
+alone does not explain or prove the discrepancy.
+
+The runner was extended to record one unranked boundary-control block per
+implementation before ranked rounds. It uses the same operation count and saves
+the event-minus-wall difference. The placement is explicit:
+
+```text
+host wall start
+CUDA start-event record
+operation submissions
+CUDA end-event record
+host submission end
+end-event synchronization
+host wall end
+CUDA elapsed-time query
+```
+
+This sequence places the host start before the start-event record and the host
+end after the end event reports completion. The later source comparison still
+showed positive differences in all 12 unranked controls and all 120 ranked
+blocks. Median excess was `0.496 ms` for the controls and `0.507 ms` for ranked
+blocks. This rules out the source variant as the trigger. It confirms a
+systematic cross-timer discrepancy but does not identify its cause. CUDA-event
+results below remain descriptive and should not be treated as independently
+validated wall-clock durations.
+
 ## Completed preallocated search
 
 The table groups all successful results by the complete resolved Triton parameter
@@ -212,6 +247,86 @@ The default and stages2 results are too close relative to observed baseline and
 round-level movement to support an optimization claim. **No meaningful speedup
 was demonstrated.**
 
+## Source-backed control and linear-PID variant
+
+The next framework milestone added one trusted local source implementation. A
+source candidate provides a self-contained Python file with the documented
+`matmul_into(a, b, out, parameters)` entry point. Matmul Inspector hashes and
+preserves the accepted bytes before execution. It loads the preserved copy only
+inside the worker process. The subprocess and timeout provide fault containment,
+not a security sandbox.
+
+A separate six-unit session exercised this path at
+[`artifacts/experiment-sessions/20261012T155001.213292Z-2fd14859/`](../artifacts/experiment-sessions/20261012T155001.213292Z-2fd14859/).
+It compared:
+
+- `example-control`, the source-backed copy of the established grouped program
+  mapping; and
+- `linear-pid-variant`, which replaced that mapping with direct row-major
+  `pid_m = pid // num_pid_n` and `pid_n = pid % num_pid_n` calculations.
+
+Both candidates used `BLOCK_M=64`, `BLOCK_N=128`, `BLOCK_K=32`, four warps,
+three stages, and `GROUP_SIZE_M=1`. The workload, tolerances, warmups,
+operations per block, rounds, and preallocated measurement mode were identical.
+At `GROUP_SIZE_M=1`, the source change preserves the intended row-major tile
+assignment while removing the general grouped-mapping calculation.
+
+Each identity ran three times. All six experiments passed the benchmark input
+and two additional validation seeds. Candidate outputs were initialized with
+NaNs before each validation and were finite afterward. The saved maximum error
+was `0.0` for these inputs. This finite test set is not a universal correctness
+proof.
+
+| Source identity | Source SHA-256 | Runs | Median candidate latency | Median paired speedup | Speedup MAD |
+|---|---|---:|---:|---:|---:|
+| Example control | `8b9e3a71…6596e` | 3 | 0.062408 ms | 1.006542x | 0.002763 |
+| Linear-PID variant | `d2c1dffa…dc355` | 3 | 0.062335 ms | 1.008134x | 0.002482 |
+
+The variant's median candidate latency was about 0.12% below the control. One
+variant run moved up to `0.065027 ms`, alongside a matched baseline of
+`0.065224 ms`. The paired median-speedup difference between identities was only
+about 0.16 percentage points. These small differences do not demonstrate a
+meaningful gain, especially with the unresolved timer discrepancy.
+
+The source session consumed all six units. It ended with zero reserved and zero
+remaining. It was separate from the completed 24-unit parameter session and did
+not alter its ranking or budget.
+
+### Compiler evidence for the source change
+
+The Triton cache retained compiler outputs for the exact preserved source
+identities. The control cache source hashes to the accepted control file. The
+variant cache source points to the first variant child run. Both metadata files
+record Triton 3.6.0, `sm_89`, four warps, three stages, and 24,576 bytes of
+dynamic shared memory.
+
+Matmul Inspector compared their saved PTX without launching another experiment.
+The modules use PTX 8.7 and target `sm_89`. Raw and normalized PTX both differ.
+The ignored comparison record is preserved at
+[`artifacts/compiler-comparisons/source-linear-pid-control/`](../artifacts/compiler-comparisons/source-linear-pid-control/).
+The selected `_gemm` entry shows:
+
+| Static PTX observation | Control | Linear-PID variant | Delta |
+|---|---:|---:|---:|
+| Instructions | 408 | 401 | -7 |
+| Arithmetic instructions | 255 | 248 | -7 |
+| Tensor instructions | 32 | 32 | 0 |
+| Global-memory instructions | 8 | 8 | 0 |
+| Shared-memory instructions | 16 | 16 | 0 |
+| Synchronization instructions | 7 | 7 | 0 |
+| `div.s32` | 1 | 0 | -1 |
+| `min.s32` | 1 | 0 | -1 |
+| PTX-declared `b32` registers | 318 | 311 | -7 |
+| PTX-declared `b64` registers | 56 | 56 | 0 |
+| PTX-declared predicate registers | 8 | 8 | 0 |
+
+The TTIR, TTGIR, PTX, and CUBIN hashes also differ. This establishes that the
+source change survived compilation and changed saved compiler outputs. It does
+not establish fewer executed instructions, lower physical register use, higher
+occupancy, or a SASS-level scheduling improvement. PTX register declarations
+are virtual. Static PTX counts do not explain the small measured timing
+difference.
+
 ## Reproduction and artifact inspection
 
 The following commands match the current CLI. They inspect the completed session
@@ -258,6 +373,21 @@ The diagnostic can be rerun independently with:
 That command launches GPU work and creates a new ignored diagnostic artifact; it
 does not submit to or consume a persistent session budget.
 
+The checked-in source comparison can be recreated with:
+
+```bash
+PYTHONPATH=src python -m matmul_inspector.cli session create \
+  --config examples/fc1_source_control_session.json \
+  --output-root artifacts/experiment-sessions
+
+# Set SESSION to the directory printed by the create command.
+PYTHONPATH=src python -m matmul_inspector.cli session submit \
+  --session "$SESSION" --proposal examples/fc1_source_control_proposal.json
+```
+
+This launches six GPU experiments and consumes the fresh session's full budget.
+It does not modify either completed session documented above.
+
 ## Limitations and next steps
 
 - The study covers one FP16 FC1 shape, one seeded input pair, one RTX 4060 Ti,
@@ -266,17 +396,22 @@ does not submit to or consume a persistent session budget.
   error is not a universal numerical guarantee.
 - CUDA events around host-submitted blocks are not guaranteed to isolate kernel
   execution from host-induced stream idle time.
-- No profiler counters, clock/temperature telemetry, register/occupancy data, or
-  compiler-output comparison was available for the session. Optional diagnostic
-  telemetry was unavailable because `nvidia-ml-py` was not installed.
+- The systematic CUDA-event versus synchronized host-wall discrepancy remains
+  unexplained. Event placement was checked, but no independent timing source was
+  collected to resolve the clock disagreement.
+- No profiler counters, clock/temperature telemetry, physical register or
+  occupancy data, or SASS comparison was collected for the source session.
+  Optional diagnostic telemetry was unavailable because `nvidia-ml-py` was not
+  installed.
 - Median/MAD summaries are descriptive. No formal uncertainty model or
   significance threshold was used.
-- The search changed only launch parameters for one existing kernel. It did not
-  test generated source or alternative kernel computations.
+- The primary search changed only launch parameters for one existing kernel.
+  The later source session tested one reviewed mapping variant. It did not use
+  autonomous source generation or a model API.
 
-A useful next framework milestone is support for reviewed candidate kernel source
-variants with immutable source hashes, explicit compilation provenance, static
-compiler-artifact comparison, the same correctness gate, and separate budgets.
-That would broaden the search boundary while preserving the distinction between
-AI-generated hypotheses, validated executable inputs, numerical evidence,
-compiler evidence, and measured performance.
+A useful next framework milestone is first-class capture and comparison of PTX
+and compiler IR inside each source-backed run. The current comparison relied on
+matching Triton's external cache entries to preserved source hashes. Saving
+compiler artifacts beside each run would make that provenance direct. The
+framework should keep AI-generated hypotheses, validated executable inputs,
+numerical evidence, compiler evidence, and measured performance separate.

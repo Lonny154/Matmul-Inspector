@@ -133,7 +133,11 @@ Each invocation creates a unique ignored directory under
 `result.json` records the schema version, run ID, UTC timestamps, Git commit and
 dirty state, resolved configuration, implementation identities and parameters,
 dependency versions, CUDA device, setup/first-invocation wall time, correctness,
-and timing summaries. `timings.json` and `timings.csv` retain the benchmark mode,
+and timing summaries. Before ranked rounds, the runner records one unranked
+boundary-control block per implementation with the same operation count. It
+stores the exact placement order and CUDA-event minus synchronized host-wall
+duration. A positive difference is reported as a timer discrepancy. It is not
+silently assigned to a cause. `timings.json` and `timings.csv` retain the benchmark mode,
 every round, its baseline/candidate order, CUDA-event elapsed milliseconds per
 operation and block, host submission milliseconds per block ending before
 synchronization, and host wall milliseconds per block through completion. The

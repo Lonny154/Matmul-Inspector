@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -181,6 +182,34 @@ class ExperimentRunnerTests(unittest.TestCase):
         failed = self.run_with(CorrectnessFailureBackend)
         self.assertEqual(failed["config"]["benchmark"]["mode"], "preallocated")
         self.assertNotIn("benchmark", failed)
+
+    def test_measurement_host_wall_brackets_event_completion_and_records_delta(self):
+        order = []
+
+        class Event:
+            def record(self):
+                order.append("record")
+
+            def synchronize(self):
+                order.append("synchronize")
+
+            def elapsed_time(self, other):
+                order.append("elapsed")
+                return 4.0
+
+        class Cuda:
+            Event = staticmethod(lambda **kwargs: Event())
+
+        class Torch:
+            cuda = Cuda()
+
+        with mock.patch.object(experiment.time, "perf_counter_ns",
+                               side_effect=[1_000_000, 2_000_000, 4_000_000]):
+            measured = experiment.CudaTritonBackend._measure(
+                Torch(), lambda: order.append("submit"), 1)
+        self.assertEqual(order, ["record", "submit", "record", "synchronize", "elapsed"])
+        self.assertEqual(measured["host_wall_ms_per_block"], 3.0)
+        self.assertEqual(measured["cuda_event_minus_host_wall_ms_per_block"], 1.0)
 
 
 if __name__ == "__main__":
