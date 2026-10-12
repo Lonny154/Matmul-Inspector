@@ -42,6 +42,17 @@ def execute(command, arguments, cwd):
     return result.stdout.strip()
 
 
+def execute_failure(command, arguments, cwd):
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    result = subprocess.run([str(command), *arguments], cwd=cwd, env=environment,
+                            text=True, capture_output=True, check=False)
+    if result.returncode == 0:
+        raise RuntimeError(f"command unexpectedly succeeded: {command} {' '.join(arguments)}")
+    return result
+
+
 def write_csv(path, rows):
     with path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
@@ -92,11 +103,20 @@ def main():
             raise RuntimeError(f"unexpected license expression: {license_expression!r}")
         version = execute(args.command, ["--version"], root)
         alias_version = execute(args.alias, ["--version"], root)
-        if version != "matmul-inspector 0.1.0" or alias_version != version:
+        if version != "matmul-inspector 0.2.0" or alias_version != version:
             raise RuntimeError(f"unexpected versions: {version!r}, {alias_version!r}")
         help_text = execute(args.command, ["--help"], root)
-        if "compiler-artifact analysis toolkit" not in help_text:
+        if "Compiler-artifact analysis and optional GPU experiment toolkit" not in help_text:
             raise RuntimeError("top-level help was not installed")
+        for command_name in ("experiment", "experiment-batch", "session"):
+            if command_name not in help_text:
+                raise RuntimeError(f"installed help omitted {command_name!r}")
+        execute(args.command, ["experiment", "--print-default-config"], root)
+        missing_gpu = execute_failure(
+            args.command, ["experiment", "--output-root", str(root / "gpu-missing")], root)
+        combined = missing_gpu.stdout + missing_gpu.stderr
+        if "PyTorch is required; install a CUDA-enabled PyTorch build" not in combined:
+            raise RuntimeError(f"missing GPU dependencies were not actionable:\n{combined}")
 
         ptx = root / "smoke.ptx"
         ptx.write_text(PTX, encoding="utf-8")
@@ -124,7 +144,7 @@ def main():
         print(f"installed package: {location}")
         print(f"license expression: {license_expression}")
         print(f"primary CLI: {version}")
-        print("PTX, SASS, NKI, and report smoke checks: PASS")
+        print("PTX, SASS, NKI, report, and optional-GPU boundary smoke checks: PASS")
 
 
 if __name__ == "__main__":

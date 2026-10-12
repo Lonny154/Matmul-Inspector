@@ -1,8 +1,10 @@
-# Python toolkit v0.1.0 release guide
+# Python toolkit release guide
 
-The `matmul-inspector` Python distribution packages the existing PTX, SASS, NKI,
-and unified reporting tools. It is deliberately CPU-only and standard-library-only
-at runtime. It does not package or build the native C++/CUDA benchmark executable.
+The `matmul-inspector` Python distribution packages the PTX, SASS, NKI, and
+unified reporting tools plus the Python experiment, batch, and persistent-session
+runners. Saved-artifact analysis is CPU-only and standard-library-only. GPU
+experiments use optional, lazily imported PyTorch and Triton dependencies. The
+distribution does not package or build the native C++/CUDA benchmark executable.
 
 ## Package layout
 
@@ -14,12 +16,16 @@ src/matmul_inspector/
   sass.py
   nki.py
   reporting.py
+  experiment.py
+  experiment_batch.py
+  experiment_session.py
+  triton_fc1.py
 ```
 
-The files under `scripts/` remain compatibility entry points for source checkouts
-and delegate to these package modules. There is one implementation of each
-analysis tool; script and installed invocation share the same functions and JSON
-schemas.
+Compatibility entry points for the packaged analysis tools remain under `scripts/`
+for source checkouts and delegate to the package modules. There is one
+implementation of each analysis tool; script and installed invocation share the
+same functions and JSON schemas.
 
 ## Installation and commands
 
@@ -29,7 +35,7 @@ The public installation target is:
 pip install matmul-inspector
 ```
 
-The project is not yet published. For prerelease testing, build locally and install
+Version 0.1.0 is published. For 0.2.0 prerelease testing, build locally and install
 one of the generated archives:
 
 ```sh
@@ -49,6 +55,9 @@ matmul-inspector sass inspect ...
 matmul-inspector sass compare ...
 matmul-inspector nki ...
 matmul-inspector report ...
+matmul-inspector experiment ...
+matmul-inspector experiment-batch ...
+matmul-inspector session ...
 ```
 
 `matmul-inspector-python` is an alias for the same dispatcher.
@@ -70,10 +79,28 @@ or using its absolute `bin/matmul-inspector-python` path removes the ambiguity.
 ## Hardware boundary
 
 Installed analysis commands consume saved artifacts and require no GPU, CUDA
-toolkit, AWS Neuron SDK, Trainium device, native compiler, or CMake. Generating PTX,
-SASS, NEFF, compiler statistics, or benchmark measurements remains a separate
-hardware/toolchain workflow. The package does not add capture, profiling, or
-benchmark orchestration.
+toolkit, AWS Neuron SDK, Trainium device, native compiler, or CMake. Generating
+PTX, SASS, NEFF, or compiler statistics remains a separate hardware/toolchain
+workflow.
+
+The experiment commands are an optional GPU capability. They support single
+experiments, sequential batches, persistent budgeted sessions, allocating and
+preallocated timing modes, and explicitly trusted local Triton source candidates.
+The registered FC1 kernel is part of the package; installed execution does not
+read `scripts/triton_fc1.py` or any other repository-only file. Source candidates
+execute local Python code and must only be enabled for files the operator trusts.
+
+Install a CUDA-enabled PyTorch build using PyTorch's platform-specific
+instructions, then install the optional dependencies with:
+
+```sh
+python -m pip install "matmul-inspector[gpu]==0.2.0"
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+The `gpu` extra requests PyTorch and Triton. It does not install or configure an
+NVIDIA driver, choose a compatible driver for the host, or guarantee support for
+a particular GPU, CUDA runtime, PyTorch, and Triton combination.
 
 ## Distribution validation
 
@@ -81,15 +108,19 @@ Normal packaging CI builds wheel and sdist archives, audits archive contents, an
 installs them in clean virtual environments. Smoke tests run from a temporary
 directory outside the checkout with `PYTHONPATH` and `PYTHONHOME` removed. They
 exercise version/help output plus minimal PTX, SASS, NKI, and unified-report
-workflows. CI does not publish packages and needs no accelerator hardware.
+workflows. It also verifies experiment CLI discovery and actionable missing-GPU
+dependency failures. CI does not publish packages and needs no accelerator
+hardware.
 The configured Linux matrix is Python 3.10–3.13; local clean-install validation
 currently covers Python 3.13, so the complete support claim remains provisional
 until the matrix succeeds.
 
 The archives intentionally exclude native sources and build products, repository
 scripts/tests, benchmark results, generated compiler artifacts, local context
-files, and local environments. The sdist includes package sources, README, build
-metadata, and setuptools-generated distribution metadata.
+files, and local environments. Required experiment runtime modules, including the
+registered Triton kernel, live under `src/matmul_inspector/` and are included in
+both archives. The sdist also includes README, build metadata, and
+setuptools-generated distribution metadata.
 
 ## Production release workflow
 
@@ -151,7 +182,7 @@ create and push the approved version tag:
 ```sh
 git switch main
 git pull --ff-only origin main
-version=1.2.3  # replace with the approved project version
+version=0.2.0  # replace for a later release
 git tag -a "v${version}" -m "Matmul Inspector v${version}"
 git push origin "v${version}"
 ```
@@ -221,3 +252,19 @@ The licensing blocker is resolved: the package declares the SPDX expression
 `Apache-2.0`, and both distribution formats carry the license and project notice.
 No TestPyPI or PyPI publication is performed by ordinary CI or by the
 implementation work described here.
+
+## v0.2.0 release checklist
+
+- [x] Source-variant PR #16 merged into `main`.
+- [x] Project and import versions set to 0.2.0.
+- [x] Experiment, batch, session, benchmark-mode, and trusted-source support
+  included in the distribution.
+- [x] Registered Triton FC1 runtime moved into the Python package.
+- [x] PyTorch and Triton remain optional and lazily imported.
+- [x] Wheel and source distribution built and audited locally.
+- [x] Distribution metadata and README rendering validated locally.
+- [x] Clean no-dependency wheel installation validated outside the checkout.
+- [ ] Review a manual BUILD-ONLY workflow run for the final commit on `main`.
+- [ ] With explicit release approval, create and push `v0.2.0`.
+- [ ] Verify the published 0.2.0 wheel from production PyPI before creating an
+  optional GitHub Release.

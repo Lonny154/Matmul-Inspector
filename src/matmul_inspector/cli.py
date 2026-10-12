@@ -24,7 +24,7 @@ COMMANDS = {
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         prog="matmul-inspector",
-        description="CPU-only compiler-artifact analysis toolkit",
+        description="Compiler-artifact analysis and optional GPU experiment toolkit",
         epilog=("The native C++ benchmark executable has the same primary command name. "
                 "Use matmul-inspector-python to select this installed Python entry point."),
     )
