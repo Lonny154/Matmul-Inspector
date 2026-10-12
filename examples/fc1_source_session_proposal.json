@@ -1,0 +1,16 @@
+{
+  "proposal_id": "source-interface-smoke",
+  "candidates": [{
+    "id": "established-computation-copy",
+    "implementation": "triton_source",
+    "source": {
+      "path": "examples/triton_source_fc1.py",
+      "entry_point": "matmul_into",
+      "interface_version": "matmul_into_v1"
+    },
+    "parameters": {"block_m": 64, "block_n": 128, "block_k": 32, "num_warps": 4, "num_stages": 3, "group_size_m": 1},
+    "hypothesis": "The source interface should reproduce the established GEMM computation."
+  }],
+  "prior_result_references": [],
+  "repetitions": 1
+}

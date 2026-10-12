@@ -10,7 +10,9 @@ import argparse
 import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 import importlib.util
+import inspect
 import json
 import math
 import multiprocessing
@@ -27,6 +29,12 @@ import uuid
 
 SCHEMA_VERSION = 2
 BENCHMARK_MODES = frozenset({"allocating", "preallocated"})
+SOURCE_IMPLEMENTATION = "triton_source"
+SOURCE_INTERFACE_VERSION = "matmul_into_v1"
+SOURCE_ENTRY_POINT = "matmul_into"
+PARAMETER_NAMES = frozenset({
+    "block_m", "block_n", "block_k", "num_warps", "num_stages", "group_size_m",
+})
 DEFAULT_CONFIG: dict[str, Any] = {
     "workload": {"m": 512, "k": 768, "n": 3072, "dtype": "float16"},
     "seed": 0,
@@ -123,17 +131,75 @@ def validate_config(raw: Mapping[str, Any]) -> dict[str, Any]:
     baseline, candidate = config["baseline"], config["candidate"]
     if not isinstance(baseline, dict) or baseline.get("implementation") != "pytorch_matmul":
         raise ValueError("baseline.implementation must be 'pytorch_matmul'")
-    if not isinstance(candidate, dict) or candidate.get("implementation") != "triton_fc1":
-        raise ValueError("candidate.implementation must be 'triton_fc1'")
+    implementation = candidate.get("implementation") if isinstance(candidate, dict) else None
+    if implementation not in {"triton_fc1", SOURCE_IMPLEMENTATION}:
+        raise ValueError("candidate.implementation must be 'triton_fc1' or 'triton_source'")
     parameters = candidate.get("parameters")
-    expected = {"block_m", "block_n", "block_k", "num_warps", "num_stages", "group_size_m"}
+    expected = PARAMETER_NAMES
     if not isinstance(parameters, dict) or set(parameters) != expected:
         raise ValueError("candidate.parameters must contain exactly: " + ", ".join(sorted(expected)))
     for field in expected:
         _positive_int(parameters[field], f"candidate.parameters.{field}")
     if workload["k"] % parameters["block_k"]:
         raise ValueError("workload.k must be divisible by candidate.parameters.block_k")
+    if implementation == SOURCE_IMPLEMENTATION:
+        if benchmark["mode"] != "preallocated":
+            raise ValueError("triton_source candidates support benchmark.mode='preallocated' only")
+        source = candidate.get("source")
+        if not isinstance(source, dict):
+            raise ValueError("candidate.source must be an object for triton_source")
+        allowed_source = {"path", "entry_point", "interface_version", "sha256", "original_path"}
+        unknown_source = sorted(set(source) - allowed_source)
+        if unknown_source:
+            raise ValueError("unknown candidate.source fields: " + ", ".join(unknown_source))
+        path = source.get("path")
+        if not isinstance(path, str) or not path.strip():
+            raise ValueError("candidate.source.path must be a non-empty local path")
+        resolved_path = Path(path).expanduser().resolve()
+        if not resolved_path.is_file():
+            raise ValueError(f"candidate source file does not exist: {resolved_path}")
+        try:
+            source_bytes = resolved_path.read_bytes()
+        except OSError as error:
+            raise ValueError(f"cannot read candidate source file: {resolved_path}: {error}") from error
+        source_hash = hashlib.sha256(source_bytes).hexdigest()
+        supplied_hash = source.get("sha256")
+        if supplied_hash is not None and supplied_hash != source_hash:
+            raise ValueError("candidate source SHA-256 does not match the referenced file")
+        if source.get("entry_point") != SOURCE_ENTRY_POINT:
+            raise ValueError(f"candidate.source.entry_point must be '{SOURCE_ENTRY_POINT}'")
+        if source.get("interface_version") != SOURCE_INTERFACE_VERSION:
+            raise ValueError(
+                f"candidate.source.interface_version must be '{SOURCE_INTERFACE_VERSION}'")
+        candidate["source"] = {
+            "path": str(resolved_path),
+            "original_path": source.get("original_path", str(resolved_path)),
+            "sha256": source_hash,
+            "entry_point": SOURCE_ENTRY_POINT,
+            "interface_version": SOURCE_INTERFACE_VERSION,
+        }
+    elif set(candidate) != {"implementation", "parameters"}:
+        raise ValueError("triton_fc1 candidate must contain exactly implementation and parameters")
     return config
+
+
+def snapshot_candidate_source(config: Mapping[str, Any], destination: Path) -> dict[str, Any]:
+    """Copy a validated source candidate byte-for-byte and return its preserved identity."""
+    normalized = validate_config(config)
+    source = normalized["candidate"].get("source")
+    if source is None:
+        return normalized
+    source_path = Path(source["path"])
+    source_bytes = source_path.read_bytes()
+    digest = hashlib.sha256(source_bytes).hexdigest()
+    if digest != source["sha256"]:
+        raise ValueError("candidate source changed while it was being preserved")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(source_bytes)
+    normalized["candidate"]["source"] = {
+        **source, "path": str(destination.resolve()), "sha256": digest,
+    }
+    return normalized
 
 
 def _summary(values: Sequence[float]) -> dict[str, float | int]:
@@ -148,9 +214,9 @@ def _summary(values: Sequence[float]) -> dict[str, float | int]:
 
 
 class CudaTritonBackend:
-    """Adapter for PyTorch/cuBLAS and the repository's established FC1 kernel."""
+    """Adapter for PyTorch/cuBLAS and registered or preserved Triton sources."""
 
-    def _imports(self):
+    def _imports(self, implementation: str):
         try:
             import torch
         except ImportError as error:
@@ -161,6 +227,8 @@ class CudaTritonBackend:
             raise StageFailure("prerequisite", "Triton is required; install a version compatible with PyTorch and CUDA") from error
         if not torch.cuda.is_available():
             raise StageFailure("prerequisite", "CUDA is unavailable; use a host with a supported NVIDIA GPU and CUDA-enabled PyTorch")
+        if implementation == SOURCE_IMPLEMENTATION:
+            return torch, None
         kernel_path = Path(__file__).resolve().parents[2] / "scripts" / "triton_fc1.py"
         if not kernel_path.is_file():
             raise StageFailure("prerequisite", f"repository kernel is missing: {kernel_path}")
@@ -174,6 +242,31 @@ class CudaTritonBackend:
         except Exception as error:
             raise StageFailure("prerequisite", f"cannot import Triton kernel: {error}") from error
         return torch, module
+
+    @staticmethod
+    def _load_source(config: Mapping[str, Any]):
+        source = config["candidate"]["source"]
+        path = Path(source["path"])
+        spec = importlib.util.spec_from_file_location(
+            f"matmul_inspector_candidate_{source['sha256'][:16]}", path)
+        if spec is None or spec.loader is None:
+            raise StageFailure("source_loading", f"cannot create module loader for {path}")
+        module = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(module)
+        except Exception as error:
+            raise StageFailure("source_loading", f"cannot import preserved candidate: {error}") from error
+        entry = getattr(module, source["entry_point"], None)
+        if not callable(entry):
+            raise StageFailure(
+                "interface", f"candidate must define callable {source['entry_point']}")
+        try:
+            signature = inspect.signature(entry)
+            signature.bind(object(), object(), object(), {})
+        except (TypeError, ValueError) as error:
+            raise StageFailure(
+                "interface", "matmul_into must accept (a, b, out, parameters)") from error
+        return entry
 
     @staticmethod
     def _measure(torch, function: Callable[[], Any], iterations: int) -> dict[str, float]:
@@ -193,11 +286,15 @@ class CudaTritonBackend:
             "cuda_event_elapsed_ms_per_block": elapsed,
             "host_submission_ms_per_block": (submission_end - wall_start) / 1e6,
             "host_wall_ms_per_block": (wall_end - wall_start) / 1e6,
+            "cuda_event_minus_host_wall_ms_per_block": (
+                elapsed - (wall_end - wall_start) / 1e6),
         }
 
     def run(self, config: Mapping[str, Any], log: Callable[[str], None]) -> dict[str, Any]:
         log("prerequisite: checking PyTorch, Triton, and CUDA")
-        torch, kernel = self._imports()
+        implementation = config["candidate"]["implementation"]
+        torch, kernel = self._imports(implementation)
+        source_entry = self._load_source(config) if implementation == SOURCE_IMPLEMENTATION else None
         try:
             device_index = torch.cuda.current_device()
             device_properties = torch.cuda.get_device_properties(device_index)
@@ -226,7 +323,8 @@ class CudaTritonBackend:
         benchmark = config["benchmark"]
         mode = benchmark["mode"]
         parameters = config["candidate"]["parameters"]
-        triton_config = kernel.TritonGemmConfig(**parameters)
+        triton_config = (kernel.TritonGemmConfig(**parameters)
+                         if implementation == "triton_fc1" else None)
         overwrite_verified: dict[str, bool | None] = {"baseline": None, "candidate": None}
         if mode == "allocating":
             baseline = lambda: torch.matmul(a, b)
@@ -240,8 +338,9 @@ class CudaTritonBackend:
                 baseline_output = torch.empty((workload["m"], workload["n"]),
                                               device=a.device, dtype=a.dtype)
                 candidate_output = torch.empty_like(baseline_output)
-                grid = (kernel.triton.cdiv(workload["m"], triton_config.block_m)
-                        * kernel.triton.cdiv(workload["n"], triton_config.block_n),)
+                grid = ((kernel.triton.cdiv(workload["m"], triton_config.block_m)
+                         * kernel.triton.cdiv(workload["n"], triton_config.block_n),)
+                        if implementation == "triton_fc1" else None)
             except Exception as error:
                 raise StageFailure("setup", f"preallocated output preparation failed: {error}") from error
 
@@ -249,21 +348,28 @@ class CudaTritonBackend:
                 return torch.matmul(a, b, out=baseline_output)
 
             def candidate():
-                kernel.fc1_kernel[grid](
-                    a, b, candidate_output, workload["m"], workload["n"], workload["k"],
-                    a.stride(0), a.stride(1), b.stride(0), b.stride(1),
-                    candidate_output.stride(0), candidate_output.stride(1),
-                    BLOCK_M=triton_config.block_m, BLOCK_N=triton_config.block_n,
-                    BLOCK_K=triton_config.block_k, GROUP_SIZE_M=triton_config.group_size_m,
-                    num_warps=triton_config.num_warps, num_stages=triton_config.num_stages,
-                )
+                if implementation == SOURCE_IMPLEMENTATION:
+                    returned = source_entry(a, b, candidate_output, dict(parameters))
+                    if returned is not None:
+                        raise StageFailure("interface", "matmul_into must return None")
+                else:
+                    kernel.fc1_kernel[grid](
+                        a, b, candidate_output, workload["m"], workload["n"], workload["k"],
+                        a.stride(0), a.stride(1), b.stride(0), b.stride(1),
+                        candidate_output.stride(0), candidate_output.stride(1),
+                        BLOCK_M=triton_config.block_m, BLOCK_N=triton_config.block_n,
+                        BLOCK_K=triton_config.block_k, GROUP_SIZE_M=triton_config.group_size_m,
+                        num_warps=triton_config.num_warps, num_stages=triton_config.num_stages,
+                    )
                 return candidate_output
 
             baseline_output.fill_(float("nan"))
             candidate_output.fill_(float("nan"))
             wrapper_work = {
                 "baseline": "torch.matmul(..., out=baseline_output) dispatches per call; output allocation is outside measurement",
-                "candidate": "the prepared Triton grid launch wrapper runs per call; validation, grid construction, and output allocation are outside measurement",
+                "candidate": ("the preserved source entry point runs per call with prepared inputs, output, and parameters; source loading, validation, and output allocation are outside measurement"
+                              if implementation == SOURCE_IMPLEMENTATION else
+                              "the prepared Triton grid launch wrapper runs per call; validation, grid construction, and output allocation are outside measurement"),
             }
         setup_ms: dict[str, float] = {}
         outputs: dict[str, Any] = {}
@@ -284,11 +390,12 @@ class CudaTritonBackend:
         try:
             reference, actual = outputs["baseline"], outputs["candidate"]
             shape_match = tuple(reference.shape) == tuple(actual.shape)
+            dtype_match = reference.dtype == actual.dtype
             reference_nonfinite = int((~torch.isfinite(reference)).sum().item())
             candidate_nonfinite = int((~torch.isfinite(actual)).sum().item()) if shape_match else None
             if shape_match:
                 tolerances = config["correctness"]
-                passed = bool(reference_nonfinite == 0 and candidate_nonfinite == 0 and torch.allclose(
+                passed = bool(dtype_match and reference_nonfinite == 0 and candidate_nonfinite == 0 and torch.allclose(
                     actual, reference, atol=tolerances["atol"], rtol=tolerances["rtol"]))
                 if reference_nonfinite == 0 and candidate_nonfinite == 0:
                     difference = (reference.float() - actual.float()).abs()
@@ -302,17 +409,65 @@ class CudaTritonBackend:
         except Exception as error:
             raise StageFailure("correctness", f"output comparison failed: {error}") from error
         correctness = {
-            "passed": passed, "shape_match": shape_match,
+            "passed": passed, "shape_match": shape_match, "dtype_match": dtype_match,
             "reference_shape": list(reference.shape), "candidate_shape": list(actual.shape),
             "max_absolute_error": max_error, "mean_absolute_error": mean_error,
             "reference_nonfinite_count": reference_nonfinite,
             "candidate_nonfinite_count": candidate_nonfinite,
             "atol": config["correctness"]["atol"], "rtol": config["correctness"]["rtol"],
             "reference": "pytorch_matmul (cuBLAS)",
-            "candidate_accumulation": "FP32 Triton tl.dot accumulator with FP16 output",
+            "candidate_accumulation": (
+                "candidate-source-defined computation with preallocated FP16 output"
+                if implementation == SOURCE_IMPLEMENTATION else
+                "FP32 Triton tl.dot accumulator with FP16 output"),
             "reference_accumulation": "PyTorch/cuBLAS implementation-selected FP16 GEMM accumulation",
             "preallocated_output_overwrite_verified": overwrite_verified,
         }
+        if implementation == SOURCE_IMPLEMENTATION and passed:
+            validation_cases = []
+            for validation_seed in (config["seed"] + 1, config["seed"] + 2):
+                try:
+                    torch.manual_seed(validation_seed)
+                    torch.cuda.manual_seed_all(validation_seed)
+                    validation_a = torch.randn(tuple(a.shape), device=a.device, dtype=a.dtype)
+                    validation_b = torch.randn(tuple(b.shape), device=b.device, dtype=b.dtype)
+                    validation_reference = torch.matmul(validation_a, validation_b)
+                    candidate_output.fill_(float("nan"))
+                    returned = source_entry(
+                        validation_a, validation_b, candidate_output, dict(parameters))
+                    if returned is not None:
+                        raise StageFailure("interface", "matmul_into must return None")
+                    torch.cuda.synchronize()
+                    finite = bool(torch.isfinite(candidate_output).all().item())
+                    validation_passed = bool(
+                        tuple(candidate_output.shape) == tuple(validation_reference.shape)
+                        and candidate_output.dtype == validation_reference.dtype
+                        and finite
+                        and torch.allclose(candidate_output, validation_reference,
+                                           atol=config["correctness"]["atol"],
+                                           rtol=config["correctness"]["rtol"])
+                    )
+                    difference = (validation_reference.float() - candidate_output.float()).abs()
+                    validation_cases.append({
+                        "seed": validation_seed, "passed": validation_passed,
+                        "overwrite_verified": finite,
+                        "shape_match": tuple(candidate_output.shape) == tuple(validation_reference.shape),
+                        "dtype_match": candidate_output.dtype == validation_reference.dtype,
+                        "candidate_nonfinite_count": int((~torch.isfinite(candidate_output)).sum().item()),
+                        "max_absolute_error": float(difference.max().item()) if finite else None,
+                        "mean_absolute_error": float(difference.mean().item()) if finite else None,
+                    })
+                except StageFailure:
+                    raise
+                except Exception as error:
+                    raise StageFailure("execution", f"source validation invocation failed: {error}") from error
+            correctness["benchmark_input_seed"] = config["seed"]
+            correctness["validation_seeds"] = [case["seed"] for case in validation_cases]
+            correctness["validation_cases"] = validation_cases
+            correctness["finite_validation_note"] = (
+                "Passing these seeded inputs does not prove correctness for every possible input.")
+            passed = all(case["passed"] for case in validation_cases)
+            correctness["passed"] = passed
         partial = {
             "environment": {"device": device, "versions": versions},
             "setup": {"measurement": "host wall time through first synchronized invocation", "unit": "ms", "duration_ms": setup_ms},
@@ -331,6 +486,15 @@ class CudaTritonBackend:
                 for _ in range(benchmark["warmups"]):
                     function()
                 torch.cuda.synchronize()
+            log("benchmark: recording unranked timing-boundary control blocks")
+            boundary_check = {}
+            for name, function in (("baseline", baseline), ("candidate", candidate)):
+                measurement = self._measure(torch, function, benchmark["iterations"])
+                boundary_check[name] = {
+                    **measurement,
+                    "cuda_event_not_greater_than_synchronized_host_wall": (
+                        measurement["cuda_event_minus_host_wall_ms_per_block"] <= 0.0),
+                }
             rows = []
             for round_index in range(benchmark["rounds"]):
                 order = ("baseline", "candidate") if round_index % 2 == 0 else ("candidate", "baseline")
@@ -357,11 +521,25 @@ class CudaTritonBackend:
                 "cuda_event_elapsed_ms_per_block": "ms/block",
                 "host_submission_ms_per_block": "ms/block",
                 "host_wall_ms_per_block": "ms/block",
+                "cuda_event_minus_host_wall_ms_per_block": "ms/block",
             },
             "timing_boundaries": {
                 "cuda_event": "device interval from an event before block submission to an event after all block operations; may include host-induced stream idle gaps",
                 "host_submission": "host wall interval from before start-event submission through end-event submission, ending before synchronization",
                 "host_wall": "host wall interval from before start-event submission through end-event completion",
+            },
+            "timing_boundary_check": {
+                "purpose": "unranked pre-measurement check using the same operations per block",
+                "placement": [
+                    "host wall start", "CUDA start-event record", "operation submissions",
+                    "CUDA end-event record", "host submission end", "end-event synchronize",
+                    "host wall end", "CUDA elapsed-time query",
+                ],
+                "interpretation": (
+                    "A positive event-minus-wall value is a concrete cross-timer discrepancy. "
+                    "The placement brackets event completion, but the discrepancy alone does "
+                    "not identify its cause."),
+                "measurements": boundary_check,
             },
             "wrapper_work_per_call": wrapper_work,
             "speedup_definition": "ratio of baseline round-median CUDA-event ms/operation to candidate round-median CUDA-event ms/operation",
@@ -372,7 +550,10 @@ class CudaTritonBackend:
         }}
 
 
-BACKENDS: dict[str, Callable[[], ExperimentBackend]] = {"triton_fc1": CudaTritonBackend}
+BACKENDS: dict[str, Callable[[], ExperimentBackend]] = {
+    "triton_fc1": CudaTritonBackend,
+    SOURCE_IMPLEMENTATION: CudaTritonBackend,
+}
 
 
 def _failure(stage: str, error: BaseException, include_traceback: bool = True) -> dict[str, Any]:
@@ -429,6 +610,17 @@ def run_experiment(raw_config: Mapping[str, Any], *, output_root: Path | str = "
     logs = [f"{datetime.now(timezone.utc).isoformat()} orchestration: worker started"]
     try:
         config = validate_config(raw_config)
+        if config["candidate"]["implementation"] == SOURCE_IMPLEMENTATION:
+            config = snapshot_candidate_source(
+                config, run_directory / "source" / "candidate.py")
+            source_identity = {
+                key: config["candidate"]["source"][key]
+                for key in ("sha256", "entry_point", "interface_version", "original_path", "path")
+            }
+            source_identity["implementation"] = SOURCE_IMPLEMENTATION
+            source_identity["parameters"] = config["candidate"]["parameters"]
+            result["source_identity"] = source_identity
+            _write_json(run_directory / "source_identity.json", source_identity)
         _write_json(run_directory / "resolved_config.json", config)
     except BaseException as error:
         result["failure"] = _failure("configuration", error)
@@ -488,6 +680,7 @@ def run_experiment(raw_config: Mapping[str, Any], *, output_root: Path | str = "
             measurement_fields = (
                 "cuda_event_elapsed_ms_per_operation", "cuda_event_elapsed_ms_per_block",
                 "host_submission_ms_per_block", "host_wall_ms_per_block",
+                "cuda_event_minus_host_wall_ms_per_block",
             )
             fields = ["benchmark_mode", "round", "order", "baseline_latency_ms", "candidate_latency_ms"]
             fields += [f"{name}_{field}" for name in ("baseline", "candidate")

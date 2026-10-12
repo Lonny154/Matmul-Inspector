@@ -1,0 +1,21 @@
+{
+  "proposal_id": "linear-pid-control",
+  "candidates": [
+    {
+      "id": "example-control",
+      "implementation": "triton_source",
+      "source": {"path": "examples/triton_source_fc1.py", "entry_point": "matmul_into", "interface_version": "matmul_into_v1"},
+      "parameters": {"block_m": 64, "block_n": 128, "block_k": 32, "num_warps": 4, "num_stages": 3, "group_size_m": 1},
+      "hypothesis": "The source-backed copy should reproduce the established control behavior."
+    },
+    {
+      "id": "linear-pid-variant",
+      "implementation": "triton_source",
+      "source": {"path": "examples/triton_source_fc1_linear_pid.py", "entry_point": "matmul_into", "interface_version": "matmul_into_v1"},
+      "parameters": {"block_m": 64, "block_n": 128, "block_k": 32, "num_warps": 4, "num_stages": 3, "group_size_m": 1},
+      "hypothesis": "For group_size_m=1, a direct row-major program-ID mapping may reduce indexing work without changing the GEMM or launch parameters."
+    }
+  ],
+  "prior_result_references": [],
+  "repetitions": 3
+}

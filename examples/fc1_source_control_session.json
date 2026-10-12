@@ -1,0 +1,16 @@
+{
+  "objective": "Compare the preserved example source with a direct program-ID mapping while keeping launch parameters fixed.",
+  "shared": {
+    "workload": {"m": 512, "k": 768, "n": 3072, "dtype": "float16"},
+    "seed": 0,
+    "correctness": {"atol": 0.01, "rtol": 0.01},
+    "benchmark": {"mode": "preallocated", "warmups": 100, "iterations": 500, "rounds": 10},
+    "timeout_seconds": 300.0,
+    "baseline": {"implementation": "pytorch_matmul"}
+  },
+  "implementation": "triton_source",
+  "allow_source_candidates": true,
+  "allowed_parameters": {"block_m": [64], "block_n": [128], "block_k": [32], "num_warps": [4], "num_stages": [3], "group_size_m": [1]},
+  "total_experiment_budget": 6,
+  "scheduling_seed": 20261013
+}
