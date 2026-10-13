@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -22,6 +23,7 @@ from matmul_inspector.sampling import (
 from matmul_inspector.triton_evaluator import (
     CudaTritonRunner, TritonEvaluatorConfig, TritonGemmEvaluator,
     TritonRunEvidence, TritonRunnerFailure,
+    _nvidia_driver_version,
 )
 
 
@@ -78,6 +80,25 @@ def evaluator(runner):
 
 
 class TritonEvaluatorTests(unittest.TestCase):
+    def test_nvidia_driver_version_uses_management_interface(self):
+        completed = Mock(stdout="616.92\n")
+        with patch("matmul_inspector.triton_evaluator.subprocess.run",
+                   return_value=completed) as run:
+            self.assertEqual(_nvidia_driver_version(0), "616.92")
+        run.assert_called_once_with(
+            ["nvidia-smi", "--id=0", "--query-gpu=driver_version",
+             "--format=csv,noheader,nounits"],
+            check=True, capture_output=True, text=True, timeout=5,
+        )
+
+    def test_nvidia_driver_version_is_optional(self):
+        with patch("matmul_inspector.triton_evaluator.subprocess.run",
+                   side_effect=FileNotFoundError):
+            self.assertIsNone(_nvidia_driver_version(0))
+        with patch("matmul_inspector.triton_evaluator.subprocess.run",
+                   return_value=Mock(stdout="")):
+            self.assertIsNone(_nvidia_driver_version(0))
+
     def test_success_maps_hardware_evidence_without_mutating_candidate(self):
         sampled = candidate()
         before = sampled.to_dict()

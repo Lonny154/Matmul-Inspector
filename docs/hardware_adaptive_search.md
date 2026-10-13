@@ -44,6 +44,11 @@ PyTorch with FP16 tolerances, warms up, and records repeated CUDA-event samples.
 Compilation and setup stay outside measured kernel latency. Host submission and
 synchronized wall clocks remain separate in evaluation extensions.
 
+Environment evidence includes Python, PyTorch, Triton, CUDA runtime, GPU name,
+compute capability, memory size, and the NVIDIA driver version reported by
+`nvidia-smi`. If that management interface is unavailable, driver version is
+recorded as unavailable without preventing evaluation.
+
 Do not launch the full plan as a first test. After reviewing the dry run, the
 recommended hardware smoke test is:
 

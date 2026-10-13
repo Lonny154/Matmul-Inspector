@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import math
 import statistics
+import subprocess
 import sys
 import time
 import traceback
@@ -27,6 +28,20 @@ from .sampling import SamplingRecord, TritonGemmConfig, candidate_identifier
 FC1_SHAPE = (512, 3072, 768)
 SUPPORTED_PRECISIONS = frozenset({"fp16", "float16"})
 SUPPORTED_HARDWARE_TARGETS = frozenset({"sm_89", "8.9"})
+
+
+def _nvidia_driver_version(device_index: int) -> str | None:
+    """Query the NVIDIA management interface without making it a dependency."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", f"--id={device_index}", "--query-gpu=driver_version",
+             "--format=csv,noheader,nounits"],
+            check=True, capture_output=True, text=True, timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    versions = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return versions[0] if len(versions) == 1 else None
 
 
 @dataclass(frozen=True)
@@ -157,6 +172,7 @@ class CudaTritonRunner:
                 "compute_capability": f"{properties.major}.{properties.minor}",
                 "total_memory_bytes": properties.total_memory,
             }
+            versions["nvidia_driver"] = _nvidia_driver_version(device_index)
         except Exception as error:
             raise TritonRunnerFailure(
                 FailureCategory.INFRASTRUCTURE, f"failed to query CUDA device: {error}",
@@ -469,6 +485,7 @@ def _optional_string(value: Any) -> str | None:
 
 
 def _software_version(versions: Mapping[str, Any]) -> str | None:
-    fields = [f"{name}={versions[name]}" for name in ("torch", "triton", "cuda_runtime")
+    fields = [f"{name}={versions[name]}"
+              for name in ("torch", "triton", "cuda_runtime", "nvidia_driver")
               if versions.get(name) is not None]
     return "; ".join(fields) if fields else None
