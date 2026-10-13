@@ -124,6 +124,20 @@ class AdaptiveSamplingTests(unittest.TestCase):
         self.assertEqual(diagnostics["exclusion_reasons"]["synthetic_measurement"], 1)
         self.assertEqual(diagnostics["failure_categories"]["compilation_failure"], 1)
 
+    def test_synthetic_feedback_requires_explicit_opt_in_and_round_trips(self):
+        search = space()
+        config = search.valid_candidates()[0]
+        record = evaluation(config, synthetic=True,
+                            measurement="simulated objective latency")
+        default = AdaptiveSampler(search, seed=1)
+        self.assertEqual(default.update([record], source_id="simulation")[
+            "eligible_evaluation_count"], 0)
+        enabled = AdaptiveSampler(search, seed=1, allow_synthetic_feedback=True)
+        self.assertEqual(enabled.update([record], source_id="simulation")[
+            "eligible_evaluation_count"], 1)
+        restored = AdaptiveSampler.from_dict(enabled.to_dict())
+        self.assertTrue(restored.allow_synthetic_feedback)
+
     def test_context_measurement_and_identity_exclusions(self):
         search = space()
         config = search.valid_candidates()[0]

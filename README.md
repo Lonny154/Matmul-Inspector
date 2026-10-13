@@ -236,6 +236,12 @@ uniform candidate-level exploration, and save exact continuation state. It does
 not execute hardware or establish that adaptive search outperforms uniform
 sampling.
 
+The CPU-only [controlled adaptive-search experiment](docs/adaptive_experiments.md)
+runs paired uniform and adaptive arms against deterministic simulated landscapes.
+It enforces equal attempted-evaluation budgets, rebuilds adaptive feedback from
+the cumulative history, and records replayable fairness evidence before any GPU
+search is authorized.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.

@@ -51,6 +51,7 @@ class AdaptiveSampler:
         epsilon: float = 0.25,
         prior_strength: float = 2.0,
         exclude_observed_from_unique: bool = True,
+        allow_synthetic_feedback: bool = False,
     ) -> None:
         if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
             raise ValueError("seed must be a non-negative integer")
@@ -68,6 +69,9 @@ class AdaptiveSampler:
         self.epsilon = float(epsilon)
         self.prior_strength = float(prior_strength)
         self.exclude_observed_from_unique = exclude_observed_from_unique
+        if not isinstance(allow_synthetic_feedback, bool):
+            raise ValueError("allow_synthetic_feedback must be boolean")
+        self.allow_synthetic_feedback = allow_synthetic_feedback
         self._random = random.Random(seed)
         self._seen: set[TritonGemmConfig] = set()
         self._candidate_probabilities = self._uniform_distribution()
@@ -196,11 +200,14 @@ class AdaptiveSampler:
         benchmark = record.benchmark
         if benchmark is None:
             return "benchmark_missing", None
-        if benchmark.synthetic:
+        if benchmark.synthetic and not self.allow_synthetic_feedback:
             return "synthetic_measurement", None
         if benchmark.unit != "us":
             return "unsupported_measurement_unit", None
-        if benchmark.measurement_type not in SUPPORTED_MEASUREMENTS:
+        supported_measurements = SUPPORTED_MEASUREMENTS
+        if self.allow_synthetic_feedback:
+            supported_measurements = supported_measurements | {"simulated objective latency"}
+        if benchmark.measurement_type not in supported_measurements:
             return "unsupported_measurement_type", None
         if not math.isfinite(benchmark.latency) or benchmark.latency <= 0:
             return "invalid_latency", None
@@ -311,7 +318,7 @@ class AdaptiveSampler:
                                    for candidate in sorted(self._seen, key=_config_key)],
             "random_state": self._random.getstate(),
             "update_history": json.loads(json.dumps(self.update_history, allow_nan=False)),
-            "extensions": {},
+            "extensions": {"allow_synthetic_feedback": self.allow_synthetic_feedback},
         }
 
     @classmethod
@@ -347,10 +354,15 @@ class AdaptiveSampler:
         )
         space = TritonGemmSearchSpace(raw_space, context, constraints=(constraint,),
                                       identifier=value["search_space_id"])
+        extensions = value["extensions"]
+        if not isinstance(extensions, Mapping):
+            raise ValueError("adaptive state extensions must be an object")
+        allow_synthetic_feedback = extensions.get("allow_synthetic_feedback", False)
         sampler = cls(
             space, seed=value["seed"], epsilon=value["epsilon"],
             prior_strength=value["prior_strength"],
             exclude_observed_from_unique=value["exclude_observed_from_unique"],
+            allow_synthetic_feedback=allow_synthetic_feedback,
         )
         by_id = {candidate_identifier(item, context): item for item in space.valid_candidates()}
         probabilities = value["candidate_probabilities"]
