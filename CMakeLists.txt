@@ -271,6 +271,10 @@ if(BUILD_TESTING)
             "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_learning_test.py")
         set_tests_properties(tensor-game-learning-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-evaluation-audit-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_evaluation_audit_test.py")
+        set_tests_properties(tensor-game-evaluation-audit-tests PROPERTIES LABELS "cpu")
         add_test(NAME process-reproducibility-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs>)

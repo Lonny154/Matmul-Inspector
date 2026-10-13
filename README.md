@@ -172,6 +172,8 @@ framework.
 The optional [policy/value learning baseline](docs/tensor_game_learning.md) trains
 a small supervised PyTorch MLP and compares held-out proposal quality without
 changing MCTS or adding reinforcement learning.
+Its versioned evaluation audit reports explicit deterministic and seeded
+denominators, paired outcomes, grouped uncertainty, and proposal-generation cost.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
