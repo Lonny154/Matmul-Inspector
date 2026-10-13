@@ -9,12 +9,13 @@ import json
 import platform
 from pathlib import Path
 import sys
+import time
 from typing import Any, Callable, Sequence
 
 from .tensor_game import matrix_multiplication_tensor, sum_actions, tensor_shape
 from .tensor_game_dataset import SyntheticDataset, tensor_from_list
 from .tensor_game_experiments import CurriculumProblem, action_to_dict, tensor_digest
-from .tensor_game_learning import PolicyValueConfig
+from .tensor_game_learning import PolicyValueConfig, rank_complete_actions
 from .tensor_game_neural_mcts import (
     HYBRID_POLICY_VERSION,
     NEURAL_POLICY_VERSION,
@@ -66,6 +67,80 @@ def dataset_content_digest(dataset: SyntheticDataset) -> str:
     return hashlib.sha256(
         "".join(row["content_digest"] for row in (*dataset.decompositions, *dataset.samples)).encode("ascii")
     ).hexdigest()
+
+
+def benchmark_inference(
+    model: Any,
+    model_config: PolicyValueConfig,
+    residuals: Sequence[Any],
+    *,
+    device: Any = "cpu",
+    max_actions: int = 12,
+    warmups: int = 10,
+    repeats: int = 50,
+) -> dict[str, Any]:
+    """Measure batch-one inference, decoding, and end-to-end proposal latency."""
+    if not residuals or warmups < 0 or repeats <= 0:
+        raise ValueError("diagnostic requires residuals, nonnegative warmups, and positive repeats")
+    import torch
+
+    def synchronize() -> None:
+        if str(device).startswith("cuda"):
+            torch.cuda.synchronize(device)
+
+    model_inputs = [torch.tensor(residual, dtype=torch.float32, device=device).unsqueeze(0) for residual in residuals]
+    with torch.inference_mode():
+        for index in range(warmups):
+            logits, _ = model(model_inputs[index % len(model_inputs)])
+            rank_complete_actions(logits[0], model_config.shape, max_actions)
+        synchronize()
+
+        inference = []
+        decoding = []
+        total = []
+        transfer = []
+        for index in range(repeats):
+            residual = residuals[index % len(residuals)]
+            ready = model_inputs[index % len(model_inputs)]
+            synchronize()
+            started = time.perf_counter()
+            logits, _ = model(ready)
+            synchronize()
+            inference.append(time.perf_counter() - started)
+
+            started = time.perf_counter()
+            rank_complete_actions(logits[0], model_config.shape, max_actions)
+            decoding.append(time.perf_counter() - started)
+
+            synchronize()
+            started = time.perf_counter()
+            prepared = torch.tensor(residual, dtype=torch.float32, device=device).unsqueeze(0)
+            synchronize()
+            transfer.append(time.perf_counter() - started)
+            logits, _ = model(prepared)
+            rank_complete_actions(logits[0], model_config.shape, max_actions)
+            synchronize()
+            total.append(time.perf_counter() - started)
+
+    def summary(values: Sequence[float]) -> dict[str, float]:
+        ordered = sorted(values)
+        middle = len(ordered) // 2
+        median = ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) / 2
+        return {"mean_seconds": sum(values) / len(values), "median_seconds": median}
+
+    return {
+        "device": str(device),
+        "batch_size": 1,
+        "representative_residuals": len(residuals),
+        "warmups": warmups,
+        "repeats": repeats,
+        "maximum_decoded_actions": max_actions,
+        "methodology": "serial wall-clock measurements; CUDA paths synchronize around measured regions",
+        "model_inference": summary(inference),
+        "action_decoding": summary(decoding),
+        "input_tensor_creation_and_transfer": summary(transfer),
+        "total_proposal_generation": summary(total),
+    }
 
 
 def heldout_curriculum(dataset: SyntheticDataset, per_length: int = 1) -> tuple[CurriculumProblem, ...]:
@@ -232,6 +307,7 @@ def save_experiment(
     dataset: SyntheticDataset,
     checkpoint_manifest: dict[str, Any],
     checkpoint_sha256: str,
+    inference_diagnostic: dict[str, Any] | None = None,
 ) -> None:
     output.mkdir(parents=True, exist_ok=False)
     payload = {
@@ -253,10 +329,15 @@ def save_experiment(
             "cpu": "wall time includes tensor construction, model inference, decoding, and search as individually labeled",
             "cuda": "input/output transfers are included in adapter/search wall time; no per-node synchronization is added, so component timings are not standalone kernel timings",
         },
+        "inference_diagnostic": inference_diagnostic,
         "trials": list(records),
     }
     (output / "results.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (output / "report.md").write_text(_markdown(records, config), encoding="utf-8")
+    if inference_diagnostic is not None:
+        (output / "inference_diagnostic.json").write_text(
+            json.dumps(inference_diagnostic, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
 
 def load_experiment(path: Path) -> dict[str, Any]:

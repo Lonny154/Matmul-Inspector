@@ -19,6 +19,7 @@ from matmul_inspector.tensor_game_learning import PolicyValueConfig
 from matmul_inspector.tensor_game_neural_experiments import (
     CONFIGURATIONS,
     NeuralMCTSExperimentConfig,
+    benchmark_inference,
     load_experiment,
     run_trials,
     save_experiment,
@@ -30,6 +31,7 @@ from matmul_inspector.tensor_game_neural_mcts import (
     canonical_action_log_probability,
 )
 from matmul_inspector.tensor_game_search import ResidualInformedPolicy, SampledMCTS, SearchConfig, SearchNode
+from matmul_inspector.tensor_game_search import ActionStatistics
 
 
 @unittest.skipIf(torch is None, "optional PyTorch is unavailable")
@@ -67,6 +69,16 @@ class NeuralAdapterTest(unittest.TestCase):
         self.assertTrue(all(set(item.action.u + item.action.v + item.action.w) <= {-1, 0, 1} for item in first))
         self.assertEqual(tuple(model.inputs[0].shape), (1, 1, 1, 1))
 
+    def test_inference_diagnostic_records_separate_timing_regions(self):
+        config = PolicyValueConfig(shape=(1, 1, 1), hidden_dim=4)
+        target = outer_product(RankOneAction((1,), (1,), (1,)))
+        result = benchmark_inference(
+            self.FakeModel(config.action_width), config, (target,), warmups=1, repeats=2, max_actions=2
+        )
+        self.assertEqual((result["batch_size"], result["warmups"], result["repeats"]), (1, 1, 2))
+        for key in ("model_inference", "action_decoding", "input_tensor_creation_and_transfer", "total_proposal_generation"):
+            self.assertGreaterEqual(result[key]["median_seconds"], 0.0)
+
     def test_neural_value_conversion_terminal_budget_and_clamping(self):
         config = PolicyValueConfig(shape=(1, 1, 1), hidden_dim=4)
         target = outer_product(RankOneAction((1,), (1,), (1,)))
@@ -78,6 +90,24 @@ class NeuralAdapterTest(unittest.TestCase):
         zero = (((0,),),)
         self.assertEqual(evaluator.evaluate(zero, 2, 5, 1), 5.0)
         self.assertEqual(evaluator.evaluate(target, 0, 5, 1), -6.0)
+
+    def test_multistep_backup_keeps_future_length_separate_from_incurred_cost(self):
+        config = PolicyValueConfig(shape=(1, 1, 1), hidden_dim=4)
+        target = outer_product(RankOneAction((1,), (1,), (1,)))
+        action = RankOneAction((1,), (1,), (1,))
+        evaluator = NeuralValueEvaluator(self.FakeModel(config.action_width, value=2.0), config)
+        search = SampledMCTS(
+            target, NeuralActionPolicy(evaluator.model, config),
+            SearchConfig(simulations=1, max_moves=4), evaluator,
+        )
+        root = SearchNode(target, 4, False, actions={action: ActionStatistics(1.0)})
+        middle = SearchNode(target, 3, False, actions={action: ActionStatistics(1.0)})
+        leaf = SearchNode(target, 2, False)
+        leaf_value = evaluator.evaluate(leaf.residual, leaf.remaining_moves, 4, 1)
+        self.assertEqual(leaf_value, 2.0)
+        search._backup(((root, action), (middle, action)), leaf, leaf_value)
+        self.assertEqual(middle.actions[action].value, 1.0)
+        self.assertEqual(root.actions[action].value, 0.0)
 
     def test_hybrid_mixture_and_independent_search_components(self):
         config = PolicyValueConfig(shape=(1, 1, 1), hidden_dim=4)

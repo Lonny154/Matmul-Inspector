@@ -9,6 +9,7 @@ from matmul_inspector.tensor_game_dataset import load_dataset
 from matmul_inspector.tensor_game_learning import load_checkpoint
 from matmul_inspector.tensor_game_neural_experiments import (
     NeuralMCTSExperimentConfig,
+    benchmark_inference,
     dataset_content_digest,
     heldout_curriculum,
     run_trials,
@@ -51,6 +52,11 @@ def main() -> int:
     )
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     output = args.output or Path("artifacts/tensor-game") / f"tg3c-{timestamp}"
+    diagnostic_residuals = [problem.target for problem in heldout_curriculum(dataset, per_length)[:4]]
+    inference_diagnostic = benchmark_inference(
+        model, model_config, diagnostic_residuals, device=args.device,
+        max_actions=args.proposals,
+    )
 
     def progress(record):
         print(
@@ -63,6 +69,7 @@ def main() -> int:
     save_experiment(
         output, config, records, dataset=dataset, checkpoint_manifest=manifest,
         checkpoint_sha256=hashlib.sha256(checkpoint_file.read_bytes()).hexdigest(),
+        inference_diagnostic=inference_diagnostic,
     )
     print(f"Saved {len(records)} trials to {output}")
     return 0

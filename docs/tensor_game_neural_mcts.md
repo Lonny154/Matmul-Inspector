@@ -75,6 +75,9 @@ PYTHONPATH=src .venv/bin/python examples/tensor_game_neural_mcts.py \
 The output directory must not exist. `results.json` stores identities, digests,
 limits, seeds, exact results, proposal counts, node statistics, clipping counts,
 and policy/value inference timing. `report.md` gives matched comparison tables.
+`inference_diagnostic.json` records batch-one warmup and repeated measurements
+for model inference, action decoding, input preparation or transfer, and the
+combined proposal path on representative held-out residuals.
 Failed and timed-out trials remain in the evidence. Equal simulation budgets do
 not imply equal computational cost.
 
