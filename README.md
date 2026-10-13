@@ -215,6 +215,11 @@ does not compile or benchmark kernels. See the
 [candidate sampling guide](docs/candidate_sampling.md) and the executable
 `examples/sample_kernel_candidates.py` example.
 
+The CPU-only [evaluation contracts](docs/evaluation_contracts.md) define
+compilation, correctness, benchmark, failure, lifecycle, and persistence records.
+An explicitly synthetic mock evaluator exercises the interface without invoking
+Triton, CUDA, Neuron, or accelerator hardware.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
