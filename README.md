@@ -174,6 +174,9 @@ a small supervised PyTorch MLP and compares held-out proposal quality without
 changing MCTS or adding reinforcement learning.
 Its versioned evaluation audit reports explicit deterministic and seeded
 denominators, paired outcomes, grouped uncertainty, and proposal-generation cost.
+The optional [neural-guided MCTS experiment](docs/tensor_game_neural_mcts.md)
+separates learned proposals from learned leaf values and reports five matched
+ablations without updating the trained model.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:

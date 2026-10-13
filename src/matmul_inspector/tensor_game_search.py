@@ -56,6 +56,7 @@ def canonicalize_action(action: RankOneAction) -> RankOneAction:
 class ProposedAction:
     action: RankOneAction
     prior: float
+    provenance: tuple[str, ...] = ()
 
 
 class ActionPolicy(Protocol):
@@ -68,6 +69,47 @@ class ActionPolicy(Protocol):
         rng: random.Random,
         max_actions: int,
     ) -> tuple[ProposedAction, ...]: ...
+
+
+@dataclass
+class ValueMetrics:
+    calls: int = 0
+    clipped: int = 0
+    inference_seconds: float = 0.0
+    predictions: list[float] = field(default_factory=list)
+
+
+class LeafEvaluator(Protocol):
+    name: str
+    metrics: ValueMetrics
+
+    def reset_metrics(self) -> None: ...
+
+    def evaluate(
+        self,
+        residual: Tensor,
+        remaining_moves: int,
+        max_moves: int,
+        target_nonzeros: int,
+    ) -> float: ...
+
+
+@dataclass
+class HeuristicValueEvaluator:
+    """Original nonzero-count leaf estimate, exposed as a configurable adapter."""
+
+    name: str = field(default="nonzero_heuristic", init=False)
+    metrics: ValueMetrics = field(default_factory=ValueMetrics, init=False, repr=False)
+
+    def reset_metrics(self) -> None:
+        self.metrics = ValueMetrics()
+
+    def evaluate(self, residual, remaining_moves, max_moves, target_nonzeros):
+        nonzeros = sum(value != 0 for plane in residual for row in plane for value in row)
+        value = -nonzeros / max(1, target_nonzeros)
+        self.metrics.calls += 1
+        self.metrics.predictions.append(value)
+        return value
 
 
 def _normalize(proposals: Sequence[tuple[RankOneAction, float]]) -> tuple[ProposedAction, ...]:
@@ -426,15 +468,27 @@ class SearchResult:
     proposal_generation_seconds: float = field(compare=False)
     search_wall_seconds: float = field(compare=False)
     simulations_per_second: float = field(compare=False)
+    value_evaluator_type: str = "nonzero_heuristic"
+    value_evaluation_calls: int = field(default=0, compare=False)
+    value_prediction_clips: int = field(default=0, compare=False)
+    value_inference_seconds: float = field(default=0.0, compare=False)
+    value_predictions: tuple[float, ...] = field(default=(), compare=False)
 
 
 class SampledMCTS:
     """Deterministic seeded MCTS with exact residual/depth transpositions."""
 
-    def __init__(self, target: Tensor, policy: ActionPolicy, config: SearchConfig):
+    def __init__(
+        self,
+        target: Tensor,
+        policy: ActionPolicy,
+        config: SearchConfig,
+        value_evaluator: LeafEvaluator | None = None,
+    ):
         self.target = target
         self.shape = tensor_shape(target)
         self.policy = policy
+        self.value_evaluator = value_evaluator or HeuristicValueEvaluator()
         self.config = config
         self.rng = random.Random(config.seed)
         self.nodes: dict[StateKey, SearchNode] = {}
@@ -472,8 +526,12 @@ class SampledMCTS:
             return float(self.config.max_moves)
         if node.remaining_moves == 0:
             return float(-(self.config.max_moves + 1))
-        nonzeros = sum(value != 0 for plane in node.residual for row in plane for value in row)
-        return -nonzeros / max(1, self._target_nonzeros)
+        return self.value_evaluator.evaluate(
+            node.residual,
+            node.remaining_moves,
+            self.config.max_moves,
+            self._target_nonzeros,
+        )
 
     def _backup(self, path: Sequence[tuple[SearchNode, RankOneAction]], leaf: SearchNode, value: float) -> None:
         leaf.visits += 1
@@ -488,6 +546,7 @@ class SampledMCTS:
     def run(self) -> SearchResult:
         if isinstance(self.policy, InstrumentedPolicy):
             self.policy.reset_metrics()
+        self.value_evaluator.reset_metrics()
         started = time.perf_counter()
         root = self._node(self.target, self.config.max_moves)
         simulations_run = 0
@@ -561,6 +620,7 @@ class SampledMCTS:
         )
         wall_seconds = time.perf_counter() - started
         metrics = getattr(self.policy, "metrics", ProposalMetrics())
+        value_metrics = self.value_evaluator.metrics
         return SearchResult(
             config=self.config,
             policy_type=self.policy.name,
@@ -582,4 +642,9 @@ class SampledMCTS:
             proposal_generation_seconds=metrics.generation_seconds,
             search_wall_seconds=wall_seconds,
             simulations_per_second=simulations_run / wall_seconds if wall_seconds else 0.0,
+            value_evaluator_type=self.value_evaluator.name,
+            value_evaluation_calls=value_metrics.calls,
+            value_prediction_clips=value_metrics.clipped,
+            value_inference_seconds=value_metrics.inference_seconds,
+            value_predictions=tuple(value_metrics.predictions),
         )
