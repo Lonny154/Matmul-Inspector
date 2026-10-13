@@ -1,0 +1,1930 @@
+{
+  "accounting": {
+    "completed_logical_evaluations": 32,
+    "completed_physical_evaluations": 27,
+    "maximum_physical_evaluations": 27,
+    "physical_savings_from_shared_initial": 5,
+    "planned_logical_evaluations": 32
+  },
+  "artifacts": {
+    "evaluations": "evaluations.jsonl",
+    "manifest": "experiment.json",
+    "progress": "progress.json",
+    "report": "report.md"
+  },
+  "config": {
+    "adaptive_batch_size": 2,
+    "epsilon": 0.25,
+    "latency_threshold_us": 62.0,
+    "per_arm_budget": 16,
+    "prior_strength": 2.0,
+    "shared_initial_size": 5,
+    "trial_seeds": [
+      303
+    ]
+  },
+  "created_at": "2026-10-13T15:14:15.731650Z",
+  "dependency_check": {
+    "cuda_queried": false,
+    "method": "importlib.util.find_spec only; modules were not imported",
+    "modules": {
+      "torch": true,
+      "triton": true
+    },
+    "note": "GPU availability and compute capability are checked only with --execute",
+    "ready_for_execution_check": true
+  },
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592,
+      "type": "cuda"
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "nvidia_driver": "616.92",
+      "python": "3.13.11",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "experiment_id": "hardware-search-d87f6e99f6747ba96f3a",
+  "extensions": {
+    "search_wall_clock_seconds": 12.312918693001848
+  },
+  "limitations": [
+    "dry-run does not query CUDA or execute kernels",
+    "future adaptive choices depend on eligible hardware feedback",
+    "search is exploratory; winners require separate controlled confirmation"
+  ],
+  "mode": "hardware",
+  "schema_version": 1,
+  "search_space": {
+    "context": {
+      "backend": "triton",
+      "hardware_target": "sm_89",
+      "k": 768,
+      "m": 512,
+      "n": 3072,
+      "precision": "fp16"
+    },
+    "identifier": "fc1-adaptive-search-sm89-v1",
+    "valid_candidate_count": 48,
+    "valid_candidate_ids": [
+      "candidate-e8f2fdea8f8189116c45",
+      "candidate-a627ba964d1206eb359a",
+      "candidate-a795f7ef04a2c90c3826",
+      "candidate-1d951974e60ff4037bf5",
+      "candidate-084083656bf066c23ad9",
+      "candidate-0535735459fd8b5821c6",
+      "candidate-585a8c91e60d4610979a",
+      "candidate-17454abcd03ce8f29999",
+      "candidate-6e387e18038e4472cef1",
+      "candidate-993684570927501be3ef",
+      "candidate-f015d61b7d16f512a779",
+      "candidate-c492179538342e71ca24",
+      "candidate-45241b54c1d8cc52f6d5",
+      "candidate-7efac8113b1b3d4f6caf",
+      "candidate-1288fe6f91f6308f8fec",
+      "candidate-622d92726c8d4bdbc58c",
+      "candidate-7cabc6acc608901d2991",
+      "candidate-c6cbaa4a9d5be456353f",
+      "candidate-d4bfde46a0bec7c9c97f",
+      "candidate-71dd4efa78e4b5379218",
+      "candidate-611bddc35a6ec95764ab",
+      "candidate-abc287f0c0ada2f983b3",
+      "candidate-85679cd0ed660b1e1a59",
+      "candidate-5932dea01c94158e9e5f",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-5765b325cda3aeda12b3",
+      "candidate-e2662a6493285ee0ef94",
+      "candidate-0347d48736efa762e80f",
+      "candidate-98972ded5e93860e6011",
+      "candidate-0544521d5bf4f6d48428",
+      "candidate-f9ccdaf188f59c83f614",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-6d1a25ab56974e4dca23",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-12dad861929b62c401f7",
+      "candidate-55adf428b0102942a9e0",
+      "candidate-7950dd6dcadf9d1dd1c3",
+      "candidate-67f701865d1d25a71a67",
+      "candidate-eaba766870d111919890",
+      "candidate-7d6d68d52ef2b8ee179d",
+      "candidate-ae4a5e51d3d6ac774981",
+      "candidate-ab556a9485d834b5f718",
+      "candidate-69e3321abc0db9b52859",
+      "candidate-ea2b62f8f702c2ace1af",
+      "candidate-2e0df1cff423be771221",
+      "candidate-2c67aa9d2806b906f9d1"
+    ],
+    "values": {
+      "block_k": [
+        32,
+        64
+      ],
+      "block_m": [
+        32,
+        64,
+        128
+      ],
+      "block_n": [
+        64,
+        128
+      ],
+      "num_stages": [
+        2,
+        3
+      ],
+      "num_warps": [
+        4,
+        8
+      ]
+    }
+  },
+  "status": "completed",
+  "trial_plans": [
+    {
+      "adaptive_rebuild_after_logical_counts": [
+        5,
+        7,
+        9,
+        11,
+        13,
+        15
+      ],
+      "future_adaptive_decisions": [
+        {
+          "round": 1,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 2,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 3,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 4,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 5,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 6,
+          "status": "pending_hardware_feedback"
+        }
+      ],
+      "logical_budget_per_arm": 16,
+      "maximum_physical_evaluations": 27,
+      "seeds": {
+        "adaptive_rounds": [
+          7410672339915829248,
+          723452963102262860,
+          3986046442121154678,
+          9668564487841770266,
+          3039889637389382931,
+          17478245635139600505
+        ],
+        "initial": 10087049503482824853,
+        "schedule": 11316867549641201396,
+        "trial": 303,
+        "uniform": 3237772572765683694
+      },
+      "shared_initial_candidates": [
+        {
+          "candidate_id": "candidate-12dad861929b62c401f7",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 128,
+            "block_n": 64,
+            "num_stages": 2,
+            "num_warps": 4
+          }
+        },
+        {
+          "candidate_id": "candidate-abc287f0c0ada2f983b3",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 64,
+            "block_n": 64,
+            "num_stages": 3,
+            "num_warps": 4
+          }
+        },
+        {
+          "candidate_id": "candidate-67f701865d1d25a71a67",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 128,
+            "block_n": 64,
+            "num_stages": 3,
+            "num_warps": 8
+          }
+        },
+        {
+          "candidate_id": "candidate-622d92726c8d4bdbc58c",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 32,
+            "block_n": 128,
+            "num_stages": 3,
+            "num_warps": 8
+          }
+        },
+        {
+          "candidate_id": "candidate-1288fe6f91f6308f8fec",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 32,
+            "block_n": 128,
+            "num_stages": 2,
+            "num_warps": 8
+          }
+        }
+      ],
+      "shared_logical_evaluations_per_arm": 5,
+      "shared_physical_evaluations": 5,
+      "trial_id": "trial-0-3a2400ed63af34a5",
+      "trial_index": 0
+    }
+  ],
+  "trials": [
+    {
+      "adaptive_rebuilds": [
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016
+            },
+            "candidate_rewards": {
+              "candidate-1288fe6f91f6308f8fec": 0.0,
+              "candidate-12dad861929b62c401f7": 0.7609638605637185,
+              "candidate-622d92726c8d4bdbc58c": 0.11302388478258792,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-abc287f0c0ada2f983b3": 0.9081083882396451
+            },
+            "eligible_candidate_count": 5,
+            "eligible_evaluation_count": 5,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 5,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5402994476551359
+              },
+              "block_m": {
+                "128": 0.6902409651409296,
+                "32": 0.278255971195647,
+                "64": 0.6360361294132151
+              },
+              "block_n": {
+                "128": 0.278255971195647,
+                "64": 0.7338144497606727
+              },
+              "num_stages": {
+                "2": 0.4402409651409296,
+                "3": 0.6042264546044466
+              },
+              "num_warps": {
+                "4": 0.6672680622008409,
+                "8": 0.42260477695651755
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-1",
+            "unique_evaluation_count": 5
+          },
+          "eligible_feedback_count": 5,
+          "feedback_digest": "66c6aa72732f3b4d2ccd86c7ae017995090caf01e90971aaee34895f4e3e62b2",
+          "proposal_seed": 7410672339915829248,
+          "round": 1,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-1"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-585a8c91e60d4610979a": 77.52716827392578,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-993684570927501be3ef": 68.27030181884766,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016
+            },
+            "candidate_rewards": {
+              "candidate-1288fe6f91f6308f8fec": 0.16634577808079323,
+              "candidate-12dad861929b62c401f7": 0.8007265131676757,
+              "candidate-585a8c91e60d4610979a": 0.0,
+              "candidate-622d92726c8d4bdbc58c": 0.26056861680750765,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-993684570927501be3ef": 0.5606373151126683,
+              "candidate-abc287f0c0ada2f983b3": 0.9233941698970195
+            },
+            "eligible_candidate_count": 7,
+            "eligible_evaluation_count": 7,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 7,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5202124383708894,
+                "64": 0.5188793847441245
+              },
+              "block_m": {
+                "128": 0.7001816282919189,
+                "32": 0.33125861833349485,
+                "64": 0.6411313899656732
+              },
+              "block_n": {
+                "128": 0.39751034200019386,
+                "64": 0.6206867805107825
+              },
+              "num_stages": {
+                "2": 0.3934144582496938,
+                "3": 0.6241000169695327
+              },
+              "num_warps": {
+                "4": 0.6569515996354728,
+                "8": 0.4044857324813835
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-2",
+            "unique_evaluation_count": 7
+          },
+          "eligible_feedback_count": 7,
+          "feedback_digest": "8e6867e30a0bd4f796a07d0356ea9e9e508a66282460c473566843b18b3236e1",
+          "proposal_seed": 723452963102262860,
+          "round": 2,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+            "evaluation-06903714fe164f5a828da2d1b0b1858f",
+            "evaluation-dacf30388e664d31807043036f9ab123"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-2"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-45241b54c1d8cc52f6d5": 70.14780807495117,
+              "candidate-585a8c91e60d4610979a": 77.52716827392578,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-993684570927501be3ef": 68.27030181884766,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016,
+              "candidate-c492179538342e71ca24": 66.52825546264648
+            },
+            "candidate_rewards": {
+              "candidate-1288fe6f91f6308f8fec": 0.16634577808079323,
+              "candidate-12dad861929b62c401f7": 0.8007265131676757,
+              "candidate-45241b54c1d8cc52f6d5": 0.44692712261532724,
+              "candidate-585a8c91e60d4610979a": 0.0,
+              "candidate-622d92726c8d4bdbc58c": 0.26056861680750765,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-993684570927501be3ef": 0.5606373151126683,
+              "candidate-abc287f0c0ada2f983b3": 0.9233941698970195,
+              "candidate-c492179538342e71ca24": 0.6661434490384375
+            },
+            "eligible_candidate_count": 9,
+            "eligible_evaluation_count": 9,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 9,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5566951910377764,
+                "64": 0.510884688952036
+              },
+              "block_m": {
+                "128": 0.7001816282919189,
+                "32": 0.3875777852068417,
+                "64": 0.6411313899656732
+              },
+              "block_n": {
+                "128": 0.44294604023639056,
+                "64": 0.6206867805107825
+              },
+              "num_stages": {
+                "2": 0.402333235643966,
+                "3": 0.6301062215508048
+              },
+              "num_warps": {
+                "4": 0.6219475201321151,
+                "8": 0.44186540627524834
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-3",
+            "unique_evaluation_count": 9
+          },
+          "eligible_feedback_count": 9,
+          "feedback_digest": "d60ed9077e9433096c95cf690e8404aadd46877980642ac4cc77f6e5fb25bb02",
+          "proposal_seed": 3986046442121154678,
+          "round": 3,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+            "evaluation-06903714fe164f5a828da2d1b0b1858f",
+            "evaluation-dacf30388e664d31807043036f9ab123",
+            "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+            "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-3"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-0535735459fd8b5821c6": 76.58768081665039,
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-2c67aa9d2806b906f9d1": 67.24566650390625,
+              "candidate-45241b54c1d8cc52f6d5": 70.14780807495117,
+              "candidate-585a8c91e60d4610979a": 77.52716827392578,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-993684570927501be3ef": 68.27030181884766,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016,
+              "candidate-c492179538342e71ca24": 66.52825546264648
+            },
+            "candidate_rewards": {
+              "candidate-0535735459fd8b5821c6": 0.05689957051718723,
+              "candidate-1288fe6f91f6308f8fec": 0.16634577808079323,
+              "candidate-12dad861929b62c401f7": 0.8007265131676757,
+              "candidate-2c67aa9d2806b906f9d1": 0.6226938214613413,
+              "candidate-45241b54c1d8cc52f6d5": 0.44692712261532724,
+              "candidate-585a8c91e60d4610979a": 0.0,
+              "candidate-622d92726c8d4bdbc58c": 0.26056861680750765,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-993684570927501be3ef": 0.5606373151126683,
+              "candidate-abc287f0c0ada2f983b3": 0.9233941698970195,
+              "candidate-c492179538342e71ca24": 0.6661434490384375
+            },
+            "eligible_candidate_count": 11,
+            "eligible_evaluation_count": 11,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 11,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5566951910377764,
+                "64": 0.4797777811406229
+              },
+              "block_m": {
+                "128": 0.6846840669258034,
+                "32": 0.35083576135243566,
+                "64": 0.6411313899656732
+              },
+              "block_n": {
+                "128": 0.4654145128895094,
+                "64": 0.5401457505116974
+              },
+              "num_stages": {
+                "2": 0.402333235643966,
+                "3": 0.5655929936482402
+              },
+              "num_warps": {
+                "4": 0.5412263844728397,
+                "8": 0.46446895817350997
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-4",
+            "unique_evaluation_count": 11
+          },
+          "eligible_feedback_count": 11,
+          "feedback_digest": "e25107c4887db5ae351ba5467894f926ac1aa2d04984743ad8eacc7ccb38b082",
+          "proposal_seed": 9668564487841770266,
+          "round": 4,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+            "evaluation-06903714fe164f5a828da2d1b0b1858f",
+            "evaluation-dacf30388e664d31807043036f9ab123",
+            "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+            "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70",
+            "evaluation-8d336b6012fa42c2960cca0dc9b3b3e3",
+            "evaluation-c5294b672e5f41f8a520d51f91fcd97b"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-4"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-0535735459fd8b5821c6": 76.58768081665039,
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-2c67aa9d2806b906f9d1": 67.24566650390625,
+              "candidate-2e0df1cff423be771221": 88.91254425048828,
+              "candidate-45241b54c1d8cc52f6d5": 70.14780807495117,
+              "candidate-585a8c91e60d4610979a": 77.52716827392578,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-8ac12f04c00378f1a984": 60.279808044433594,
+              "candidate-993684570927501be3ef": 68.27030181884766,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016,
+              "candidate-c492179538342e71ca24": 66.52825546264648
+            },
+            "candidate_rewards": {
+              "candidate-0535735459fd8b5821c6": 0.4304465820221426,
+              "candidate-1288fe6f91f6308f8fec": 0.4935597330100321,
+              "candidate-12dad861929b62c401f7": 0.8593811534925858,
+              "candidate-2c67aa9d2806b906f9d1": 0.7567169826403229,
+              "candidate-2e0df1cff423be771221": 0.0,
+              "candidate-45241b54c1d8cc52f6d5": 0.6553595171798186,
+              "candidate-585a8c91e60d4610979a": 0.39763492719061005,
+              "candidate-622d92726c8d4bdbc58c": 0.5478941899039422,
+              "candidate-67f701865d1d25a71a67": 0.9742940220359984,
+              "candidate-8ac12f04c00378f1a984": 1.0,
+              "candidate-993684570927501be3ef": 0.7209315338600301,
+              "candidate-abc287f0c0ada2f983b3": 0.930118573388934,
+              "candidate-c492179538342e71ca24": 0.7817726055503005
+            },
+            "eligible_candidate_count": 13,
+            "eligible_evaluation_count": 13,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 13,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.7005408278820661,
+                "64": 0.5871171400720322
+              },
+              "block_m": {
+                "128": 0.6557703083098438,
+                "32": 0.5586221209685418,
+                "64": 0.6433728577963113
+              },
+              "block_n": {
+                "128": 0.5506927291271607,
+                "64": 0.6989844072662839
+              },
+              "num_stages": {
+                "2": 0.48656219012472096,
+                "3": 0.7142174489401671
+              },
+              "num_warps": {
+                "4": 0.6995296699929389,
+                "8": 0.5502080511479117
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-5",
+            "unique_evaluation_count": 13
+          },
+          "eligible_feedback_count": 13,
+          "feedback_digest": "b28720d1be7520dc89d46f7e44f98d1dc3e4364a637278533a8c49eaa3c107b6",
+          "proposal_seed": 3039889637389382931,
+          "round": 5,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+            "evaluation-06903714fe164f5a828da2d1b0b1858f",
+            "evaluation-dacf30388e664d31807043036f9ab123",
+            "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+            "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70",
+            "evaluation-8d336b6012fa42c2960cca0dc9b3b3e3",
+            "evaluation-c5294b672e5f41f8a520d51f91fcd97b",
+            "evaluation-f4b801412d6b4a099c206a7628b48324",
+            "evaluation-986cfc612ed440ceab58de3683025949"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-5"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-0347d48736efa762e80f": 65.35055923461914,
+              "candidate-0535735459fd8b5821c6": 76.58768081665039,
+              "candidate-1288fe6f91f6308f8fec": 74.78057861328125,
+              "candidate-12dad861929b62c401f7": 64.30611038208008,
+              "candidate-2c67aa9d2806b906f9d1": 67.24566650390625,
+              "candidate-2e0df1cff423be771221": 88.91254425048828,
+              "candidate-45241b54c1d8cc52f6d5": 70.14780807495117,
+              "candidate-585a8c91e60d4610979a": 77.52716827392578,
+              "candidate-622d92726c8d4bdbc58c": 73.22483444213867,
+              "candidate-67f701865d1d25a71a67": 61.01584053039551,
+              "candidate-71dd4efa78e4b5379218": 62.53763198852539,
+              "candidate-8ac12f04c00378f1a984": 60.279808044433594,
+              "candidate-993684570927501be3ef": 68.27030181884766,
+              "candidate-abc287f0c0ada2f983b3": 62.280704498291016,
+              "candidate-c492179538342e71ca24": 66.52825546264648
+            },
+            "candidate_rewards": {
+              "candidate-0347d48736efa762e80f": 0.822903715743615,
+              "candidate-0535735459fd8b5821c6": 0.4304465820221426,
+              "candidate-1288fe6f91f6308f8fec": 0.4935597330100321,
+              "candidate-12dad861929b62c401f7": 0.8593811534925858,
+              "candidate-2c67aa9d2806b906f9d1": 0.7567169826403229,
+              "candidate-2e0df1cff423be771221": 0.0,
+              "candidate-45241b54c1d8cc52f6d5": 0.6553595171798186,
+              "candidate-585a8c91e60d4610979a": 0.39763492719061005,
+              "candidate-622d92726c8d4bdbc58c": 0.5478941899039422,
+              "candidate-67f701865d1d25a71a67": 0.9742940220359984,
+              "candidate-71dd4efa78e4b5379218": 0.921145365645692,
+              "candidate-8ac12f04c00378f1a984": 1.0,
+              "candidate-993684570927501be3ef": 0.7209315338600301,
+              "candidate-abc287f0c0ada2f983b3": 0.930118573388934,
+              "candidate-c492179538342e71ca24": 0.7817726055503005
+            },
+            "eligible_candidate_count": 15,
+            "eligible_evaluation_count": 15,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 15,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.7373082508426704,
+                "64": 0.6052545689698463
+              },
+              "block_m": {
+                "128": 0.6557703083098438,
+                "32": 0.5586221209685418,
+                "64": 0.7348335309556482
+              },
+              "block_n": {
+                "128": 0.5779138277888062,
+                "64": 0.7236689581973291
+              },
+              "num_stages": {
+                "2": 0.5286048808270827,
+                "3": 0.7330290777315784
+              },
+              "num_warps": {
+                "4": 0.7132378972985696,
+                "8": 0.5873017825976898
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-6",
+            "unique_evaluation_count": 15
+          },
+          "eligible_feedback_count": 15,
+          "feedback_digest": "fc30f2e55cfb623d861c4d8ad9a39665cf9b4a5e7de6aa22539d62ad0cd9c7d4",
+          "proposal_seed": 17478245635139600505,
+          "round": 6,
+          "source_evaluation_ids": [
+            "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+            "evaluation-78ba18a081b442d1b57711d4da8329f7",
+            "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+            "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+            "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+            "evaluation-06903714fe164f5a828da2d1b0b1858f",
+            "evaluation-dacf30388e664d31807043036f9ab123",
+            "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+            "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70",
+            "evaluation-8d336b6012fa42c2960cca0dc9b3b3e3",
+            "evaluation-c5294b672e5f41f8a520d51f91fcd97b",
+            "evaluation-f4b801412d6b4a099c206a7628b48324",
+            "evaluation-986cfc612ed440ceab58de3683025949",
+            "evaluation-302ac233f51f41a1a440f5d642983687",
+            "evaluation-91bb938b7a0b4b4b9d64946b672d7860"
+          ],
+          "source_id": "trial-0-3a2400ed63af34a5-adaptive-cumulative-6"
+        }
+      ],
+      "arms": {
+        "adaptive": {
+          "best_valid_latency_us": 60.279808044433594,
+          "evaluations_to_threshold": 4,
+          "failures_by_category": {},
+          "history": [
+            {
+              "candidate_id": "candidate-1288fe6f91f6308f8fec",
+              "evaluation_id": "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+              "failure_category": null,
+              "latency_us": 74.78057861328125,
+              "logical_order": 0,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-12dad861929b62c401f7",
+              "evaluation_id": "evaluation-78ba18a081b442d1b57711d4da8329f7",
+              "failure_category": null,
+              "latency_us": 64.30611038208008,
+              "logical_order": 1,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-622d92726c8d4bdbc58c",
+              "evaluation_id": "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+              "failure_category": null,
+              "latency_us": 73.22483444213867,
+              "logical_order": 2,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-67f701865d1d25a71a67",
+              "evaluation_id": "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+              "failure_category": null,
+              "latency_us": 61.01584053039551,
+              "logical_order": 3,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-abc287f0c0ada2f983b3",
+              "evaluation_id": "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+              "failure_category": null,
+              "latency_us": 62.280704498291016,
+              "logical_order": 4,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-993684570927501be3ef",
+              "evaluation_id": "evaluation-06903714fe164f5a828da2d1b0b1858f",
+              "failure_category": null,
+              "latency_us": 68.27030181884766,
+              "logical_order": 5,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-585a8c91e60d4610979a",
+              "evaluation_id": "evaluation-dacf30388e664d31807043036f9ab123",
+              "failure_category": null,
+              "latency_us": 77.52716827392578,
+              "logical_order": 6,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-c492179538342e71ca24",
+              "evaluation_id": "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+              "failure_category": null,
+              "latency_us": 66.52825546264648,
+              "logical_order": 7,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-45241b54c1d8cc52f6d5",
+              "evaluation_id": "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70",
+              "failure_category": null,
+              "latency_us": 70.14780807495117,
+              "logical_order": 8,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-2c67aa9d2806b906f9d1",
+              "evaluation_id": "evaluation-8d336b6012fa42c2960cca0dc9b3b3e3",
+              "failure_category": null,
+              "latency_us": 67.24566650390625,
+              "logical_order": 9,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-0535735459fd8b5821c6",
+              "evaluation_id": "evaluation-c5294b672e5f41f8a520d51f91fcd97b",
+              "failure_category": null,
+              "latency_us": 76.58768081665039,
+              "logical_order": 10,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-2e0df1cff423be771221",
+              "evaluation_id": "evaluation-f4b801412d6b4a099c206a7628b48324",
+              "failure_category": null,
+              "latency_us": 88.91254425048828,
+              "logical_order": 11,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-8ac12f04c00378f1a984",
+              "evaluation_id": "evaluation-986cfc612ed440ceab58de3683025949",
+              "failure_category": null,
+              "latency_us": 60.279808044433594,
+              "logical_order": 12,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-0347d48736efa762e80f",
+              "evaluation_id": "evaluation-302ac233f51f41a1a440f5d642983687",
+              "failure_category": null,
+              "latency_us": 65.35055923461914,
+              "logical_order": 13,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-71dd4efa78e4b5379218",
+              "evaluation_id": "evaluation-91bb938b7a0b4b4b9d64946b672d7860",
+              "failure_category": null,
+              "latency_us": 62.53763198852539,
+              "logical_order": 14,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-55adf428b0102942a9e0",
+              "evaluation_id": "evaluation-e85b9f10fba040a5860d492f43be2c99",
+              "failure_category": null,
+              "latency_us": 61.453311920166016,
+              "logical_order": 15,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            }
+          ],
+          "progress": [
+            {
+              "best_valid_latency_us": 74.78057861328125,
+              "submitted_evaluations": 1
+            },
+            {
+              "best_valid_latency_us": 64.30611038208008,
+              "submitted_evaluations": 2
+            },
+            {
+              "best_valid_latency_us": 64.30611038208008,
+              "submitted_evaluations": 3
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 4
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 5
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 6
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 7
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 8
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 9
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 10
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 11
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 12
+            },
+            {
+              "best_valid_latency_us": 60.279808044433594,
+              "submitted_evaluations": 13
+            },
+            {
+              "best_valid_latency_us": 60.279808044433594,
+              "submitted_evaluations": 14
+            },
+            {
+              "best_valid_latency_us": 60.279808044433594,
+              "submitted_evaluations": 15
+            },
+            {
+              "best_valid_latency_us": 60.279808044433594,
+              "submitted_evaluations": 16
+            }
+          ],
+          "submitted_evaluations": 16,
+          "successful_evaluations": 16,
+          "unique_candidate_count": 16,
+          "unique_coverage": 0.3333333333333333
+        },
+        "uniform": {
+          "best_valid_latency_us": 59.39916801452637,
+          "evaluations_to_threshold": 4,
+          "failures_by_category": {},
+          "history": [
+            {
+              "candidate_id": "candidate-1288fe6f91f6308f8fec",
+              "evaluation_id": "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+              "failure_category": null,
+              "latency_us": 74.78057861328125,
+              "logical_order": 0,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-12dad861929b62c401f7",
+              "evaluation_id": "evaluation-78ba18a081b442d1b57711d4da8329f7",
+              "failure_category": null,
+              "latency_us": 64.30611038208008,
+              "logical_order": 1,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-622d92726c8d4bdbc58c",
+              "evaluation_id": "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+              "failure_category": null,
+              "latency_us": 73.22483444213867,
+              "logical_order": 2,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-67f701865d1d25a71a67",
+              "evaluation_id": "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+              "failure_category": null,
+              "latency_us": 61.01584053039551,
+              "logical_order": 3,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-abc287f0c0ada2f983b3",
+              "evaluation_id": "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+              "failure_category": null,
+              "latency_us": 62.280704498291016,
+              "logical_order": 4,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-ea2b62f8f702c2ace1af",
+              "evaluation_id": "evaluation-606e4ced978d440787945ac78285299b",
+              "failure_category": null,
+              "latency_us": 65.53638458251953,
+              "logical_order": 5,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-a795f7ef04a2c90c3826",
+              "evaluation_id": "evaluation-e9a755ecbd824edd9ba32fe6a11907e8",
+              "failure_category": null,
+              "latency_us": 73.04534149169922,
+              "logical_order": 6,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-7cabc6acc608901d2991",
+              "evaluation_id": "evaluation-a4555fb9f103462ca13624b6042b226b",
+              "failure_category": null,
+              "latency_us": 61.06387138366699,
+              "logical_order": 7,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-611bddc35a6ec95764ab",
+              "evaluation_id": "evaluation-2a9ac6d0ff1445a5ac8006b4c9bcdc0c",
+              "failure_category": null,
+              "latency_us": 61.21663856506348,
+              "logical_order": 8,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-0347d48736efa762e80f",
+              "evaluation_id": "evaluation-84068d0884c542cebc45a641cc3916d3",
+              "failure_category": null,
+              "latency_us": 65.08720016479492,
+              "logical_order": 9,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-c6cbaa4a9d5be456353f",
+              "evaluation_id": "evaluation-f3147ee86c694fb8adb797ea91767c8a",
+              "failure_category": null,
+              "latency_us": 61.862783432006836,
+              "logical_order": 10,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-c492179538342e71ca24",
+              "evaluation_id": "evaluation-209e499184f24d87b867e1038c69c830",
+              "failure_category": null,
+              "latency_us": 67.03718566894531,
+              "logical_order": 11,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-09991c7d870c92ae572f",
+              "evaluation_id": "evaluation-2bd2ffdb9a4448169617dba235563d78",
+              "failure_category": null,
+              "latency_us": 59.39916801452637,
+              "logical_order": 12,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-086fcf07d56d98d3387d",
+              "evaluation_id": "evaluation-9618f2df8c2b4149b19f8ce6569284cc",
+              "failure_category": null,
+              "latency_us": 61.02400016784668,
+              "logical_order": 13,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-f015d61b7d16f512a779",
+              "evaluation_id": "evaluation-3141543c1e854f948d459552e8aa699c",
+              "failure_category": null,
+              "latency_us": 69.0423355102539,
+              "logical_order": 14,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-55adf428b0102942a9e0",
+              "evaluation_id": "evaluation-a46ebf7abc424f459aed4e43243c9e2e",
+              "failure_category": null,
+              "latency_us": 61.4826545715332,
+              "logical_order": 15,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            }
+          ],
+          "progress": [
+            {
+              "best_valid_latency_us": 74.78057861328125,
+              "submitted_evaluations": 1
+            },
+            {
+              "best_valid_latency_us": 64.30611038208008,
+              "submitted_evaluations": 2
+            },
+            {
+              "best_valid_latency_us": 64.30611038208008,
+              "submitted_evaluations": 3
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 4
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 5
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 6
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 7
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 8
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 9
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 10
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 11
+            },
+            {
+              "best_valid_latency_us": 61.01584053039551,
+              "submitted_evaluations": 12
+            },
+            {
+              "best_valid_latency_us": 59.39916801452637,
+              "submitted_evaluations": 13
+            },
+            {
+              "best_valid_latency_us": 59.39916801452637,
+              "submitted_evaluations": 14
+            },
+            {
+              "best_valid_latency_us": 59.39916801452637,
+              "submitted_evaluations": 15
+            },
+            {
+              "best_valid_latency_us": 59.39916801452637,
+              "submitted_evaluations": 16
+            }
+          ],
+          "submitted_evaluations": 16,
+          "successful_evaluations": 16,
+          "unique_candidate_count": 16,
+          "unique_coverage": 0.3333333333333333
+        }
+      },
+      "paired_progress": [
+        {
+          "adaptive_best_latency_us": 74.78057861328125,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 1,
+          "uniform_best_latency_us": 74.78057861328125
+        },
+        {
+          "adaptive_best_latency_us": 64.30611038208008,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 2,
+          "uniform_best_latency_us": 64.30611038208008
+        },
+        {
+          "adaptive_best_latency_us": 64.30611038208008,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 3,
+          "uniform_best_latency_us": 64.30611038208008
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 4,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 5,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 6,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 7,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 8,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 9,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 10,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 11,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 61.01584053039551,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 12,
+          "uniform_best_latency_us": 61.01584053039551
+        },
+        {
+          "adaptive_best_latency_us": 60.279808044433594,
+          "adaptive_minus_uniform_best_latency_us": 0.8806400299072266,
+          "equal_logical_budget": 13,
+          "uniform_best_latency_us": 59.39916801452637
+        },
+        {
+          "adaptive_best_latency_us": 60.279808044433594,
+          "adaptive_minus_uniform_best_latency_us": 0.8806400299072266,
+          "equal_logical_budget": 14,
+          "uniform_best_latency_us": 59.39916801452637
+        },
+        {
+          "adaptive_best_latency_us": 60.279808044433594,
+          "adaptive_minus_uniform_best_latency_us": 0.8806400299072266,
+          "equal_logical_budget": 15,
+          "uniform_best_latency_us": 59.39916801452637
+        },
+        {
+          "adaptive_best_latency_us": 60.279808044433594,
+          "adaptive_minus_uniform_best_latency_us": 0.8806400299072266,
+          "equal_logical_budget": 16,
+          "uniform_best_latency_us": 59.39916801452637
+        }
+      ],
+      "physical_evaluation_count": 27,
+      "physical_execution_order": [
+        {
+          "candidate_id": "candidate-1288fe6f91f6308f8fec",
+          "evaluation_id": "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 0,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-12dad861929b62c401f7",
+          "evaluation_id": "evaluation-78ba18a081b442d1b57711d4da8329f7",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 1,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-622d92726c8d4bdbc58c",
+          "evaluation_id": "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 2,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-67f701865d1d25a71a67",
+          "evaluation_id": "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 3,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-abc287f0c0ada2f983b3",
+          "evaluation_id": "evaluation-e762c441a3f64642a8dc009b9b3b741a",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 4,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-993684570927501be3ef",
+          "evaluation_id": "evaluation-06903714fe164f5a828da2d1b0b1858f",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 5,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-ea2b62f8f702c2ace1af",
+          "evaluation_id": "evaluation-606e4ced978d440787945ac78285299b",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 6,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-a795f7ef04a2c90c3826",
+          "evaluation_id": "evaluation-e9a755ecbd824edd9ba32fe6a11907e8",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 7,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-585a8c91e60d4610979a",
+          "evaluation_id": "evaluation-dacf30388e664d31807043036f9ab123",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 8,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-c492179538342e71ca24",
+          "evaluation_id": "evaluation-21aa8893b1a24ceb81d3ceeef48e9509",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 9,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-7cabc6acc608901d2991",
+          "evaluation_id": "evaluation-a4555fb9f103462ca13624b6042b226b",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 10,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-611bddc35a6ec95764ab",
+          "evaluation_id": "evaluation-2a9ac6d0ff1445a5ac8006b4c9bcdc0c",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 11,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-45241b54c1d8cc52f6d5",
+          "evaluation_id": "evaluation-8f3e7e03b5bc43b88ecc6fcbd390ae70",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 12,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-2c67aa9d2806b906f9d1",
+          "evaluation_id": "evaluation-8d336b6012fa42c2960cca0dc9b3b3e3",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 13,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-0347d48736efa762e80f",
+          "evaluation_id": "evaluation-84068d0884c542cebc45a641cc3916d3",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 14,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-c6cbaa4a9d5be456353f",
+          "evaluation_id": "evaluation-f3147ee86c694fb8adb797ea91767c8a",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 15,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-0535735459fd8b5821c6",
+          "evaluation_id": "evaluation-c5294b672e5f41f8a520d51f91fcd97b",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 16,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-2e0df1cff423be771221",
+          "evaluation_id": "evaluation-f4b801412d6b4a099c206a7628b48324",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 17,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-c492179538342e71ca24",
+          "evaluation_id": "evaluation-209e499184f24d87b867e1038c69c830",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 18,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-09991c7d870c92ae572f",
+          "evaluation_id": "evaluation-2bd2ffdb9a4448169617dba235563d78",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 19,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-8ac12f04c00378f1a984",
+          "evaluation_id": "evaluation-986cfc612ed440ceab58de3683025949",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 20,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-0347d48736efa762e80f",
+          "evaluation_id": "evaluation-302ac233f51f41a1a440f5d642983687",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 21,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-086fcf07d56d98d3387d",
+          "evaluation_id": "evaluation-9618f2df8c2b4149b19f8ce6569284cc",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 22,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-f015d61b7d16f512a779",
+          "evaluation_id": "evaluation-3141543c1e854f948d459552e8aa699c",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 23,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-71dd4efa78e4b5379218",
+          "evaluation_id": "evaluation-91bb938b7a0b4b4b9d64946b672d7860",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 24,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-55adf428b0102942a9e0",
+          "evaluation_id": "evaluation-e85b9f10fba040a5860d492f43be2c99",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 25,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-55adf428b0102942a9e0",
+          "evaluation_id": "evaluation-a46ebf7abc424f459aed4e43243c9e2e",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 26,
+          "status": "completed"
+        }
+      ],
+      "search_wall_clock_seconds": 12.312270464994072,
+      "shared_evaluation_ids": [
+        "evaluation-84cb8b9c80b245bcac85f1395dfe3a84",
+        "evaluation-78ba18a081b442d1b57711d4da8329f7",
+        "evaluation-832ea2ad03aa47f78661f5d473d0a738",
+        "evaluation-da15e0e9f4b243e790d28bbd9eb613f4",
+        "evaluation-e762c441a3f64642a8dc009b9b3b741a"
+      ],
+      "status": "budget_exhausted",
+      "trial_id": "trial-0-3a2400ed63af34a5",
+      "trial_seed": 303
+    }
+  ]
+}

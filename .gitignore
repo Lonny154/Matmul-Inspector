@@ -53,6 +53,15 @@ ncu_*.txt
 # AWS Neuron generated artifacts
 artifacts/
 artifacts/nki-*/
+# Preserve the evidence used by the hardware search case study.
+!artifacts/
+artifacts/*
+!artifacts/hardware-search/
+artifacts/hardware-search/*
+!artifacts/hardware-search/fc1-pilot-seed101/
+!artifacts/hardware-search/fc1-pilot-seed202/
+!artifacts/hardware-search/fc1-pilot-seed303/
+!artifacts/hardware-search/fc1-winner-confirmation/
 *.neff
 *.ntff
 *.pftrace

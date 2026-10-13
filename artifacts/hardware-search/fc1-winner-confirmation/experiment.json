@@ -1,0 +1,1832 @@
+{
+  "artifacts": {
+    "evaluations_jsonl": "evaluations.jsonl",
+    "manifest_json": "experiment.json",
+    "report_markdown": "report.md"
+  },
+  "baseline": {
+    "comparison_to_baseline": null,
+    "implementation": "PyTorch torch.matmul(..., out=...) / cuBLAS",
+    "implementation_id": "pytorch_cublas",
+    "input_layout": "shared contiguous row-major FP16 tensors",
+    "library": "PyTorch dispatch, normally cuBLAS on CUDA",
+    "operation": "torch.matmul(a, b, out=baseline_output)",
+    "output_allocation": "preallocated FP16 output reused for every launch",
+    "per_round_median_us": [
+      64.43007946014404,
+      60.46720027923584,
+      60.371198654174805,
+      60.04608154296875,
+      60.38527965545654,
+      59.88287925720215,
+      60.17024040222168,
+      60.590081214904785,
+      62.685441970825195,
+      61.19423866271973
+    ],
+    "raw_rounds": [
+      [
+        {
+          "cuda_event_us": 65.91487884521484,
+          "host_submission_us": 26.19469,
+          "host_wall_us": 67.85737
+        },
+        {
+          "cuda_event_us": 64.43007946014404,
+          "host_submission_us": 8.82147,
+          "host_wall_us": 65.69333999999999
+        },
+        {
+          "cuda_event_us": 64.41984176635742,
+          "host_submission_us": 8.79366,
+          "host_wall_us": 65.52866
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.46720027923584,
+          "host_submission_us": 17.46693,
+          "host_wall_us": 61.40945
+        },
+        {
+          "cuda_event_us": 62.20799922943115,
+          "host_submission_us": 11.411859999999999,
+          "host_wall_us": 64.56463
+        },
+        {
+          "cuda_event_us": 59.92447853088379,
+          "host_submission_us": 10.55532,
+          "host_wall_us": 60.85659
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.371198654174805,
+          "host_submission_us": 9.12118,
+          "host_wall_us": 61.16407
+        },
+        {
+          "cuda_event_us": 59.89408016204834,
+          "host_submission_us": 10.73701,
+          "host_wall_us": 60.72808
+        },
+        {
+          "cuda_event_us": 61.57951831817627,
+          "host_submission_us": 15.925640000000001,
+          "host_wall_us": 62.50742
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 65.25951862335205,
+          "host_submission_us": 18.83652,
+          "host_wall_us": 66.42267
+        },
+        {
+          "cuda_event_us": 60.04608154296875,
+          "host_submission_us": 21.29743,
+          "host_wall_us": 61.18772
+        },
+        {
+          "cuda_event_us": 59.73663806915283,
+          "host_submission_us": 19.13461,
+          "host_wall_us": 60.757740000000005
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.4531192779541,
+          "host_submission_us": 9.48625,
+          "host_wall_us": 61.329809999999995
+        },
+        {
+          "cuda_event_us": 60.38527965545654,
+          "host_submission_us": 18.26113,
+          "host_wall_us": 61.43996
+        },
+        {
+          "cuda_event_us": 59.90272045135498,
+          "host_submission_us": 18.1085,
+          "host_wall_us": 60.78265999999999
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.46720027923584,
+          "host_submission_us": 9.02576,
+          "host_wall_us": 61.26948
+        },
+        {
+          "cuda_event_us": 59.88287925720215,
+          "host_submission_us": 8.50534,
+          "host_wall_us": 60.71134
+        },
+        {
+          "cuda_event_us": 59.709439277648926,
+          "host_submission_us": 8.42787,
+          "host_wall_us": 60.54984
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.85472106933594,
+          "host_submission_us": 24.34625,
+          "host_wall_us": 62.01021
+        },
+        {
+          "cuda_event_us": 60.17024040222168,
+          "host_submission_us": 23.132310000000004,
+          "host_wall_us": 61.28008
+        },
+        {
+          "cuda_event_us": 59.801602363586426,
+          "host_submission_us": 24.43865,
+          "host_wall_us": 60.87405
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 60.590081214904785,
+          "host_submission_us": 16.32572,
+          "host_wall_us": 61.57564
+        },
+        {
+          "cuda_event_us": 59.903998374938965,
+          "host_submission_us": 15.06589,
+          "host_wall_us": 60.84097
+        },
+        {
+          "cuda_event_us": 64.54271793365479,
+          "host_submission_us": 16.26379,
+          "host_wall_us": 65.45774
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 62.685441970825195,
+          "host_submission_us": 10.37637,
+          "host_wall_us": 63.92645
+        },
+        {
+          "cuda_event_us": 67.61727809906006,
+          "host_submission_us": 9.07155,
+          "host_wall_us": 68.81741
+        },
+        {
+          "cuda_event_us": 61.99295997619629,
+          "host_submission_us": 9.09193,
+          "host_wall_us": 63.021800000000006
+        }
+      ],
+      [
+        {
+          "cuda_event_us": 62.47424125671387,
+          "host_submission_us": 10.11683,
+          "host_wall_us": 63.26077
+        },
+        {
+          "cuda_event_us": 61.19423866271973,
+          "host_submission_us": 9.25323,
+          "host_wall_us": 62.04562
+        },
+        {
+          "cuda_event_us": 60.13951778411865,
+          "host_submission_us": 18.36361,
+          "host_wall_us": 61.8013
+        }
+      ]
+    ],
+    "status": "completed",
+    "summary": {
+      "maximum_us": 67.61727809906006,
+      "mean_us": 61.56730635960897,
+      "median_us": 60.46720027923584,
+      "minimum_us": 59.709439277648926,
+      "observation_count": 30,
+      "sample_standard_deviation_us": 2.158992816567721
+    }
+  },
+  "candidate_ids": [
+    "candidate-09991c7d870c92ae572f",
+    "candidate-086fcf07d56d98d3387d",
+    "candidate-8e3ff66de13a408caa23",
+    "candidate-2c7ad186cbae1bfb44ed",
+    "candidate-8ac12f04c00378f1a984"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "candidate-09991c7d870c92ae572f",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 128,
+        "block_n": 64,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "sampling_order": 0
+    },
+    {
+      "candidate_id": "candidate-086fcf07d56d98d3387d",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "num_stages": 2,
+        "num_warps": 4
+      },
+      "sampling_order": 1
+    },
+    {
+      "candidate_id": "candidate-8e3ff66de13a408caa23",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "sampling_order": 2
+    },
+    {
+      "candidate_id": "candidate-2c7ad186cbae1bfb44ed",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 128,
+        "block_n": 64,
+        "num_stages": 2,
+        "num_warps": 4
+      },
+      "sampling_order": 3
+    },
+    {
+      "candidate_id": "candidate-8ac12f04c00378f1a984",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 128,
+        "block_n": 64,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "sampling_order": 4
+    }
+  ],
+  "config": {
+    "atol": 0.01,
+    "input_seed": 0,
+    "launches_per_sample": 100,
+    "rounds": 10,
+    "rtol": 0.01,
+    "samples_per_round": 3,
+    "scheduling_seed": 8675309,
+    "warmups": 100
+  },
+  "created_at": "2026-10-13T15:25:00.018692Z",
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592,
+      "type": "cuda"
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "nvidia_driver": "616.92",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "evaluation_ids": [
+    "evaluation-ec26a12476284edaa7c27d26423601f7",
+    "evaluation-84983908b4154a86b909389e34fab22b",
+    "evaluation-e22e52c94498431a93335b3b338a1b8c",
+    "evaluation-0642caaf80724b11a9acfaca268cfb6b",
+    "evaluation-04844b4d26f843a7b9fafb8cb380f11a"
+  ],
+  "evaluation_records": [
+    {
+      "candidate_id": "candidate-09991c7d870c92ae572f",
+      "evaluation_id": "evaluation-ec26a12476284edaa7c27d26423601f7",
+      "status": "completed"
+    },
+    {
+      "candidate_id": "candidate-086fcf07d56d98d3387d",
+      "evaluation_id": "evaluation-84983908b4154a86b909389e34fab22b",
+      "status": "completed"
+    },
+    {
+      "candidate_id": "candidate-8e3ff66de13a408caa23",
+      "evaluation_id": "evaluation-e22e52c94498431a93335b3b338a1b8c",
+      "status": "completed"
+    },
+    {
+      "candidate_id": "candidate-2c7ad186cbae1bfb44ed",
+      "evaluation_id": "evaluation-0642caaf80724b11a9acfaca268cfb6b",
+      "status": "completed"
+    },
+    {
+      "candidate_id": "candidate-8ac12f04c00378f1a984",
+      "evaluation_id": "evaluation-04844b4d26f843a7b9fafb8cb380f11a",
+      "status": "completed"
+    }
+  ],
+  "experiment_id": "controlled-8a29d7fe84994abe88b44164feecdb0f",
+  "extensions": {
+    "source_experiment_ids": [
+      "hardware-search-a105ae40b2ec7e343f8a",
+      "hardware-search-23291cfe22195750d532",
+      "hardware-search-d87f6e99f6747ba96f3a"
+    ],
+    "winner_selection": [
+      {
+        "candidate_id": "candidate-09991c7d870c92ae572f",
+        "discoveries": [
+          {
+            "arm": "uniform",
+            "experiment_id": "hardware-search-a105ae40b2ec7e343f8a",
+            "logical_budget": 12,
+            "search_evaluation_id": "evaluation-cda7cf5541f147c4a105de15d826fc50",
+            "search_latency_us": 60.21939277648926,
+            "trial_id": "trial-0-86c33b835465265d"
+          },
+          {
+            "arm": "uniform",
+            "experiment_id": "hardware-search-d87f6e99f6747ba96f3a",
+            "logical_budget": 13,
+            "search_evaluation_id": "evaluation-2bd2ffdb9a4448169617dba235563d78",
+            "search_latency_us": 59.39916801452637,
+            "trial_id": "trial-0-3a2400ed63af34a5"
+          }
+        ],
+        "parameters": {
+          "block_k": 32,
+          "block_m": 128,
+          "block_n": 64,
+          "num_stages": 3,
+          "num_warps": 8
+        }
+      },
+      {
+        "candidate_id": "candidate-086fcf07d56d98d3387d",
+        "discoveries": [
+          {
+            "arm": "adaptive",
+            "experiment_id": "hardware-search-a105ae40b2ec7e343f8a",
+            "logical_budget": 11,
+            "search_evaluation_id": "evaluation-f66e185b3a01416eb7e777ea02ce86b4",
+            "search_latency_us": 60.812320709228516,
+            "trial_id": "trial-0-86c33b835465265d"
+          }
+        ],
+        "parameters": {
+          "block_k": 32,
+          "block_m": 64,
+          "block_n": 128,
+          "num_stages": 2,
+          "num_warps": 4
+        }
+      },
+      {
+        "candidate_id": "candidate-8e3ff66de13a408caa23",
+        "discoveries": [
+          {
+            "arm": "uniform",
+            "experiment_id": "hardware-search-23291cfe22195750d532",
+            "logical_budget": 12,
+            "search_evaluation_id": "evaluation-c7fd2a01c2f043778599a99bbd6daee4",
+            "search_latency_us": 61.19724655151367,
+            "trial_id": "trial-0-fa0b3bb94598ecc4"
+          }
+        ],
+        "parameters": {
+          "block_k": 32,
+          "block_m": 64,
+          "block_n": 128,
+          "num_stages": 3,
+          "num_warps": 4
+        }
+      },
+      {
+        "candidate_id": "candidate-2c7ad186cbae1bfb44ed",
+        "discoveries": [
+          {
+            "arm": "adaptive",
+            "experiment_id": "hardware-search-23291cfe22195750d532",
+            "logical_budget": 15,
+            "search_evaluation_id": "evaluation-5de45c3a1e7d466dbc6be120baf3983c",
+            "search_latency_us": 61.39382553100586,
+            "trial_id": "trial-0-fa0b3bb94598ecc4"
+          }
+        ],
+        "parameters": {
+          "block_k": 32,
+          "block_m": 128,
+          "block_n": 64,
+          "num_stages": 2,
+          "num_warps": 4
+        }
+      },
+      {
+        "candidate_id": "candidate-8ac12f04c00378f1a984",
+        "discoveries": [
+          {
+            "arm": "adaptive",
+            "experiment_id": "hardware-search-d87f6e99f6747ba96f3a",
+            "logical_budget": 13,
+            "search_evaluation_id": "evaluation-986cfc612ed440ceab58de3683025949",
+            "search_latency_us": 60.279808044433594,
+            "trial_id": "trial-0-3a2400ed63af34a5"
+          }
+        ],
+        "parameters": {
+          "block_k": 32,
+          "block_m": 128,
+          "block_n": 64,
+          "num_stages": 3,
+          "num_warps": 4
+        }
+      }
+    ]
+  },
+  "failures": [],
+  "hardware_target": "sm_89",
+  "implementations": {
+    "candidate-086fcf07d56d98d3387d": {
+      "comparison_to_baseline": {
+        "latency_reduction_percent": 0.9238377465939251,
+        "paired_round_count": 10,
+        "paired_round_speedups": [
+          1.004805857157932,
+          1.0117798646177276,
+          1.0098490278352286,
+          1.0049486188454202,
+          0.9966409819561682,
+          0.9996474506158232,
+          1.0025646067739338,
+          1.0150969644379846,
+          1.0476908878772808,
+          0.9280944183779062
+        ],
+        "paired_speedup_mean": 1.0021118678495404,
+        "paired_speedup_median": 1.0048772380016762,
+        "paired_speedup_sample_standard_deviation": 0.029682561443155436,
+        "speedup_baseline_over_candidate": 1.009324520909793
+      },
+      "implementation": "Triton fc1_kernel",
+      "per_round_median_us": [
+        64.12191867828369,
+        59.763197898864746,
+        59.782400131225586,
+        59.750399589538574,
+        60.58879852294922,
+        59.903998374938965,
+        60.01632213592529,
+        59.6889591217041,
+        59.832000732421875,
+        65.93535900115967
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 64.12191867828369,
+            "host_submission_us": 13.82865,
+            "host_wall_us": 65.40892
+          },
+          {
+            "cuda_event_us": 66.10879898071289,
+            "host_submission_us": 29.01531,
+            "host_wall_us": 67.36936
+          },
+          {
+            "cuda_event_us": 63.80415916442871,
+            "host_submission_us": 26.19015,
+            "host_wall_us": 65.08461
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.02687931060791,
+            "host_submission_us": 14.29691,
+            "host_wall_us": 60.90966
+          },
+          {
+            "cuda_event_us": 59.763197898864746,
+            "host_submission_us": 13.812909999999999,
+            "host_wall_us": 60.6372
+          },
+          {
+            "cuda_event_us": 59.607038497924805,
+            "host_submission_us": 13.32649,
+            "host_wall_us": 60.54298
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.748477935791016,
+            "host_submission_us": 17.81072,
+            "host_wall_us": 60.66881
+          },
+          {
+            "cuda_event_us": 66.33120059967041,
+            "host_submission_us": 12.6372,
+            "host_wall_us": 67.33236
+          },
+          {
+            "cuda_event_us": 59.782400131225586,
+            "host_submission_us": 25.031190000000002,
+            "host_wall_us": 60.85327
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.750399589538574,
+            "host_submission_us": 26.52497,
+            "host_wall_us": 60.73101
+          },
+          {
+            "cuda_event_us": 59.73663806915283,
+            "host_submission_us": 20.02817,
+            "host_wall_us": 60.64144
+          },
+          {
+            "cuda_event_us": 63.65856170654297,
+            "host_submission_us": 16.1741,
+            "host_wall_us": 64.63731
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.58879852294922,
+            "host_submission_us": 11.5884,
+            "host_wall_us": 61.45589
+          },
+          {
+            "cuda_event_us": 63.5148811340332,
+            "host_submission_us": 12.500419999999998,
+            "host_wall_us": 65.10043999999999
+          },
+          {
+            "cuda_event_us": 59.92447853088379,
+            "host_submission_us": 11.625419999999998,
+            "host_wall_us": 60.8454
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 63.43616008758545,
+            "host_submission_us": 12.12577,
+            "host_wall_us": 64.33036
+          },
+          {
+            "cuda_event_us": 59.81184005737305,
+            "host_submission_us": 11.99351,
+            "host_wall_us": 60.76369
+          },
+          {
+            "cuda_event_us": 59.903998374938965,
+            "host_submission_us": 12.26689,
+            "host_wall_us": 60.73918
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.94495868682861,
+            "host_submission_us": 43.87155,
+            "host_wall_us": 61.134409999999995
+          },
+          {
+            "cuda_event_us": 60.01632213592529,
+            "host_submission_us": 25.00505,
+            "host_wall_us": 60.96688
+          },
+          {
+            "cuda_event_us": 63.846402168273926,
+            "host_submission_us": 14.674090000000001,
+            "host_wall_us": 64.82909
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.6889591217041,
+            "host_submission_us": 22.586669999999998,
+            "host_wall_us": 60.79375
+          },
+          {
+            "cuda_event_us": 59.66847896575928,
+            "host_submission_us": 21.29587,
+            "host_wall_us": 60.563050000000004
+          },
+          {
+            "cuda_event_us": 59.750399589538574,
+            "host_submission_us": 24.050680000000003,
+            "host_wall_us": 60.67472
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 63.84607791900635,
+            "host_submission_us": 15.38345,
+            "host_wall_us": 65.13504
+          },
+          {
+            "cuda_event_us": 59.832000732421875,
+            "host_submission_us": 12.93771,
+            "host_wall_us": 60.926610000000004
+          },
+          {
+            "cuda_event_us": 59.58399772644043,
+            "host_submission_us": 11.566410000000001,
+            "host_wall_us": 60.49425
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 67.10368156433105,
+            "host_submission_us": 12.453510000000001,
+            "host_wall_us": 68.12036
+          },
+          {
+            "cuda_event_us": 61.69407844543457,
+            "host_submission_us": 14.61346,
+            "host_wall_us": 63.17523
+          },
+          {
+            "cuda_event_us": 65.93535900115967,
+            "host_submission_us": 18.12727,
+            "host_wall_us": 67.10181
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 67.10368156433105,
+        "mean_us": 61.684351444244385,
+        "median_us": 59.98064041137695,
+        "minimum_us": 59.58399772644043,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 2.496692052181628
+      }
+    },
+    "candidate-09991c7d870c92ae572f": {
+      "comparison_to_baseline": {
+        "latency_reduction_percent": 0.6881780980423358,
+        "paired_round_count": 10,
+        "paired_round_speedups": [
+          1.0201037636500174,
+          0.9625102050792071,
+          1.0232184759887388,
+          1.0230068526625558,
+          0.9929281267188363,
+          0.9964483375217169,
+          1.004101193324715,
+          1.0269728394119808,
+          1.063705540875919,
+          1.0122111832732816
+        ],
+        "paired_speedup_mean": 1.0125206518506968,
+        "paired_speedup_median": 1.0161574734616496,
+        "paired_speedup_sample_standard_deviation": 0.02650970512228431,
+        "speedup_baseline_over_candidate": 1.0069294680619365
+      },
+      "implementation": "Triton fc1_kernel",
+      "per_round_median_us": [
+        63.160319328308105,
+        62.8223991394043,
+        59.0012788772583,
+        58.6956787109375,
+        60.81535816192627,
+        60.09632110595703,
+        59.92447853088379,
+        58.99871826171875,
+        58.93119812011719,
+        60.45599937438965
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 67.10271835327148,
+            "host_submission_us": 22.71868,
+            "host_wall_us": 68.37264
+          },
+          {
+            "cuda_event_us": 62.80191898345947,
+            "host_submission_us": 38.42795,
+            "host_wall_us": 64.19306
+          },
+          {
+            "cuda_event_us": 63.160319328308105,
+            "host_submission_us": 43.75703000000001,
+            "host_wall_us": 64.5087
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 62.8223991394043,
+            "host_submission_us": 12.0715,
+            "host_wall_us": 63.83839
+          },
+          {
+            "cuda_event_us": 60.098562240600586,
+            "host_submission_us": 11.39482,
+            "host_wall_us": 60.97846
+          },
+          {
+            "cuda_event_us": 63.240318298339844,
+            "host_submission_us": 11.6576,
+            "host_wall_us": 64.13001
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 58.68544101715088,
+            "host_submission_us": 24.92376,
+            "host_wall_us": 59.71852
+          },
+          {
+            "cuda_event_us": 59.0012788772583,
+            "host_submission_us": 14.913620000000002,
+            "host_wall_us": 59.92411
+          },
+          {
+            "cuda_event_us": 60.159358978271484,
+            "host_submission_us": 25.36368,
+            "host_wall_us": 61.100609999999996
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 58.6956787109375,
+            "host_submission_us": 11.51668,
+            "host_wall_us": 59.55742
+          },
+          {
+            "cuda_event_us": 65.87615966796875,
+            "host_submission_us": 12.25963,
+            "host_wall_us": 66.73543
+          },
+          {
+            "cuda_event_us": 58.5584020614624,
+            "host_submission_us": 11.35346,
+            "host_wall_us": 59.37554
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.81535816192627,
+            "host_submission_us": 24.943730000000002,
+            "host_wall_us": 61.77497
+          },
+          {
+            "cuda_event_us": 63.457279205322266,
+            "host_submission_us": 20.19522,
+            "host_wall_us": 64.44242
+          },
+          {
+            "cuda_event_us": 58.59327793121338,
+            "host_submission_us": 12.663530000000002,
+            "host_wall_us": 59.66737
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 58.787841796875,
+            "host_submission_us": 25.48978,
+            "host_wall_us": 59.73143
+          },
+          {
+            "cuda_event_us": 60.09632110595703,
+            "host_submission_us": 26.855639999999998,
+            "host_wall_us": 61.02295
+          },
+          {
+            "cuda_event_us": 61.45023822784424,
+            "host_submission_us": 23.09953,
+            "host_wall_us": 62.44378
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 58.42751979827881,
+            "host_submission_us": 12.36171,
+            "host_wall_us": 59.20991
+          },
+          {
+            "cuda_event_us": 59.92447853088379,
+            "host_submission_us": 12.39213,
+            "host_wall_us": 60.82158999999999
+          },
+          {
+            "cuda_event_us": 61.55263900756836,
+            "host_submission_us": 24.87303,
+            "host_wall_us": 62.498149999999995
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 58.99871826171875,
+            "host_submission_us": 12.12767,
+            "host_wall_us": 60.19625
+          },
+          {
+            "cuda_event_us": 63.62080097198486,
+            "host_submission_us": 12.44685,
+            "host_wall_us": 64.7166
+          },
+          {
+            "cuda_event_us": 58.83584022521973,
+            "host_submission_us": 12.66272,
+            "host_wall_us": 59.76835
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.08063888549805,
+            "host_submission_us": 41.94361,
+            "host_wall_us": 60.173559999999995
+          },
+          {
+            "cuda_event_us": 58.675198554992676,
+            "host_submission_us": 24.2371,
+            "host_wall_us": 59.67535
+          },
+          {
+            "cuda_event_us": 58.93119812011719,
+            "host_submission_us": 14.861110000000002,
+            "host_wall_us": 60.23873
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.88479995727539,
+            "host_submission_us": 26.11904,
+            "host_wall_us": 61.90833
+          },
+          {
+            "cuda_event_us": 60.35359859466553,
+            "host_submission_us": 24.91731,
+            "host_wall_us": 61.39558
+          },
+          {
+            "cuda_event_us": 60.45599937438965,
+            "host_submission_us": 19.48263,
+            "host_wall_us": 61.583909999999996
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 67.10271835327148,
+        "mean_us": 60.77147674560547,
+        "median_us": 60.128960609436035,
+        "minimum_us": 58.42751979827881,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 2.2996287866163865
+      }
+    },
+    "candidate-2c7ad186cbae1bfb44ed": {
+      "comparison_to_baseline": {
+        "latency_reduction_percent": -1.2116584036316658,
+        "paired_round_count": 10,
+        "paired_round_speedups": [
+          1.0003179674484248,
+          0.9410733552985795,
+          1.0079714141772484,
+          1.0032668417947967,
+          1.0092742336545488,
+          0.9985272967714071,
+          0.9634613348062219,
+          1.0010150643906115,
+          1.011483638444702,
+          0.990387806187353
+        ],
+        "paired_speedup_mean": 0.9926778952973894,
+        "paired_speedup_median": 1.000666515919518,
+        "paired_speedup_sample_standard_deviation": 0.022752501649910325,
+        "speedup_baseline_over_candidate": 0.9880284700128164
+      },
+      "implementation": "Triton fc1_kernel",
+      "per_round_median_us": [
+        64.40959930419922,
+        64.25343990325928,
+        59.893760681152344,
+        59.85055923461914,
+        59.83039855957031,
+        59.97119903564453,
+        62.45215892791748,
+        60.52864074707031,
+        61.97375774383545,
+        61.78815841674805
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 64.40959930419922,
+            "host_submission_us": 12.28576,
+            "host_wall_us": 65.78411
+          },
+          {
+            "cuda_event_us": 64.13311958312988,
+            "host_submission_us": 12.73901,
+            "host_wall_us": 65.4809
+          },
+          {
+            "cuda_event_us": 66.77311897277832,
+            "host_submission_us": 37.175,
+            "host_wall_us": 68.24117
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 64.26623821258545,
+            "host_submission_us": 22.421640000000004,
+            "host_wall_us": 65.26838
+          },
+          {
+            "cuda_event_us": 64.25343990325928,
+            "host_submission_us": 27.000790000000002,
+            "host_wall_us": 65.19274
+          },
+          {
+            "cuda_event_us": 64.23359870910645,
+            "host_submission_us": 18.798189999999998,
+            "host_wall_us": 65.25479
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 62.58528232574463,
+            "host_submission_us": 22.149070000000002,
+            "host_wall_us": 63.59558
+          },
+          {
+            "cuda_event_us": 59.83039855957031,
+            "host_submission_us": 11.772,
+            "host_wall_us": 60.69878
+          },
+          {
+            "cuda_event_us": 59.893760681152344,
+            "host_submission_us": 15.527349999999998,
+            "host_wall_us": 60.87834
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 66.88735961914062,
+            "host_submission_us": 12.22916,
+            "host_wall_us": 67.80087999999999
+          },
+          {
+            "cuda_event_us": 59.85055923461914,
+            "host_submission_us": 12.12818,
+            "host_wall_us": 60.752179999999996
+          },
+          {
+            "cuda_event_us": 59.75935935974121,
+            "host_submission_us": 11.46352,
+            "host_wall_us": 60.63729
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.79135990142822,
+            "host_submission_us": 15.12419,
+            "host_wall_us": 60.724759999999996
+          },
+          {
+            "cuda_event_us": 59.83039855957031,
+            "host_submission_us": 11.77109,
+            "host_wall_us": 60.63962000000001
+          },
+          {
+            "cuda_event_us": 65.8028793334961,
+            "host_submission_us": 12.36231,
+            "host_wall_us": 66.60731
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.97119903564453,
+            "host_submission_us": 11.99957,
+            "host_wall_us": 60.869620000000005
+          },
+          {
+            "cuda_event_us": 60.11903762817383,
+            "host_submission_us": 12.589390000000002,
+            "host_wall_us": 61.022740000000006
+          },
+          {
+            "cuda_event_us": 59.64767932891846,
+            "host_submission_us": 11.28829,
+            "host_wall_us": 60.44139
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 62.45215892791748,
+            "host_submission_us": 40.82814,
+            "host_wall_us": 63.55795
+          },
+          {
+            "cuda_event_us": 65.06495952606201,
+            "host_submission_us": 37.09553,
+            "host_wall_us": 66.17475999999999
+          },
+          {
+            "cuda_event_us": 60.25216102600098,
+            "host_submission_us": 44.84207000000001,
+            "host_wall_us": 61.38438
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 63.168959617614746,
+            "host_submission_us": 12.60029,
+            "host_wall_us": 64.42226
+          },
+          {
+            "cuda_event_us": 60.303359031677246,
+            "host_submission_us": 13.05453,
+            "host_wall_us": 61.63557
+          },
+          {
+            "cuda_event_us": 60.52864074707031,
+            "host_submission_us": 13.24145,
+            "host_wall_us": 61.99024
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 64.28639888763428,
+            "host_submission_us": 15.42067,
+            "host_wall_us": 65.26093
+          },
+          {
+            "cuda_event_us": 61.97375774383545,
+            "host_submission_us": 28.70891,
+            "host_wall_us": 63.05366
+          },
+          {
+            "cuda_event_us": 61.972479820251465,
+            "host_submission_us": 25.272289999999998,
+            "host_wall_us": 62.95875
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 61.7471981048584,
+            "host_submission_us": 24.5364,
+            "host_wall_us": 62.80017
+          },
+          {
+            "cuda_event_us": 69.33407783508301,
+            "host_submission_us": 25.694960000000002,
+            "host_wall_us": 70.28475
+          },
+          {
+            "cuda_event_us": 61.78815841674805,
+            "host_submission_us": 12.86397,
+            "host_wall_us": 62.751329999999996
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 69.33407783508301,
+        "mean_us": 62.497023264567055,
+        "median_us": 61.97311878204346,
+        "minimum_us": 59.64767932891846,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 2.6219771911713368
+      }
+    },
+    "candidate-8ac12f04c00378f1a984": {
+      "comparison_to_baseline": {
+        "latency_reduction_percent": 1.0967424148147997,
+        "paired_round_count": 10,
+        "paired_round_speedups": [
+          1.0106260346937577,
+          1.0115523445545533,
+          1.0107363148429158,
+          1.0015158050050754,
+          1.0117146349970816,
+          1.0032918848507388,
+          1.0079658819591832,
+          1.0140531549769456,
+          1.027290689782763,
+          0.9646780537009766
+        ],
+        "paired_speedup_mean": 1.0063424799363991,
+        "paired_speedup_median": 1.0106811747683366,
+        "paired_speedup_sample_standard_deviation": 0.016203916330979968,
+        "speedup_baseline_over_candidate": 1.0110890423793188
+      },
+      "implementation": "Triton fc1_kernel",
+      "per_round_median_us": [
+        63.752641677856445,
+        59.77663993835449,
+        59.72991943359375,
+        59.955201148986816,
+        59.686079025268555,
+        59.68639850616455,
+        59.694719314575195,
+        59.750399589538574,
+        61.02015972137451,
+        63.434882164001465
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 63.752641677856445,
+            "host_submission_us": 48.104440000000004,
+            "host_wall_us": 64.97608
+          },
+          {
+            "cuda_event_us": 70.93247890472412,
+            "host_submission_us": 43.8786,
+            "host_wall_us": 72.3447
+          },
+          {
+            "cuda_event_us": 63.72032165527344,
+            "host_submission_us": 34.27351,
+            "host_wall_us": 64.8571
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.77663993835449,
+            "host_submission_us": 14.84184,
+            "host_wall_us": 60.71567
+          },
+          {
+            "cuda_event_us": 63.02720069885254,
+            "host_submission_us": 13.28099,
+            "host_wall_us": 64.91028
+          },
+          {
+            "cuda_event_us": 59.738240242004395,
+            "host_submission_us": 13.0635,
+            "host_wall_us": 60.582209999999996
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.736318588256836,
+            "host_submission_us": 23.89493,
+            "host_wall_us": 60.718090000000004
+          },
+          {
+            "cuda_event_us": 59.72991943359375,
+            "host_submission_us": 23.749270000000003,
+            "host_wall_us": 60.64144
+          },
+          {
+            "cuda_event_us": 59.67616081237793,
+            "host_submission_us": 25.425819999999998,
+            "host_wall_us": 60.62236
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.22143840789795,
+            "host_submission_us": 21.363249999999997,
+            "host_wall_us": 61.2728
+          },
+          {
+            "cuda_event_us": 59.955201148986816,
+            "host_submission_us": 24.324659999999998,
+            "host_wall_us": 61.00104999999999
+          },
+          {
+            "cuda_event_us": 59.66847896575928,
+            "host_submission_us": 25.1815,
+            "host_wall_us": 60.61481
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.656639099121094,
+            "host_submission_us": 25.910839999999997,
+            "host_wall_us": 60.6145
+          },
+          {
+            "cuda_event_us": 59.810237884521484,
+            "host_submission_us": 12.718409999999999,
+            "host_wall_us": 60.70609
+          },
+          {
+            "cuda_event_us": 59.686079025268555,
+            "host_submission_us": 24.68238,
+            "host_wall_us": 60.634269999999994
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.74751949310303,
+            "host_submission_us": 25.54092,
+            "host_wall_us": 60.689049999999995
+          },
+          {
+            "cuda_event_us": 59.658241271972656,
+            "host_submission_us": 12.23844,
+            "host_wall_us": 60.59915
+          },
+          {
+            "cuda_event_us": 59.68639850616455,
+            "host_submission_us": 13.47528,
+            "host_wall_us": 60.668260000000004
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.6889591217041,
+            "host_submission_us": 23.70963,
+            "host_wall_us": 60.61581
+          },
+          {
+            "cuda_event_us": 59.94495868682861,
+            "host_submission_us": 21.650940000000002,
+            "host_wall_us": 61.010529999999996
+          },
+          {
+            "cuda_event_us": 59.694719314575195,
+            "host_submission_us": 24.78516,
+            "host_wall_us": 60.74907
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.7708797454834,
+            "host_submission_us": 19.91216,
+            "host_wall_us": 60.69438
+          },
+          {
+            "cuda_event_us": 59.70592021942139,
+            "host_submission_us": 24.64393,
+            "host_wall_us": 60.62166
+          },
+          {
+            "cuda_event_us": 59.750399589538574,
+            "host_submission_us": 23.152289999999997,
+            "host_wall_us": 60.680780000000006
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 61.02015972137451,
+            "host_submission_us": 11.72498,
+            "host_wall_us": 62.076989999999995
+          },
+          {
+            "cuda_event_us": 60.67200183868408,
+            "host_submission_us": 28.523809999999997,
+            "host_wall_us": 62.655
+          },
+          {
+            "cuda_event_us": 62.84287929534912,
+            "host_submission_us": 17.92803,
+            "host_wall_us": 64.39048
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 61.213440895080566,
+            "host_submission_us": 12.527550000000002,
+            "host_wall_us": 62.18925
+          },
+          {
+            "cuda_event_us": 65.76191902160645,
+            "host_submission_us": 11.90744,
+            "host_wall_us": 66.74567
+          },
+          {
+            "cuda_event_us": 63.434882164001465,
+            "host_submission_us": 28.07293,
+            "host_wall_us": 64.62695
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 70.93247890472412,
+        "mean_us": 61.056042512257896,
+        "median_us": 59.773759841918945,
+        "minimum_us": 59.656639099121094,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 2.49583455235462
+      }
+    },
+    "candidate-8e3ff66de13a408caa23": {
+      "comparison_to_baseline": {
+        "latency_reduction_percent": 0.6542852793663956,
+        "paired_round_count": 10,
+        "paired_round_speedups": [
+          0.9480186733192781,
+          1.0151281084913182,
+          1.0096977013686008,
+          1.0051208372643956,
+          1.0090691602654174,
+          1.003593191835272,
+          0.9796751748353274,
+          1.0061588191258735,
+          0.9376501845544837,
+          0.990387806187353
+        ],
+        "paired_speedup_mean": 0.9904499657247319,
+        "paired_speedup_median": 1.004357014549834,
+        "paired_speedup_sample_standard_deviation": 0.027213638027067978,
+        "speedup_baseline_over_candidate": 1.006585943653496
+      },
+      "implementation": "Triton fc1_kernel",
+      "per_round_median_us": [
+        67.96288013458252,
+        59.566078186035156,
+        59.79135990142822,
+        59.74016189575195,
+        59.84255790710449,
+        59.66847896575928,
+        61.418561935424805,
+        60.21920204162598,
+        66.85376167297363,
+        61.78815841674805
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 68.97664070129395,
+            "host_submission_us": 39.11585,
+            "host_wall_us": 70.12214
+          },
+          {
+            "cuda_event_us": 63.51871967315674,
+            "host_submission_us": 12.308510000000002,
+            "host_wall_us": 64.73077
+          },
+          {
+            "cuda_event_us": 67.96288013458252,
+            "host_submission_us": 11.11664,
+            "host_wall_us": 69.03893
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.566078186035156,
+            "host_submission_us": 12.02852,
+            "host_wall_us": 60.374309999999994
+          },
+          {
+            "cuda_event_us": 59.51136112213135,
+            "host_submission_us": 11.95206,
+            "host_wall_us": 60.321450000000006
+          },
+          {
+            "cuda_event_us": 59.67872142791748,
+            "host_submission_us": 23.34516,
+            "host_wall_us": 60.63568
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 65.33120155334473,
+            "host_submission_us": 25.50633,
+            "host_wall_us": 67.57049
+          },
+          {
+            "cuda_event_us": 59.759039878845215,
+            "host_submission_us": 23.18265,
+            "host_wall_us": 60.78387
+          },
+          {
+            "cuda_event_us": 59.79135990142822,
+            "host_submission_us": 24.656640000000003,
+            "host_wall_us": 60.73191
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.66847896575928,
+            "host_submission_us": 12.50072,
+            "host_wall_us": 60.61994
+          },
+          {
+            "cuda_event_us": 59.74016189575195,
+            "host_submission_us": 12.800830000000001,
+            "host_wall_us": 60.84055
+          },
+          {
+            "cuda_event_us": 60.22047996520996,
+            "host_submission_us": 24.019920000000003,
+            "host_wall_us": 61.387010000000004
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.84255790710449,
+            "host_submission_us": 23.284740000000003,
+            "host_wall_us": 60.80213
+          },
+          {
+            "cuda_event_us": 59.852800369262695,
+            "host_submission_us": 24.54589,
+            "host_wall_us": 60.73524999999999
+          },
+          {
+            "cuda_event_us": 59.706878662109375,
+            "host_submission_us": 15.26174,
+            "host_wall_us": 60.59735
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 66.09632015228271,
+            "host_submission_us": 12.44433,
+            "host_wall_us": 67.07185
+          },
+          {
+            "cuda_event_us": 59.66847896575928,
+            "host_submission_us": 12.22633,
+            "host_wall_us": 60.62902
+          },
+          {
+            "cuda_event_us": 59.58655834197998,
+            "host_submission_us": 11.288900000000002,
+            "host_wall_us": 60.41799
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 61.418561935424805,
+            "host_submission_us": 23.66817,
+            "host_wall_us": 62.49079
+          },
+          {
+            "cuda_event_us": 62.074880599975586,
+            "host_submission_us": 30.12411,
+            "host_wall_us": 63.024229999999996
+          },
+          {
+            "cuda_event_us": 59.64799880981445,
+            "host_submission_us": 11.599290000000002,
+            "host_wall_us": 61.632799999999996
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 59.69503879547119,
+            "host_submission_us": 23.65031,
+            "host_wall_us": 60.63527
+          },
+          {
+            "cuda_event_us": 64.15200233459473,
+            "host_submission_us": 24.06158,
+            "host_wall_us": 65.27203
+          },
+          {
+            "cuda_event_us": 60.21920204162598,
+            "host_submission_us": 14.171520000000001,
+            "host_wall_us": 61.83933
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 68.68576049804688,
+            "host_submission_us": 24.25819,
+            "host_wall_us": 69.97425
+          },
+          {
+            "cuda_event_us": 66.85376167297363,
+            "host_submission_us": 12.20203,
+            "host_wall_us": 68.16616
+          },
+          {
+            "cuda_event_us": 63.71327877044678,
+            "host_submission_us": 15.02825,
+            "host_wall_us": 65.59985999999999
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 64.04096126556396,
+            "host_submission_us": 25.32072,
+            "host_wall_us": 65.74494
+          },
+          {
+            "cuda_event_us": 60.97023963928223,
+            "host_submission_us": 19.46912,
+            "host_wall_us": 63.501760000000004
+          },
+          {
+            "cuda_event_us": 61.78815841674805,
+            "host_submission_us": 11.931880000000001,
+            "host_wall_us": 62.67741
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 68.97664070129395,
+        "mean_us": 62.057952086130776,
+        "median_us": 60.21984100341797,
+        "minimum_us": 59.51136112213135,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 3.0887256825273037
+      }
+    },
+    "pytorch_cublas": {
+      "comparison_to_baseline": null,
+      "implementation": "PyTorch torch.matmul(..., out=...) / cuBLAS",
+      "per_round_median_us": [
+        64.43007946014404,
+        60.46720027923584,
+        60.371198654174805,
+        60.04608154296875,
+        60.38527965545654,
+        59.88287925720215,
+        60.17024040222168,
+        60.590081214904785,
+        62.685441970825195,
+        61.19423866271973
+      ],
+      "raw_rounds": [
+        [
+          {
+            "cuda_event_us": 65.91487884521484,
+            "host_submission_us": 26.19469,
+            "host_wall_us": 67.85737
+          },
+          {
+            "cuda_event_us": 64.43007946014404,
+            "host_submission_us": 8.82147,
+            "host_wall_us": 65.69333999999999
+          },
+          {
+            "cuda_event_us": 64.41984176635742,
+            "host_submission_us": 8.79366,
+            "host_wall_us": 65.52866
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.46720027923584,
+            "host_submission_us": 17.46693,
+            "host_wall_us": 61.40945
+          },
+          {
+            "cuda_event_us": 62.20799922943115,
+            "host_submission_us": 11.411859999999999,
+            "host_wall_us": 64.56463
+          },
+          {
+            "cuda_event_us": 59.92447853088379,
+            "host_submission_us": 10.55532,
+            "host_wall_us": 60.85659
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.371198654174805,
+            "host_submission_us": 9.12118,
+            "host_wall_us": 61.16407
+          },
+          {
+            "cuda_event_us": 59.89408016204834,
+            "host_submission_us": 10.73701,
+            "host_wall_us": 60.72808
+          },
+          {
+            "cuda_event_us": 61.57951831817627,
+            "host_submission_us": 15.925640000000001,
+            "host_wall_us": 62.50742
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 65.25951862335205,
+            "host_submission_us": 18.83652,
+            "host_wall_us": 66.42267
+          },
+          {
+            "cuda_event_us": 60.04608154296875,
+            "host_submission_us": 21.29743,
+            "host_wall_us": 61.18772
+          },
+          {
+            "cuda_event_us": 59.73663806915283,
+            "host_submission_us": 19.13461,
+            "host_wall_us": 60.757740000000005
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.4531192779541,
+            "host_submission_us": 9.48625,
+            "host_wall_us": 61.329809999999995
+          },
+          {
+            "cuda_event_us": 60.38527965545654,
+            "host_submission_us": 18.26113,
+            "host_wall_us": 61.43996
+          },
+          {
+            "cuda_event_us": 59.90272045135498,
+            "host_submission_us": 18.1085,
+            "host_wall_us": 60.78265999999999
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.46720027923584,
+            "host_submission_us": 9.02576,
+            "host_wall_us": 61.26948
+          },
+          {
+            "cuda_event_us": 59.88287925720215,
+            "host_submission_us": 8.50534,
+            "host_wall_us": 60.71134
+          },
+          {
+            "cuda_event_us": 59.709439277648926,
+            "host_submission_us": 8.42787,
+            "host_wall_us": 60.54984
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.85472106933594,
+            "host_submission_us": 24.34625,
+            "host_wall_us": 62.01021
+          },
+          {
+            "cuda_event_us": 60.17024040222168,
+            "host_submission_us": 23.132310000000004,
+            "host_wall_us": 61.28008
+          },
+          {
+            "cuda_event_us": 59.801602363586426,
+            "host_submission_us": 24.43865,
+            "host_wall_us": 60.87405
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 60.590081214904785,
+            "host_submission_us": 16.32572,
+            "host_wall_us": 61.57564
+          },
+          {
+            "cuda_event_us": 59.903998374938965,
+            "host_submission_us": 15.06589,
+            "host_wall_us": 60.84097
+          },
+          {
+            "cuda_event_us": 64.54271793365479,
+            "host_submission_us": 16.26379,
+            "host_wall_us": 65.45774
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 62.685441970825195,
+            "host_submission_us": 10.37637,
+            "host_wall_us": 63.92645
+          },
+          {
+            "cuda_event_us": 67.61727809906006,
+            "host_submission_us": 9.07155,
+            "host_wall_us": 68.81741
+          },
+          {
+            "cuda_event_us": 61.99295997619629,
+            "host_submission_us": 9.09193,
+            "host_wall_us": 63.021800000000006
+          }
+        ],
+        [
+          {
+            "cuda_event_us": 62.47424125671387,
+            "host_submission_us": 10.11683,
+            "host_wall_us": 63.26077
+          },
+          {
+            "cuda_event_us": 61.19423866271973,
+            "host_submission_us": 9.25323,
+            "host_wall_us": 62.04562
+          },
+          {
+            "cuda_event_us": 60.13951778411865,
+            "host_submission_us": 18.36361,
+            "host_wall_us": 61.8013
+          }
+        ]
+      ],
+      "status": "completed",
+      "summary": {
+        "maximum_us": 67.61727809906006,
+        "mean_us": 61.56730635960897,
+        "median_us": 60.46720027923584,
+        "minimum_us": 59.709439277648926,
+        "observation_count": 30,
+        "sample_standard_deviation_us": 2.158992816567721
+      }
+    }
+  },
+  "round_execution_order": [
+    [
+      "candidate-2c7ad186cbae1bfb44ed",
+      "pytorch_cublas",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8e3ff66de13a408caa23"
+    ],
+    [
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8e3ff66de13a408caa23",
+      "pytorch_cublas",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-8ac12f04c00378f1a984"
+    ],
+    [
+      "candidate-09991c7d870c92ae572f",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "pytorch_cublas",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-8ac12f04c00378f1a984"
+    ],
+    [
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8e3ff66de13a408caa23",
+      "pytorch_cublas",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-086fcf07d56d98d3387d"
+    ],
+    [
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "pytorch_cublas",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-086fcf07d56d98d3387d"
+    ],
+    [
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-086fcf07d56d98d3387d",
+      "pytorch_cublas",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8ac12f04c00378f1a984"
+    ],
+    [
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-8e3ff66de13a408caa23",
+      "pytorch_cublas",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-086fcf07d56d98d3387d"
+    ],
+    [
+      "candidate-086fcf07d56d98d3387d",
+      "pytorch_cublas",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-09991c7d870c92ae572f"
+    ],
+    [
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8e3ff66de13a408caa23",
+      "pytorch_cublas",
+      "candidate-2c7ad186cbae1bfb44ed"
+    ],
+    [
+      "candidate-2c7ad186cbae1bfb44ed",
+      "pytorch_cublas",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-8ac12f04c00378f1a984"
+    ]
+  ],
+  "sampling": {
+    "samplers": [
+      "hardware_search_winner"
+    ],
+    "search_space_ids": [
+      "fc1-adaptive-search-sm89-v1"
+    ],
+    "seeds": [
+      0
+    ]
+  },
+  "schema_version": 1,
+  "workload": {
+    "k": 768,
+    "m": 512,
+    "n": 3072,
+    "precision": "fp16"
+  }
+}

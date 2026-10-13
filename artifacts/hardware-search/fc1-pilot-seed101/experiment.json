@@ -1,0 +1,1930 @@
+{
+  "accounting": {
+    "completed_logical_evaluations": 32,
+    "completed_physical_evaluations": 27,
+    "maximum_physical_evaluations": 27,
+    "physical_savings_from_shared_initial": 5,
+    "planned_logical_evaluations": 32
+  },
+  "artifacts": {
+    "evaluations": "evaluations.jsonl",
+    "manifest": "experiment.json",
+    "progress": "progress.json",
+    "report": "report.md"
+  },
+  "config": {
+    "adaptive_batch_size": 2,
+    "epsilon": 0.25,
+    "latency_threshold_us": 62.0,
+    "per_arm_budget": 16,
+    "prior_strength": 2.0,
+    "shared_initial_size": 5,
+    "trial_seeds": [
+      101
+    ]
+  },
+  "created_at": "2026-10-13T15:07:54.626840Z",
+  "dependency_check": {
+    "cuda_queried": false,
+    "method": "importlib.util.find_spec only; modules were not imported",
+    "modules": {
+      "torch": true,
+      "triton": true
+    },
+    "note": "GPU availability and compute capability are checked only with --execute",
+    "ready_for_execution_check": true
+  },
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592,
+      "type": "cuda"
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "nvidia_driver": "616.92",
+      "python": "3.13.11",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "experiment_id": "hardware-search-a105ae40b2ec7e343f8a",
+  "extensions": {
+    "search_wall_clock_seconds": 14.67332343399903
+  },
+  "limitations": [
+    "dry-run does not query CUDA or execute kernels",
+    "future adaptive choices depend on eligible hardware feedback",
+    "search is exploratory; winners require separate controlled confirmation"
+  ],
+  "mode": "hardware",
+  "schema_version": 1,
+  "search_space": {
+    "context": {
+      "backend": "triton",
+      "hardware_target": "sm_89",
+      "k": 768,
+      "m": 512,
+      "n": 3072,
+      "precision": "fp16"
+    },
+    "identifier": "fc1-adaptive-search-sm89-v1",
+    "valid_candidate_count": 48,
+    "valid_candidate_ids": [
+      "candidate-e8f2fdea8f8189116c45",
+      "candidate-a627ba964d1206eb359a",
+      "candidate-a795f7ef04a2c90c3826",
+      "candidate-1d951974e60ff4037bf5",
+      "candidate-084083656bf066c23ad9",
+      "candidate-0535735459fd8b5821c6",
+      "candidate-585a8c91e60d4610979a",
+      "candidate-17454abcd03ce8f29999",
+      "candidate-6e387e18038e4472cef1",
+      "candidate-993684570927501be3ef",
+      "candidate-f015d61b7d16f512a779",
+      "candidate-c492179538342e71ca24",
+      "candidate-45241b54c1d8cc52f6d5",
+      "candidate-7efac8113b1b3d4f6caf",
+      "candidate-1288fe6f91f6308f8fec",
+      "candidate-622d92726c8d4bdbc58c",
+      "candidate-7cabc6acc608901d2991",
+      "candidate-c6cbaa4a9d5be456353f",
+      "candidate-d4bfde46a0bec7c9c97f",
+      "candidate-71dd4efa78e4b5379218",
+      "candidate-611bddc35a6ec95764ab",
+      "candidate-abc287f0c0ada2f983b3",
+      "candidate-85679cd0ed660b1e1a59",
+      "candidate-5932dea01c94158e9e5f",
+      "candidate-086fcf07d56d98d3387d",
+      "candidate-8e3ff66de13a408caa23",
+      "candidate-5765b325cda3aeda12b3",
+      "candidate-e2662a6493285ee0ef94",
+      "candidate-0347d48736efa762e80f",
+      "candidate-98972ded5e93860e6011",
+      "candidate-0544521d5bf4f6d48428",
+      "candidate-f9ccdaf188f59c83f614",
+      "candidate-2c7ad186cbae1bfb44ed",
+      "candidate-8ac12f04c00378f1a984",
+      "candidate-6d1a25ab56974e4dca23",
+      "candidate-09991c7d870c92ae572f",
+      "candidate-12dad861929b62c401f7",
+      "candidate-55adf428b0102942a9e0",
+      "candidate-7950dd6dcadf9d1dd1c3",
+      "candidate-67f701865d1d25a71a67",
+      "candidate-eaba766870d111919890",
+      "candidate-7d6d68d52ef2b8ee179d",
+      "candidate-ae4a5e51d3d6ac774981",
+      "candidate-ab556a9485d834b5f718",
+      "candidate-69e3321abc0db9b52859",
+      "candidate-ea2b62f8f702c2ace1af",
+      "candidate-2e0df1cff423be771221",
+      "candidate-2c67aa9d2806b906f9d1"
+    ],
+    "values": {
+      "block_k": [
+        32,
+        64
+      ],
+      "block_m": [
+        32,
+        64,
+        128
+      ],
+      "block_n": [
+        64,
+        128
+      ],
+      "num_stages": [
+        2,
+        3
+      ],
+      "num_warps": [
+        4,
+        8
+      ]
+    }
+  },
+  "status": "completed",
+  "trial_plans": [
+    {
+      "adaptive_rebuild_after_logical_counts": [
+        5,
+        7,
+        9,
+        11,
+        13,
+        15
+      ],
+      "future_adaptive_decisions": [
+        {
+          "round": 1,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 2,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 3,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 4,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 5,
+          "status": "pending_hardware_feedback"
+        },
+        {
+          "round": 6,
+          "status": "pending_hardware_feedback"
+        }
+      ],
+      "logical_budget_per_arm": 16,
+      "maximum_physical_evaluations": 27,
+      "seeds": {
+        "adaptive_rounds": [
+          18389874746982838409,
+          9257634825584245323,
+          17763973814218445454,
+          17484632547961262271,
+          17672228599930588402,
+          15101181072009329608
+        ],
+        "initial": 13137204867812065081,
+        "schedule": 10534125791876913295,
+        "trial": 101,
+        "uniform": 3800216116103362379
+      },
+      "shared_initial_candidates": [
+        {
+          "candidate_id": "candidate-ae4a5e51d3d6ac774981",
+          "parameters": {
+            "block_k": 32,
+            "block_m": 128,
+            "block_n": 128,
+            "num_stages": 2,
+            "num_warps": 8
+          }
+        },
+        {
+          "candidate_id": "candidate-85679cd0ed660b1e1a59",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 64,
+            "block_n": 64,
+            "num_stages": 2,
+            "num_warps": 8
+          }
+        },
+        {
+          "candidate_id": "candidate-084083656bf066c23ad9",
+          "parameters": {
+            "block_k": 64,
+            "block_m": 32,
+            "block_n": 64,
+            "num_stages": 2,
+            "num_warps": 4
+          }
+        },
+        {
+          "candidate_id": "candidate-1d951974e60ff4037bf5",
+          "parameters": {
+            "block_k": 32,
+            "block_m": 32,
+            "block_n": 64,
+            "num_stages": 3,
+            "num_warps": 8
+          }
+        },
+        {
+          "candidate_id": "candidate-f015d61b7d16f512a779",
+          "parameters": {
+            "block_k": 32,
+            "block_m": 32,
+            "block_n": 128,
+            "num_stages": 2,
+            "num_warps": 8
+          }
+        }
+      ],
+      "shared_logical_evaluations_per_arm": 5,
+      "shared_physical_evaluations": 5,
+      "trial_id": "trial-0-86c33b835465265d",
+      "trial_index": 0
+    }
+  ],
+  "trials": [
+    {
+      "adaptive_rebuilds": [
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-1d951974e60ff4037bf5": 0.29099705221969563,
+              "candidate-85679cd0ed660b1e1a59": 1.0,
+              "candidate-ae4a5e51d3d6ac774981": 0.9792018385185368,
+              "candidate-f015d61b7d16f512a779": 0.776180075643404
+            },
+            "eligible_candidate_count": 5,
+            "eligible_evaluation_count": 5,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 5,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.6092757932763273,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.6597339461728456,
+                "32": 0.4134354255726199,
+                "64": 0.6666666666666666
+              },
+              "block_n": {
+                "128": 0.6888454785404852,
+                "64": 0.45819941044393914
+              },
+              "num_stages": {
+                "2": 0.6258969856936568,
+                "3": 0.43033235073989856
+              },
+              "num_warps": {
+                "4": 0.3333333333333333,
+                "8": 0.6743964943969395
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-1",
+            "unique_evaluation_count": 5
+          },
+          "eligible_feedback_count": 5,
+          "feedback_digest": "f0d159ad24f440c5bba6ad8f4caa24de03efdfe3ca76d740b413a7e9e1a33c52",
+          "proposal_seed": 18389874746982838409,
+          "round": 1,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-1"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-45241b54c1d8cc52f6d5": 70.64156723022461,
+              "candidate-67f701865d1d25a71a67": 61.54240036010742,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-1d951974e60ff4037bf5": 0.2542998234029004,
+              "candidate-45241b54c1d8cc52f6d5": 0.5858870931339631,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-85679cd0ed660b1e1a59": 0.8738914070198562,
+              "candidate-ae4a5e51d3d6ac774981": 0.8557160724193942,
+              "candidate-f015d61b7d16f512a779": 0.6782970984047928
+            },
+            "eligible_candidate_count": 7,
+            "eligible_evaluation_count": 7,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 7,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5576625988454176,
+                "64": 0.5766297500256365
+              },
+              "block_m": {
+                "128": 0.7139290181048485,
+                "32": 0.4197473358236094,
+                "64": 0.6246304690066188
+              },
+              "block_n": {
+                "128": 0.6239800527916299,
+                "64": 0.5213652050704595
+              },
+              "num_stages": {
+                "2": 0.5705416672825724,
+                "3": 0.563574955850725
+              },
+              "num_warps": {
+                "4": 0.3964717732834908,
+                "8": 0.6660292001781348
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-2",
+            "unique_evaluation_count": 7
+          },
+          "eligible_feedback_count": 7,
+          "feedback_digest": "3804f2c805c2538caba10c53caa51120ed80097252fc1f10db6ef3015062b527",
+          "proposal_seed": 9257634825584245323,
+          "round": 2,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7",
+            "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+            "evaluation-2833a0964868486b9eeb9922dc294839"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-2"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-45241b54c1d8cc52f6d5": 70.64156723022461,
+              "candidate-67f701865d1d25a71a67": 61.54240036010742,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-ab556a9485d834b5f718": 61.71958541870117,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-e8f2fdea8f8189116c45": 82.28659057617188,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-1d951974e60ff4037bf5": 0.2542998234029004,
+              "candidate-45241b54c1d8cc52f6d5": 0.5858870931339631,
+              "candidate-67f701865d1d25a71a67": 1.0,
+              "candidate-85679cd0ed660b1e1a59": 0.8738914070198562,
+              "candidate-ab556a9485d834b5f718": 0.9919361167110301,
+              "candidate-ae4a5e51d3d6ac774981": 0.8557160724193942,
+              "candidate-e8f2fdea8f8189116c45": 0.05590950978506265,
+              "candidate-f015d61b7d16f512a779": 0.6782970984047928
+            },
+            "eligible_candidate_count": 9,
+            "eligible_evaluation_count": 9,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 9,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.5480226601033115,
+                "64": 0.5766297500256365
+              },
+              "block_m": {
+                "128": 0.7695304378260849,
+                "32": 0.36777050353238844,
+                "64": 0.6246304690066188
+              },
+              "block_n": {
+                "128": 0.6853060634448633,
+                "64": 0.4548715343154028
+              },
+              "num_stages": {
+                "2": 0.5062126475953836,
+                "3": 0.6492471880227861
+              },
+              "num_warps": {
+                "4": 0.3283593205838052,
+                "8": 0.7067675647447467
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-3",
+            "unique_evaluation_count": 9
+          },
+          "eligible_feedback_count": 9,
+          "feedback_digest": "8c49d9ceffd07175375e65af95669ccfeec0594ba29f33ba9053c2bdb6121647",
+          "proposal_seed": 17763973814218445454,
+          "round": 3,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7",
+            "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+            "evaluation-2833a0964868486b9eeb9922dc294839",
+            "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+            "evaluation-a4c812a536294de88f4763420d9805cb"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-3"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-086fcf07d56d98d3387d": 60.812320709228516,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-45241b54c1d8cc52f6d5": 70.64156723022461,
+              "candidate-67f701865d1d25a71a67": 61.54240036010742,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-993684570927501be3ef": 67.4549789428711,
+              "candidate-ab556a9485d834b5f718": 61.71958541870117,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-e8f2fdea8f8189116c45": 82.28659057617188,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-086fcf07d56d98d3387d": 1.0,
+              "candidate-1d951974e60ff4037bf5": 0.24612199839029203,
+              "candidate-45241b54c1d8cc52f6d5": 0.5670460178210468,
+              "candidate-67f701865d1d25a71a67": 0.9678417983025814,
+              "candidate-85679cd0ed660b1e1a59": 0.8457886308912708,
+              "candidate-993684570927501be3ef": 0.7074073451748247,
+              "candidate-ab556a9485d834b5f718": 0.9600372349988826,
+              "candidate-ae4a5e51d3d6ac774981": 0.8281977823668084,
+              "candidate-e8f2fdea8f8189116c45": 0.054111560492590804,
+              "candidate-f015d61b7d16f512a779": 0.6564842835035176
+            },
+            "eligible_candidate_count": 11,
+            "eligible_evaluation_count": 11,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 11,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.6058178005474351,
+                "64": 0.5634460745024832
+              },
+              "block_m": {
+                "128": 0.7512153631336546,
+                "32": 0.403896400672784,
+                "64": 0.7114471577228176
+              },
+              "block_n": {
+                "128": 0.7148965829831351,
+                "64": 0.4448377125823907
+              },
+              "num_stages": {
+                "2": 0.5501809194528039,
+                "3": 0.6469013961444302
+              },
+              "num_warps": {
+                "4": 0.475509274784066,
+                "8": 0.6880589660566692
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-4",
+            "unique_evaluation_count": 11
+          },
+          "eligible_feedback_count": 11,
+          "feedback_digest": "1c78d550e9613c1a84e782677313c4033a7d9d203d1425168dac1ee6d804c97e",
+          "proposal_seed": 17484632547961262271,
+          "round": 4,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7",
+            "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+            "evaluation-2833a0964868486b9eeb9922dc294839",
+            "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+            "evaluation-a4c812a536294de88f4763420d9805cb",
+            "evaluation-319ab2b52dd0480b974112f5ad327e3d",
+            "evaluation-f66e185b3a01416eb7e777ea02ce86b4"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-4"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-086fcf07d56d98d3387d": 60.812320709228516,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-45241b54c1d8cc52f6d5": 70.64156723022461,
+              "candidate-67f701865d1d25a71a67": 61.54240036010742,
+              "candidate-7efac8113b1b3d4f6caf": 69.95455932617188,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-993684570927501be3ef": 67.4549789428711,
+              "candidate-ab556a9485d834b5f718": 61.71958541870117,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-c6cbaa4a9d5be456353f": 63.18966484069824,
+              "candidate-e8f2fdea8f8189116c45": 82.28659057617188,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-086fcf07d56d98d3387d": 1.0,
+              "candidate-1d951974e60ff4037bf5": 0.24612199839029203,
+              "candidate-45241b54c1d8cc52f6d5": 0.5670460178210468,
+              "candidate-67f701865d1d25a71a67": 0.9678417983025814,
+              "candidate-7efac8113b1b3d4f6caf": 0.5973070156719691,
+              "candidate-85679cd0ed660b1e1a59": 0.8457886308912708,
+              "candidate-993684570927501be3ef": 0.7074073451748247,
+              "candidate-ab556a9485d834b5f718": 0.9600372349988826,
+              "candidate-ae4a5e51d3d6ac774981": 0.8281977823668084,
+              "candidate-c6cbaa4a9d5be456353f": 0.8952838748594866,
+              "candidate-e8f2fdea8f8189116c45": 0.054111560492590804,
+              "candidate-f015d61b7d16f512a779": 0.6564842835035176
+            },
+            "eligible_candidate_count": 13,
+            "eligible_evaluation_count": 13,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 13,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.6347644079786403,
+                "64": 0.5682833518124097
+              },
+              "block_m": {
+                "128": 0.7512153631336546,
+                "32": 0.4253864690060268,
+                "64": 0.7482145011501514
+              },
+              "block_n": {
+                "128": 0.7018310755041166,
+                "64": 0.5011434828670277
+              },
+              "num_stages": {
+                "2": 0.5501809194528039,
+                "3": 0.6717499084247546
+              },
+              "num_warps": {
+                "4": 0.5356839793355465,
+                "8": 0.6880589660566692
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-5",
+            "unique_evaluation_count": 13
+          },
+          "eligible_feedback_count": 13,
+          "feedback_digest": "92b672909bef49609f540b87677fabb7272146ba66211f3754606e14fbf538f3",
+          "proposal_seed": 17672228599930588402,
+          "round": 5,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7",
+            "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+            "evaluation-2833a0964868486b9eeb9922dc294839",
+            "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+            "evaluation-a4c812a536294de88f4763420d9805cb",
+            "evaluation-319ab2b52dd0480b974112f5ad327e3d",
+            "evaluation-f66e185b3a01416eb7e777ea02ce86b4",
+            "evaluation-f3aad3bd9b0c4f6e9914d34ecda681ce",
+            "evaluation-4de747d2f6d5405a87e556687b783855"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-5"
+        },
+        {
+          "diagnostics": {
+            "candidate_latencies_us": {
+              "candidate-084083656bf066c23ad9": 83.51507186889648,
+              "candidate-086fcf07d56d98d3387d": 60.812320709228516,
+              "candidate-1d951974e60ff4037bf5": 77.92742538452148,
+              "candidate-45241b54c1d8cc52f6d5": 70.64156723022461,
+              "candidate-67f701865d1d25a71a67": 61.54240036010742,
+              "candidate-7efac8113b1b3d4f6caf": 69.95455932617188,
+              "candidate-85679cd0ed660b1e1a59": 64.3133430480957,
+              "candidate-993684570927501be3ef": 67.4549789428711,
+              "candidate-ab556a9485d834b5f718": 61.71958541870117,
+              "candidate-ae4a5e51d3d6ac774981": 64.71270370483398,
+              "candidate-c492179538342e71ca24": 67.99827194213867,
+              "candidate-c6cbaa4a9d5be456353f": 63.18966484069824,
+              "candidate-e8f2fdea8f8189116c45": 82.28659057617188,
+              "candidate-eaba766870d111919890": 61.280256271362305,
+              "candidate-f015d61b7d16f512a779": 68.6110725402832
+            },
+            "candidate_rewards": {
+              "candidate-084083656bf066c23ad9": 0.0,
+              "candidate-086fcf07d56d98d3387d": 1.0,
+              "candidate-1d951974e60ff4037bf5": 0.24612199839029203,
+              "candidate-45241b54c1d8cc52f6d5": 0.5670460178210468,
+              "candidate-67f701865d1d25a71a67": 0.9678417983025814,
+              "candidate-7efac8113b1b3d4f6caf": 0.5973070156719691,
+              "candidate-85679cd0ed660b1e1a59": 0.8457886308912708,
+              "candidate-993684570927501be3ef": 0.7074073451748247,
+              "candidate-ab556a9485d834b5f718": 0.9600372349988826,
+              "candidate-ae4a5e51d3d6ac774981": 0.8281977823668084,
+              "candidate-c492179538342e71ca24": 0.6834766331898935,
+              "candidate-c6cbaa4a9d5be456353f": 0.8952838748594866,
+              "candidate-e8f2fdea8f8189116c45": 0.054111560492590804,
+              "candidate-eaba766870d111919890": 0.9793885966135643,
+              "candidate-f015d61b7d16f512a779": 0.6564842835035176
+            },
+            "eligible_candidate_count": 15,
+            "eligible_evaluation_count": 15,
+            "excluded_observation_count": 0,
+            "exclusion_reasons": {},
+            "exploration_mixture": {
+              "epsilon": 0.25,
+              "minimum_candidate_probability": 0.005208333333333333
+            },
+            "failure_categories": {},
+            "input_record_count": 15,
+            "parameter_scores_after": {
+              "block_k": {
+                "32": 0.6675424424658217,
+                "64": 0.5682833518124097
+              },
+              "block_m": {
+                "128": 0.7892442353803061,
+                "32": 0.45119548542441346,
+                "64": 0.7482145011501514
+              },
+              "block_n": {
+                "128": 0.725394991758228,
+                "64": 0.5011434828670277
+              },
+              "num_stages": {
+                "2": 0.5931016871688799,
+                "3": 0.6730528778431033
+              },
+              "num_warps": {
+                "4": 0.5800544410633482,
+                "8": 0.6875498179603607
+              }
+            },
+            "parameter_scores_before": {
+              "block_k": {
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_m": {
+                "128": 0.5,
+                "32": 0.5,
+                "64": 0.5
+              },
+              "block_n": {
+                "128": 0.5,
+                "64": 0.5
+              },
+              "num_stages": {
+                "2": 0.5,
+                "3": 0.5
+              },
+              "num_warps": {
+                "4": 0.5,
+                "8": 0.5
+              }
+            },
+            "repeated_candidate_policy": "median latency per candidate; each candidate contributes once",
+            "reward_formula": "(maximum_latency - latency) / (maximum_latency - minimum_latency)",
+            "software_environment": "torch=2.11.0+cu128; triton=3.6.0; cuda_runtime=12.8; nvidia_driver=616.92",
+            "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-6",
+            "unique_evaluation_count": 15
+          },
+          "eligible_feedback_count": 15,
+          "feedback_digest": "26f59446f554fa4e8cfd53ea8c49f2b81564c6b9a3572c691762ca0438499f57",
+          "proposal_seed": 15101181072009329608,
+          "round": 6,
+          "source_evaluation_ids": [
+            "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+            "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+            "evaluation-02803e752ac14f7dbe9d569447f189ae",
+            "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+            "evaluation-cdd9841407e24fbbafe40697059005c7",
+            "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+            "evaluation-2833a0964868486b9eeb9922dc294839",
+            "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+            "evaluation-a4c812a536294de88f4763420d9805cb",
+            "evaluation-319ab2b52dd0480b974112f5ad327e3d",
+            "evaluation-f66e185b3a01416eb7e777ea02ce86b4",
+            "evaluation-f3aad3bd9b0c4f6e9914d34ecda681ce",
+            "evaluation-4de747d2f6d5405a87e556687b783855",
+            "evaluation-0965b3fca233436f8709ab7f4a9c39c4",
+            "evaluation-07e58bd57b4f4eb4a2f06dd3b33d668d"
+          ],
+          "source_id": "trial-0-86c33b835465265d-adaptive-cumulative-6"
+        }
+      ],
+      "arms": {
+        "adaptive": {
+          "best_valid_latency_us": 60.812320709228516,
+          "evaluations_to_threshold": 6,
+          "failures_by_category": {},
+          "history": [
+            {
+              "candidate_id": "candidate-ae4a5e51d3d6ac774981",
+              "evaluation_id": "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+              "failure_category": null,
+              "latency_us": 64.71270370483398,
+              "logical_order": 0,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-f015d61b7d16f512a779",
+              "evaluation_id": "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+              "failure_category": null,
+              "latency_us": 68.6110725402832,
+              "logical_order": 1,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-084083656bf066c23ad9",
+              "evaluation_id": "evaluation-02803e752ac14f7dbe9d569447f189ae",
+              "failure_category": null,
+              "latency_us": 83.51507186889648,
+              "logical_order": 2,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-85679cd0ed660b1e1a59",
+              "evaluation_id": "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+              "failure_category": null,
+              "latency_us": 64.3133430480957,
+              "logical_order": 3,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-1d951974e60ff4037bf5",
+              "evaluation_id": "evaluation-cdd9841407e24fbbafe40697059005c7",
+              "failure_category": null,
+              "latency_us": 77.92742538452148,
+              "logical_order": 4,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-67f701865d1d25a71a67",
+              "evaluation_id": "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+              "failure_category": null,
+              "latency_us": 61.54240036010742,
+              "logical_order": 5,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-45241b54c1d8cc52f6d5",
+              "evaluation_id": "evaluation-2833a0964868486b9eeb9922dc294839",
+              "failure_category": null,
+              "latency_us": 70.64156723022461,
+              "logical_order": 6,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-e8f2fdea8f8189116c45",
+              "evaluation_id": "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+              "failure_category": null,
+              "latency_us": 82.28659057617188,
+              "logical_order": 7,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-ab556a9485d834b5f718",
+              "evaluation_id": "evaluation-a4c812a536294de88f4763420d9805cb",
+              "failure_category": null,
+              "latency_us": 61.71958541870117,
+              "logical_order": 8,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-993684570927501be3ef",
+              "evaluation_id": "evaluation-319ab2b52dd0480b974112f5ad327e3d",
+              "failure_category": null,
+              "latency_us": 67.4549789428711,
+              "logical_order": 9,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-086fcf07d56d98d3387d",
+              "evaluation_id": "evaluation-f66e185b3a01416eb7e777ea02ce86b4",
+              "failure_category": null,
+              "latency_us": 60.812320709228516,
+              "logical_order": 10,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-c6cbaa4a9d5be456353f",
+              "evaluation_id": "evaluation-f3aad3bd9b0c4f6e9914d34ecda681ce",
+              "failure_category": null,
+              "latency_us": 63.18966484069824,
+              "logical_order": 11,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-7efac8113b1b3d4f6caf",
+              "evaluation_id": "evaluation-4de747d2f6d5405a87e556687b783855",
+              "failure_category": null,
+              "latency_us": 69.95455932617188,
+              "logical_order": 12,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-c492179538342e71ca24",
+              "evaluation_id": "evaluation-0965b3fca233436f8709ab7f4a9c39c4",
+              "failure_category": null,
+              "latency_us": 67.99827194213867,
+              "logical_order": 13,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-eaba766870d111919890",
+              "evaluation_id": "evaluation-07e58bd57b4f4eb4a2f06dd3b33d668d",
+              "failure_category": null,
+              "latency_us": 61.280256271362305,
+              "logical_order": 14,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-0544521d5bf4f6d48428",
+              "evaluation_id": "evaluation-f0aa38074d984317a9dea509a50eeb99",
+              "failure_category": null,
+              "latency_us": 65.68940734863281,
+              "logical_order": 15,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            }
+          ],
+          "progress": [
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 1
+            },
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 2
+            },
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 3
+            },
+            {
+              "best_valid_latency_us": 64.3133430480957,
+              "submitted_evaluations": 4
+            },
+            {
+              "best_valid_latency_us": 64.3133430480957,
+              "submitted_evaluations": 5
+            },
+            {
+              "best_valid_latency_us": 61.54240036010742,
+              "submitted_evaluations": 6
+            },
+            {
+              "best_valid_latency_us": 61.54240036010742,
+              "submitted_evaluations": 7
+            },
+            {
+              "best_valid_latency_us": 61.54240036010742,
+              "submitted_evaluations": 8
+            },
+            {
+              "best_valid_latency_us": 61.54240036010742,
+              "submitted_evaluations": 9
+            },
+            {
+              "best_valid_latency_us": 61.54240036010742,
+              "submitted_evaluations": 10
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 11
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 12
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 13
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 14
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 15
+            },
+            {
+              "best_valid_latency_us": 60.812320709228516,
+              "submitted_evaluations": 16
+            }
+          ],
+          "submitted_evaluations": 16,
+          "successful_evaluations": 16,
+          "unique_candidate_count": 16,
+          "unique_coverage": 0.3333333333333333
+        },
+        "uniform": {
+          "best_valid_latency_us": 60.21939277648926,
+          "evaluations_to_threshold": 12,
+          "failures_by_category": {},
+          "history": [
+            {
+              "candidate_id": "candidate-ae4a5e51d3d6ac774981",
+              "evaluation_id": "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+              "failure_category": null,
+              "latency_us": 64.71270370483398,
+              "logical_order": 0,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-f015d61b7d16f512a779",
+              "evaluation_id": "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+              "failure_category": null,
+              "latency_us": 68.6110725402832,
+              "logical_order": 1,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-084083656bf066c23ad9",
+              "evaluation_id": "evaluation-02803e752ac14f7dbe9d569447f189ae",
+              "failure_category": null,
+              "latency_us": 83.51507186889648,
+              "logical_order": 2,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-85679cd0ed660b1e1a59",
+              "evaluation_id": "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+              "failure_category": null,
+              "latency_us": 64.3133430480957,
+              "logical_order": 3,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-1d951974e60ff4037bf5",
+              "evaluation_id": "evaluation-cdd9841407e24fbbafe40697059005c7",
+              "failure_category": null,
+              "latency_us": 77.92742538452148,
+              "logical_order": 4,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": true,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-2e0df1cff423be771221",
+              "evaluation_id": "evaluation-0628d31e0dda4b6b9c4b60aa0e51d138",
+              "failure_category": null,
+              "latency_us": 89.27856063842773,
+              "logical_order": 5,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-5765b325cda3aeda12b3",
+              "evaluation_id": "evaluation-b9bb55553cf74b16a70348394e1f052d",
+              "failure_category": null,
+              "latency_us": 62.63174247741699,
+              "logical_order": 6,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-69e3321abc0db9b52859",
+              "evaluation_id": "evaluation-309dcdc5c9384ef3abacd65c23086cb7",
+              "failure_category": null,
+              "latency_us": 63.28422546386719,
+              "logical_order": 7,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-7950dd6dcadf9d1dd1c3",
+              "evaluation_id": "evaluation-0fcaac373ac64b9f8e6d52f99347f095",
+              "failure_category": null,
+              "latency_us": 65.72223663330078,
+              "logical_order": 8,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-6e387e18038e4472cef1",
+              "evaluation_id": "evaluation-fba380a5955540229aa833e9bde99f42",
+              "failure_category": null,
+              "latency_us": 69.14662551879883,
+              "logical_order": 9,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-abc287f0c0ada2f983b3",
+              "evaluation_id": "evaluation-87cd9d06b48c419eb4656711b888809e",
+              "failure_category": null,
+              "latency_us": 63.35078430175781,
+              "logical_order": 10,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-09991c7d870c92ae572f",
+              "evaluation_id": "evaluation-cda7cf5541f147c4a105de15d826fc50",
+              "failure_category": null,
+              "latency_us": 60.21939277648926,
+              "logical_order": 11,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 128,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-1288fe6f91f6308f8fec",
+              "evaluation_id": "evaluation-65f5d80f3ce64e639ec710f4ec38d898",
+              "failure_category": null,
+              "latency_us": 71.99231719970703,
+              "logical_order": 12,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 32,
+                "block_n": 128,
+                "num_stages": 2,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-e2662a6493285ee0ef94",
+              "evaluation_id": "evaluation-5855f648c62d4d1880a294926a8a216d",
+              "failure_category": null,
+              "latency_us": 61.04547309875488,
+              "logical_order": 13,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 128,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-611bddc35a6ec95764ab",
+              "evaluation_id": "evaluation-d0361ccfbeb0499f8849592fc6a40ce5",
+              "failure_category": null,
+              "latency_us": 62.50985527038574,
+              "logical_order": 14,
+              "parameters": {
+                "block_k": 64,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 2,
+                "num_warps": 4
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            },
+            {
+              "candidate_id": "candidate-71dd4efa78e4b5379218",
+              "evaluation_id": "evaluation-b7ccbe4e125b4e2093fb2b7a458c8464",
+              "failure_category": null,
+              "latency_us": 63.24550437927246,
+              "logical_order": 15,
+              "parameters": {
+                "block_k": 32,
+                "block_m": 64,
+                "block_n": 64,
+                "num_stages": 3,
+                "num_warps": 8
+              },
+              "shared_physical_evaluation": false,
+              "status": "completed"
+            }
+          ],
+          "progress": [
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 1
+            },
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 2
+            },
+            {
+              "best_valid_latency_us": 64.71270370483398,
+              "submitted_evaluations": 3
+            },
+            {
+              "best_valid_latency_us": 64.3133430480957,
+              "submitted_evaluations": 4
+            },
+            {
+              "best_valid_latency_us": 64.3133430480957,
+              "submitted_evaluations": 5
+            },
+            {
+              "best_valid_latency_us": 64.3133430480957,
+              "submitted_evaluations": 6
+            },
+            {
+              "best_valid_latency_us": 62.63174247741699,
+              "submitted_evaluations": 7
+            },
+            {
+              "best_valid_latency_us": 62.63174247741699,
+              "submitted_evaluations": 8
+            },
+            {
+              "best_valid_latency_us": 62.63174247741699,
+              "submitted_evaluations": 9
+            },
+            {
+              "best_valid_latency_us": 62.63174247741699,
+              "submitted_evaluations": 10
+            },
+            {
+              "best_valid_latency_us": 62.63174247741699,
+              "submitted_evaluations": 11
+            },
+            {
+              "best_valid_latency_us": 60.21939277648926,
+              "submitted_evaluations": 12
+            },
+            {
+              "best_valid_latency_us": 60.21939277648926,
+              "submitted_evaluations": 13
+            },
+            {
+              "best_valid_latency_us": 60.21939277648926,
+              "submitted_evaluations": 14
+            },
+            {
+              "best_valid_latency_us": 60.21939277648926,
+              "submitted_evaluations": 15
+            },
+            {
+              "best_valid_latency_us": 60.21939277648926,
+              "submitted_evaluations": 16
+            }
+          ],
+          "submitted_evaluations": 16,
+          "successful_evaluations": 16,
+          "unique_candidate_count": 16,
+          "unique_coverage": 0.3333333333333333
+        }
+      },
+      "paired_progress": [
+        {
+          "adaptive_best_latency_us": 64.71270370483398,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 1,
+          "uniform_best_latency_us": 64.71270370483398
+        },
+        {
+          "adaptive_best_latency_us": 64.71270370483398,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 2,
+          "uniform_best_latency_us": 64.71270370483398
+        },
+        {
+          "adaptive_best_latency_us": 64.71270370483398,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 3,
+          "uniform_best_latency_us": 64.71270370483398
+        },
+        {
+          "adaptive_best_latency_us": 64.3133430480957,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 4,
+          "uniform_best_latency_us": 64.3133430480957
+        },
+        {
+          "adaptive_best_latency_us": 64.3133430480957,
+          "adaptive_minus_uniform_best_latency_us": 0.0,
+          "equal_logical_budget": 5,
+          "uniform_best_latency_us": 64.3133430480957
+        },
+        {
+          "adaptive_best_latency_us": 61.54240036010742,
+          "adaptive_minus_uniform_best_latency_us": -2.7709426879882812,
+          "equal_logical_budget": 6,
+          "uniform_best_latency_us": 64.3133430480957
+        },
+        {
+          "adaptive_best_latency_us": 61.54240036010742,
+          "adaptive_minus_uniform_best_latency_us": -1.0893421173095703,
+          "equal_logical_budget": 7,
+          "uniform_best_latency_us": 62.63174247741699
+        },
+        {
+          "adaptive_best_latency_us": 61.54240036010742,
+          "adaptive_minus_uniform_best_latency_us": -1.0893421173095703,
+          "equal_logical_budget": 8,
+          "uniform_best_latency_us": 62.63174247741699
+        },
+        {
+          "adaptive_best_latency_us": 61.54240036010742,
+          "adaptive_minus_uniform_best_latency_us": -1.0893421173095703,
+          "equal_logical_budget": 9,
+          "uniform_best_latency_us": 62.63174247741699
+        },
+        {
+          "adaptive_best_latency_us": 61.54240036010742,
+          "adaptive_minus_uniform_best_latency_us": -1.0893421173095703,
+          "equal_logical_budget": 10,
+          "uniform_best_latency_us": 62.63174247741699
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": -1.8194217681884766,
+          "equal_logical_budget": 11,
+          "uniform_best_latency_us": 62.63174247741699
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": 0.5929279327392578,
+          "equal_logical_budget": 12,
+          "uniform_best_latency_us": 60.21939277648926
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": 0.5929279327392578,
+          "equal_logical_budget": 13,
+          "uniform_best_latency_us": 60.21939277648926
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": 0.5929279327392578,
+          "equal_logical_budget": 14,
+          "uniform_best_latency_us": 60.21939277648926
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": 0.5929279327392578,
+          "equal_logical_budget": 15,
+          "uniform_best_latency_us": 60.21939277648926
+        },
+        {
+          "adaptive_best_latency_us": 60.812320709228516,
+          "adaptive_minus_uniform_best_latency_us": 0.5929279327392578,
+          "equal_logical_budget": 16,
+          "uniform_best_latency_us": 60.21939277648926
+        }
+      ],
+      "physical_evaluation_count": 27,
+      "physical_execution_order": [
+        {
+          "candidate_id": "candidate-ae4a5e51d3d6ac774981",
+          "evaluation_id": "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 0,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-f015d61b7d16f512a779",
+          "evaluation_id": "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 1,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-084083656bf066c23ad9",
+          "evaluation_id": "evaluation-02803e752ac14f7dbe9d569447f189ae",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 2,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-85679cd0ed660b1e1a59",
+          "evaluation_id": "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 3,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-1d951974e60ff4037bf5",
+          "evaluation_id": "evaluation-cdd9841407e24fbbafe40697059005c7",
+          "logical_arms": [
+            "uniform",
+            "adaptive"
+          ],
+          "physical_order": 4,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-67f701865d1d25a71a67",
+          "evaluation_id": "evaluation-10d9df9906264d8797fcf3f6512ae7aa",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 5,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-2e0df1cff423be771221",
+          "evaluation_id": "evaluation-0628d31e0dda4b6b9c4b60aa0e51d138",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 6,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-5765b325cda3aeda12b3",
+          "evaluation_id": "evaluation-b9bb55553cf74b16a70348394e1f052d",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 7,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-45241b54c1d8cc52f6d5",
+          "evaluation_id": "evaluation-2833a0964868486b9eeb9922dc294839",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 8,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-e8f2fdea8f8189116c45",
+          "evaluation_id": "evaluation-fb25ab439f2549ff85ba6d920c5896ad",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 9,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-69e3321abc0db9b52859",
+          "evaluation_id": "evaluation-309dcdc5c9384ef3abacd65c23086cb7",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 10,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-7950dd6dcadf9d1dd1c3",
+          "evaluation_id": "evaluation-0fcaac373ac64b9f8e6d52f99347f095",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 11,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-ab556a9485d834b5f718",
+          "evaluation_id": "evaluation-a4c812a536294de88f4763420d9805cb",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 12,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-993684570927501be3ef",
+          "evaluation_id": "evaluation-319ab2b52dd0480b974112f5ad327e3d",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 13,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-6e387e18038e4472cef1",
+          "evaluation_id": "evaluation-fba380a5955540229aa833e9bde99f42",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 14,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-abc287f0c0ada2f983b3",
+          "evaluation_id": "evaluation-87cd9d06b48c419eb4656711b888809e",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 15,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-086fcf07d56d98d3387d",
+          "evaluation_id": "evaluation-f66e185b3a01416eb7e777ea02ce86b4",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 16,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-c6cbaa4a9d5be456353f",
+          "evaluation_id": "evaluation-f3aad3bd9b0c4f6e9914d34ecda681ce",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 17,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-09991c7d870c92ae572f",
+          "evaluation_id": "evaluation-cda7cf5541f147c4a105de15d826fc50",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 18,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-1288fe6f91f6308f8fec",
+          "evaluation_id": "evaluation-65f5d80f3ce64e639ec710f4ec38d898",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 19,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-7efac8113b1b3d4f6caf",
+          "evaluation_id": "evaluation-4de747d2f6d5405a87e556687b783855",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 20,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-c492179538342e71ca24",
+          "evaluation_id": "evaluation-0965b3fca233436f8709ab7f4a9c39c4",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 21,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-e2662a6493285ee0ef94",
+          "evaluation_id": "evaluation-5855f648c62d4d1880a294926a8a216d",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 22,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-611bddc35a6ec95764ab",
+          "evaluation_id": "evaluation-d0361ccfbeb0499f8849592fc6a40ce5",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 23,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-eaba766870d111919890",
+          "evaluation_id": "evaluation-07e58bd57b4f4eb4a2f06dd3b33d668d",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 24,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-0544521d5bf4f6d48428",
+          "evaluation_id": "evaluation-f0aa38074d984317a9dea509a50eeb99",
+          "logical_arms": [
+            "adaptive"
+          ],
+          "physical_order": 25,
+          "status": "completed"
+        },
+        {
+          "candidate_id": "candidate-71dd4efa78e4b5379218",
+          "evaluation_id": "evaluation-b7ccbe4e125b4e2093fb2b7a458c8464",
+          "logical_arms": [
+            "uniform"
+          ],
+          "physical_order": 26,
+          "status": "completed"
+        }
+      ],
+      "search_wall_clock_seconds": 14.672722992996569,
+      "shared_evaluation_ids": [
+        "evaluation-ba39227cdc7d443dbc2f6db8df925de4",
+        "evaluation-d496d38ecf81407088a2d919be3f5b3c",
+        "evaluation-02803e752ac14f7dbe9d569447f189ae",
+        "evaluation-8e3d0bfbc3d9473ab22404ede8f7a6c2",
+        "evaluation-cdd9841407e24fbbafe40697059005c7"
+      ],
+      "status": "budget_exhausted",
+      "trial_id": "trial-0-86c33b835465265d",
+      "trial_seed": 101
+    }
+  ]
+}

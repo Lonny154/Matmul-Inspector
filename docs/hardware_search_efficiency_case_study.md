@@ -23,8 +23,9 @@ evidence and seed. That is an important result. A search strategy must be
 auditable when it loses, not only when it finds the fastest candidate.
 
 These are search-time discovery measurements. They are not confirmed kernel
-performance results. The winning configurations have not yet been compared in
-a separate randomized, interleaved confirmation benchmark.
+performance results. A later randomized, interleaved experiment confirmed the
+five distinct arm winners in one controlled session. Its results are reported
+separately below.
 
 ## Experiment design
 
@@ -288,7 +289,74 @@ The recorded search wall times were:
 These durations include search orchestration and candidate evaluation. They are
 not kernel latencies and should not be used as a throughput comparison.
 
-## Search discovery is not confirmed performance
+## Controlled winner confirmation
+
+The confirmation experiment collected the six arm winners from the three
+search trials and deduplicated them by candidate identity. The uniform winner
+from seeds 101 and 303 was the same configuration, so it was confirmed once.
+The resulting controlled session contained five candidates plus one shared
+PyTorch/cuBLAS baseline.
+
+The session used 10 independently shuffled rounds. Every round measured all six
+implementations in a randomized order. Each implementation received three
+CUDA-event samples per round and 100 kernel launches per sample. Compilation,
+first-use setup, and 100 warmup launches were excluded. All implementations
+reused the same input tensors. Host submission and synchronized host-wall times
+were recorded separately from device timing.
+
+| Confirmation setting | Value |
+|---|---:|
+| Experiment ID | `controlled-8a29d7fe84994abe88b44164feecdb0f` |
+| Input seed | 0 |
+| Scheduling seed | 8,675,309 |
+| Rounds | 10 |
+| Samples per implementation per round | 3 |
+| Launches per sample | 100 |
+| Warmup launches | 100 |
+| Absolute tolerance | 0.01 |
+| Relative tolerance | 0.01 |
+
+| Implementation | Search source | Confirmation median | Paired-round median speedup vs baseline | Correctness |
+|---|---|---:|---:|---|
+| PyTorch/cuBLAS | Shared baseline | 60.467200 µs | 1.0000× | Reference |
+| `candidate-09991c7d870c92ae572f` | Uniform, seeds 101 and 303 | 60.128961 µs | 1.0162× | PASS |
+| `candidate-086fcf07d56d98d3387d` | Adaptive, seed 101 | 59.980640 µs | 1.0049× | PASS |
+| `candidate-8e3ff66de13a408caa23` | Uniform, seed 202 | 60.219841 µs | 1.0044× | PASS |
+| `candidate-2c7ad186cbae1bfb44ed` | Adaptive, seed 202 | 61.973119 µs | 1.0007× | PASS |
+| `candidate-8ac12f04c00378f1a984` | Adaptive, seed 303 | **59.773760 µs** | **1.0107×** | PASS |
+
+The fastest overall confirmation median belonged to the adaptive seed-303
+winner:
+
+```text
+candidate: candidate-8ac12f04c00378f1a984
+confirmation evaluation: evaluation-04844b4d26f843a7b9fafb8cb380f11a
+block_m=128, block_n=64, block_k=32, num_warps=4, num_stages=3
+median CUDA-event latency=59.773760 µs
+```
+
+This was about 0.693 µs below the baseline median in this session. It was not
+the lowest search-time observation. Conversely, the configuration with the
+lowest search-time observation did not have the lowest confirmation median.
+That reversal is exactly why search-time discovery and confirmed performance
+must remain separate.
+
+All five candidates passed the shared-input PyTorch comparison with the stated
+absolute and relative tolerances of 0.01. There were no compilation,
+correctness, benchmark, or infrastructure failures. Each implementation has 30
+raw CUDA-event observations and 10 paired round comparisons. All 10 rounds used
+different execution orders.
+
+The confirmation used the same GPU and software stack as the searches: RTX 4060
+Ti, SM 8.9, NVIDIA driver 616.92, PyTorch 2.11.0+cu128, Triton 3.6.0, and CUDA
+runtime 12.8.
+
+These results do not establish a stable speedup. The gaps are small relative to
+the recorded variability. The paired-round summaries also do not preserve the
+same ordering as the overall medians. More independent controlled sessions
+would be needed before making a performance claim.
+
+## Why search discovery is not confirmed performance
 
 The search runner measured each candidate when it was proposed. Those
 measurements were sufficient to update the search policy and construct
@@ -300,7 +368,8 @@ In particular:
 - absolute latency shifted across trials;
 - the candidate set changed with each search path;
 - no common PyTorch/cuBLAS baseline was interleaved with these searches;
-- no randomized interleaved confirmation compared all unique winners together.
+- the later randomized confirmation is a separate experiment and cannot be
+  substituted back into the search policy's historical observations.
 
 The statement supported by this evidence is:
 
@@ -308,9 +377,10 @@ The statement supported by this evidence is:
 > three paired trials. Adaptive search found a threshold-qualified candidate
 > earlier in seed 101 and otherwise behaved according to its recorded contract.
 
-The evidence does **not** establish that the uniform winners are reliably faster
-than the adaptive winners. That requires the separate confirmation workflow.
-Historical cuBLAS results are also not a matched baseline for these trials.
+The search evidence does **not** establish that the uniform winners are reliably
+faster than the adaptive winners. The separate confirmation found the lowest
+overall median for an adaptive-discovered configuration, but its small margin is
+descriptive rather than a confirmed speedup claim.
 
 ## Limitations
 
@@ -325,6 +395,10 @@ Historical cuBLAS results are also not a matched baseline for these trials.
 - The adaptive model cannot express general parameter interactions.
 - The experiment records descriptive outcomes. It does not provide statistical power
   for a broad superiority claim.
+- The confirmation consists of one controlled session with 10 paired rounds.
+- No confidence interval or hypothesis test was prespecified for confirmation.
+- The confirmation ranking changes depending on whether overall medians or paired
+  round summaries are considered.
 
 ## Evidence
 
@@ -349,9 +423,18 @@ Seed 303:
 - [`progress.json`](../artifacts/hardware-search/fc1-pilot-seed303/progress.json)
 - [`report.md`](../artifacts/hardware-search/fc1-pilot-seed303/report.md)
 
-## Next step
+Controlled confirmation:
 
-Use the separate controlled confirmation workflow to deduplicate the arm winners
-and benchmark them in randomized interleaved rounds against the same
-PyTorch/cuBLAS baseline. Keep those confirmation results separate from the
-search-time curves in this report.
+- [`experiment.json`](../artifacts/hardware-search/fc1-winner-confirmation/experiment.json)
+- [`evaluations.jsonl`](../artifacts/hardware-search/fc1-winner-confirmation/evaluations.jsonl)
+- [`report.md`](../artifacts/hardware-search/fc1-winner-confirmation/report.md)
+
+## Current conclusion
+
+Uniform search produced the lower exploratory minimum in all three paired
+trials. Adaptive sampling still behaved correctly and contributed the
+configuration with the lowest median in the later controlled session. Neither
+result establishes that one search strategy is generally superior. Together,
+they show that the framework can preserve a losing adaptive-search result,
+deduplicate repeated discoveries, and test the resulting candidates under a
+matched confirmation protocol.
