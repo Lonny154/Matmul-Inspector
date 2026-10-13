@@ -230,6 +230,12 @@ uses shared inputs, preallocated outputs, deterministic interleaved rounds, and
 paired comparisons against `torch.matmul(..., out=...)`. It writes a versioned
 JSON manifest, evaluation JSONL, and Markdown report.
 
+The CPU-only [offline adaptive sampler](docs/adaptive_sampling.md) can replay a
+saved controlled experiment, derive smoothed parameter-wise scores, preserve
+uniform candidate-level exploration, and save exact continuation state. It does
+not execute hardware or establish that adaptive search outperforms uniform
+sampling.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
