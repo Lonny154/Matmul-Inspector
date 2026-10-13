@@ -158,6 +158,10 @@ capture conditions, methodology, numerical evidence, and limitations.
 | GPU experiment runner | Single experiments, batches, persistent sessions, allocating/preallocated modes, and explicitly trusted local Triton candidates | Python package; optional PyTorch/Triton and compatible NVIDIA environment |
 | Research experiments | Additional Triton Transformer projections and Trainium NKI GEMM studies | Source checkout; additional toolchains/hardware |
 
+The source tree also includes a CPU-only [TensorGame research environment](docs/tensor_game.md)
+for exact matrix multiplication tensor decomposition. Its standard and Strassen
+trajectories are known correctness references, not newly discovered algorithms.
+
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
 
