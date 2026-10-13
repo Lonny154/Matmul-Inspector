@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import math
 import random
+import time
 from typing import Protocol, Sequence
 
 from .tensor_game import (
@@ -19,6 +20,24 @@ from .tensor_game import (
 )
 
 StateKey = tuple[Tensor, int]
+
+
+@dataclass
+class ProposalMetrics:
+    attempted: int = 0
+    valid: int = 0
+    accepted: int = 0
+    duplicates: int = 0
+    generation_seconds: float = 0.0
+
+
+class InstrumentedPolicy:
+    """Shared counters for proposal cost and acceptance diagnostics."""
+
+    metrics: ProposalMetrics
+
+    def reset_metrics(self) -> None:
+        self.metrics = ProposalMetrics()
 
 
 def canonicalize_action(action: RankOneAction) -> RankOneAction:
@@ -62,14 +81,15 @@ def _normalize(proposals: Sequence[tuple[RankOneAction, float]]) -> tuple[Propos
     return tuple(ProposedAction(action, prior / total) for action, prior in unique.items())
 
 
-@dataclass(frozen=True)
-class UniformSampledPolicy:
+@dataclass
+class UniformSampledPolicy(InstrumentedPolicy):
     """Sample bounded factor vectors without enumerating their Cartesian product."""
 
     shape: tuple[int, int, int]
     coefficients: tuple[int, ...] = (-1, 0, 1)
     attempt_multiplier: int = 50
     name: str = field(default="uniform_sampled", init=False)
+    metrics: ProposalMetrics = field(default_factory=ProposalMetrics, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if len(self.shape) != 3 or any(value <= 0 for value in self.shape):
@@ -80,12 +100,14 @@ class UniformSampledPolicy:
             raise ValueError("attempt_multiplier must be positive")
 
     def propose_actions(self, residual, remaining_moves, rng, max_actions):
+        started = time.perf_counter()
         if tensor_shape(residual) != self.shape or remaining_moves <= 0 or max_actions <= 0:
             return ()
         actions: dict[RankOneAction, float] = {}
         attempts = 0
         while len(actions) < max_actions and attempts < max_actions * self.attempt_multiplier:
             attempts += 1
+            self.metrics.attempted += 1
             vectors = tuple(
                 tuple(rng.choice(self.coefficients) for _ in range(length))
                 for length in self.shape
@@ -95,8 +117,156 @@ class UniformSampledPolicy:
                 validate_action(action, self.shape, frozenset(self.coefficients))
             except ValueError:
                 continue
-            actions.setdefault(canonicalize_action(action), 1.0)
-        return _normalize(tuple(actions.items()))
+            self.metrics.valid += 1
+            canonical = canonicalize_action(action)
+            if canonical in actions:
+                self.metrics.duplicates += 1
+            actions.setdefault(canonical, 1.0)
+        result = _normalize(tuple(actions.items()))
+        self.metrics.accepted += len(result)
+        self.metrics.generation_seconds += time.perf_counter() - started
+        return result
+
+
+def contract_residual(residual: Tensor, u: Sequence[int], v: Sequence[int]) -> tuple[int, ...]:
+    """Compute d_k = sum_ij residual[i,j,k] u_i v_j exactly."""
+    x, y, z = tensor_shape(residual)
+    if len(u) != x or len(v) != y:
+        raise ValueError("factor lengths must match the first two residual dimensions")
+    if any(not isinstance(value, int) or isinstance(value, bool) for value in (*u, *v)):
+        raise ValueError("factor coefficients must be integers")
+    return tuple(
+        sum(residual[i][j][k] * u[i] * v[j] for i in range(x) for j in range(y))
+        for k in range(z)
+    )
+
+
+def quantize_ratio(numerator: int, denominator: int, coefficients: Sequence[int]) -> int:
+    """Choose an allowed integer nearest to numerator/denominator without floats."""
+    if denominator <= 0:
+        raise ValueError("denominator must be positive")
+    if not coefficients:
+        raise ValueError("coefficients must not be empty")
+    return min(coefficients, key=lambda value: (abs(numerator - denominator * value), abs(value), value))
+
+
+@dataclass
+class ResidualInformedPolicy(InstrumentedPolicy):
+    """Propose integer actions from residual contractions and sparse slices."""
+
+    shape: tuple[int, int, int]
+    coefficients: tuple[int, ...] = (-1, 0, 1)
+    sparse_probability: float = 0.25
+    attempt_multiplier: int = 50
+    name: str = field(default="residual_informed", init=False)
+    metrics: ProposalMetrics = field(default_factory=ProposalMetrics, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if len(self.shape) != 3 or any(value <= 0 for value in self.shape):
+            raise ValueError("shape must contain three positive dimensions")
+        if not self.coefficients or any(not isinstance(value, int) or isinstance(value, bool) for value in self.coefficients):
+            raise ValueError("coefficients must be a nonempty tuple of integers")
+        if not 0 <= self.sparse_probability <= 1:
+            raise ValueError("sparse_probability must be in [0, 1]")
+        if self.attempt_multiplier <= 0:
+            raise ValueError("attempt_multiplier must be positive")
+
+    def _candidate(self, residual: Tensor, rng: random.Random) -> RankOneAction | None:
+        x, y, _ = self.shape
+        nonzeros = [
+            (i, j)
+            for i in range(x)
+            for j in range(y)
+            if any(residual[i][j][k] != 0 for k in range(self.shape[2]))
+        ]
+        if nonzeros and rng.random() < self.sparse_probability:
+            i, j = rng.choice(nonzeros)
+            sign = 1 if residual[i][j][next(k for k in range(self.shape[2]) if residual[i][j][k])] > 0 else -1
+            u = tuple(sign if index == i else 0 for index in range(x))
+            v = tuple(1 if index == j else 0 for index in range(y))
+        else:
+            u = tuple(rng.choice(self.coefficients) for _ in range(x))
+            v = tuple(rng.choice(self.coefficients) for _ in range(y))
+        q = sum(value * value for value in u) * sum(value * value for value in v)
+        if q == 0:
+            return None
+        contraction = contract_residual(residual, u, v)
+        w = tuple(quantize_ratio(value, q, self.coefficients) for value in contraction)
+        return RankOneAction(u, v, w)
+
+    def propose_actions(self, residual, remaining_moves, rng, max_actions):
+        started = time.perf_counter()
+        if tensor_shape(residual) != self.shape or remaining_moves <= 0 or max_actions <= 0:
+            return ()
+        actions: dict[RankOneAction, float] = {}
+        attempts = 0
+        while len(actions) < max_actions and attempts < max_actions * self.attempt_multiplier:
+            attempts += 1
+            self.metrics.attempted += 1
+            action = self._candidate(residual, rng)
+            if action is None:
+                continue
+            try:
+                validate_action(action, self.shape, frozenset(self.coefficients))
+            except ValueError:
+                continue
+            self.metrics.valid += 1
+            canonical = canonicalize_action(action)
+            if canonical in actions:
+                self.metrics.duplicates += 1
+            actions.setdefault(canonical, 1.0)
+        result = _normalize(tuple(actions.items()))
+        self.metrics.accepted += len(result)
+        self.metrics.generation_seconds += time.perf_counter() - started
+        return result
+
+
+@dataclass
+class HybridSampledPolicy(InstrumentedPolicy):
+    """Mix bounded uniform and residual-informed proposal batches."""
+
+    shape: tuple[int, int, int]
+    residual_probability: float = 0.5
+    coefficients: tuple[int, ...] = (-1, 0, 1)
+    name: str = field(default="hybrid", init=False)
+    metrics: ProposalMetrics = field(default_factory=ProposalMetrics, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if not 0 <= self.residual_probability <= 1:
+            raise ValueError("residual_probability must be in [0, 1]")
+        self.uniform = UniformSampledPolicy(self.shape, self.coefficients)
+        self.informed = ResidualInformedPolicy(self.shape, self.coefficients)
+
+    def reset_metrics(self) -> None:
+        super().reset_metrics()
+        self.uniform.reset_metrics()
+        self.informed.reset_metrics()
+
+    def propose_actions(self, residual, remaining_moves, rng, max_actions):
+        started = time.perf_counter()
+        informed_count = sum(rng.random() < self.residual_probability for _ in range(max_actions))
+        uniform_count = max_actions - informed_count
+        before_uniform = (self.uniform.metrics.attempted, self.uniform.metrics.valid)
+        before_informed = (self.informed.metrics.attempted, self.informed.metrics.valid)
+        uniform = self.uniform.propose_actions(residual, remaining_moves, rng, uniform_count)
+        informed = self.informed.propose_actions(residual, remaining_moves, rng, informed_count)
+        proposals = [
+            (item.action, (1 - self.residual_probability) * item.prior) for item in uniform
+        ] + [(item.action, self.residual_probability * item.prior) for item in informed]
+        result = _normalize(proposals)
+        self.metrics.attempted += (
+            self.uniform.metrics.attempted - before_uniform[0]
+            + self.informed.metrics.attempted - before_informed[0]
+        )
+        self.metrics.valid += (
+            self.uniform.metrics.valid - before_uniform[1]
+            + self.informed.metrics.valid - before_informed[1]
+        )
+        child_accepted = len(uniform) + len(informed)
+        self.metrics.duplicates += child_accepted - len(result)
+        self.metrics.accepted += len(result)
+        self.metrics.generation_seconds += time.perf_counter() - started
+        return result
 
 
 class ReferenceGuidedPolicy:
@@ -213,6 +383,7 @@ class SearchConfig:
     seed: int = 0
     c_puct: float = 1.5
     node_limit: int | None = None
+    max_wall_time_seconds: float | None = None
 
     def __post_init__(self) -> None:
         if self.simulations <= 0 or self.max_actions <= 0 or self.max_moves <= 0:
@@ -221,6 +392,8 @@ class SearchConfig:
             raise ValueError("c_puct must be finite and nonnegative")
         if self.node_limit is not None and self.node_limit <= 0:
             raise ValueError("node_limit must be positive when supplied")
+        if self.max_wall_time_seconds is not None and self.max_wall_time_seconds <= 0:
+            raise ValueError("max_wall_time_seconds must be positive when supplied")
 
 
 @dataclass(frozen=True)
@@ -246,6 +419,13 @@ class SearchResult:
     termination_reason: str
     root_visits: int
     root_actions: tuple[RootActionDiagnostic, ...]
+    proposal_attempts: int = field(compare=False)
+    valid_proposals: int = field(compare=False)
+    accepted_proposals: int = field(compare=False)
+    duplicate_proposals: int = field(compare=False)
+    proposal_generation_seconds: float = field(compare=False)
+    search_wall_seconds: float = field(compare=False)
+    simulations_per_second: float = field(compare=False)
 
 
 class SampledMCTS:
@@ -306,10 +486,20 @@ class SampledMCTS:
             node.visits += 1
 
     def run(self) -> SearchResult:
+        if isinstance(self.policy, InstrumentedPolicy):
+            self.policy.reset_metrics()
+        started = time.perf_counter()
         root = self._node(self.target, self.config.max_moves)
         simulations_run = 0
         node_limited = False
+        timed_out = False
         for _ in range(self.config.simulations):
+            if (
+                self.config.max_wall_time_seconds is not None
+                and time.perf_counter() - started >= self.config.max_wall_time_seconds
+            ):
+                timed_out = True
+                break
             simulations_run += 1
             node = root
             path: list[tuple[SearchNode, RankOneAction]] = []
@@ -359,6 +549,8 @@ class SampledMCTS:
         exact = self.solution is not None and sum_actions(self.solution, self.shape) == self.target
         if exact:
             reason = "solution_found"
+        elif timed_out:
+            reason = "wall_time_limit_reached"
         elif node_limited:
             reason = "node_limit_reached"
         else:
@@ -367,6 +559,8 @@ class SampledMCTS:
             RootActionDiagnostic(action, stats.prior, stats.visits, stats.value)
             for action, stats in root.actions.items()
         )
+        wall_seconds = time.perf_counter() - started
+        metrics = getattr(self.policy, "metrics", ProposalMetrics())
         return SearchResult(
             config=self.config,
             policy_type=self.policy.name,
@@ -381,4 +575,11 @@ class SampledMCTS:
             termination_reason=reason,
             root_visits=root.visits,
             root_actions=diagnostics,
+            proposal_attempts=metrics.attempted,
+            valid_proposals=metrics.valid,
+            accepted_proposals=metrics.accepted,
+            duplicate_proposals=metrics.duplicates,
+            proposal_generation_seconds=metrics.generation_seconds,
+            search_wall_seconds=wall_seconds,
+            simulations_per_second=simulations_run / wall_seconds if wall_seconds else 0.0,
         )

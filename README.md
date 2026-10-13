@@ -164,6 +164,8 @@ trajectories are known correctness references, not newly discovered algorithms.
 A bounded [sampled MCTS planner](docs/tensor_game_mcts.md) supports deterministic
 reference-guided validation and small unguided search experiments without neural
 networks or hardware dependencies.
+The [independent discovery study](docs/tensor_game_discovery.md) compares uniform,
+residual-informed, and hybrid proposals under matched CPU search budgets.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
