@@ -473,6 +473,7 @@ class SearchResult:
     value_prediction_clips: int = field(default=0, compare=False)
     value_inference_seconds: float = field(default=0.0, compare=False)
     value_predictions: tuple[float, ...] = field(default=(), compare=False)
+    simulations_to_first_success: int | None = field(default=None, compare=False)
 
 
 class SampledMCTS:
@@ -550,6 +551,7 @@ class SampledMCTS:
         started = time.perf_counter()
         root = self._node(self.target, self.config.max_moves)
         simulations_run = 0
+        simulations_to_first_success = None
         node_limited = False
         timed_out = False
         for _ in range(self.config.simulations):
@@ -604,6 +606,8 @@ class SampledMCTS:
                 exact = sum_actions(candidate, self.shape) == self.target
                 if exact and (self.solution is None or len(candidate) < len(self.solution)):
                     self.solution = candidate
+                    if simulations_to_first_success is None:
+                        simulations_to_first_success = simulations_run
 
         exact = self.solution is not None and sum_actions(self.solution, self.shape) == self.target
         if exact:
@@ -647,4 +651,5 @@ class SampledMCTS:
             value_prediction_clips=value_metrics.clipped,
             value_inference_seconds=value_metrics.inference_seconds,
             value_predictions=tuple(value_metrics.predictions),
+            simulations_to_first_success=simulations_to_first_success,
         )

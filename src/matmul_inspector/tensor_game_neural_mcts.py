@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
+import json
 import math
 import random
 import time
@@ -123,9 +125,22 @@ class NeuralValueEvaluator:
     device: Any = "cpu"
     name: str = field(default="neural_completion_length", init=False)
     metrics: ValueMetrics = field(default_factory=ValueMetrics, init=False, repr=False)
+    trace_limit: int = 0
+    trace: list[dict[str, Any]] = field(default_factory=list, init=False, repr=False)
+    clipping_by_depth: dict[int, int] = field(default_factory=dict, init=False, repr=False)
+    unique_state_digests: set[str] = field(default_factory=set, init=False, repr=False)
+    raw_predictions: list[float] = field(default_factory=list, init=False, repr=False)
+    clamped_lengths: list[float] = field(default_factory=list, init=False, repr=False)
+    clip_reasons: dict[str, int] = field(default_factory=dict, init=False, repr=False)
 
     def reset_metrics(self) -> None:
         self.metrics = ValueMetrics()
+        self.trace = []
+        self.clipping_by_depth = {}
+        self.unique_state_digests = set()
+        self.raw_predictions = []
+        self.clamped_lengths = []
+        self.clip_reasons = {}
 
     def evaluate(self, residual, remaining_moves, max_moves, target_nonzeros):
         del target_nonzeros
@@ -142,13 +157,63 @@ class NeuralValueEvaluator:
             _, prediction = self.model(tensor)
         self.metrics.inference_seconds += time.perf_counter() - started
         raw = float(prediction[0].detach().cpu())
-        clipped = not math.isfinite(raw) or raw < 0.0 or raw > remaining_moves
+        if not math.isfinite(raw):
+            clip_reason = "nonfinite"
+        elif raw < 0.0:
+            clip_reason = "negative"
+        elif raw > remaining_moves:
+            clip_reason = "above_remaining_budget"
+        else:
+            clip_reason = None
+        clipped = clip_reason is not None
         length = float(remaining_moves) if not math.isfinite(raw) else min(float(remaining_moves), max(0.0, raw))
         value = float(max_moves) - length
+        depth = max_moves - remaining_moves
+        digest = hashlib.sha256(json.dumps(residual, separators=(",", ":")).encode()).hexdigest()
+        self.unique_state_digests.add(digest)
+        self.raw_predictions.append(raw)
+        self.clamped_lengths.append(length)
         self.metrics.calls += 1
         self.metrics.clipped += int(clipped)
         self.metrics.predictions.append(value)
+        if clipped:
+            self.clipping_by_depth[depth] = self.clipping_by_depth.get(depth, 0) + 1
+            self.clip_reasons[clip_reason] = self.clip_reasons.get(clip_reason, 0) + 1
+        if len(self.trace) < self.trace_limit:
+            self.trace.append({
+                "state_digest": digest,
+                "depth": depth,
+                "remaining_moves": remaining_moves,
+                "raw_predicted_length": raw,
+                "clamped_predicted_length": length,
+                "converted_leaf_value": value,
+                "clipped": clipped,
+                "clip_reason": clip_reason,
+                "residual_nonzeros": sum(x != 0 for plane in residual for row in plane for x in row),
+            })
         return value
+
+
+@dataclass
+class ConstantValueEvaluator:
+    """Residual-independent nonterminal control on the MCTS leaf-value scale."""
+
+    value: float = 0.0
+    name: str = field(default="constant_value", init=False)
+    metrics: ValueMetrics = field(default_factory=ValueMetrics, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.value):
+            raise ValueError("constant value must be finite")
+
+    def reset_metrics(self) -> None:
+        self.metrics = ValueMetrics()
+
+    def evaluate(self, residual, remaining_moves, max_moves, target_nonzeros):
+        del residual, remaining_moves, max_moves, target_nonzeros
+        self.metrics.calls += 1
+        self.metrics.predictions.append(self.value)
+        return self.value
 
 
 @dataclass

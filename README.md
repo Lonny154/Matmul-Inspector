@@ -177,6 +177,8 @@ denominators, paired outcomes, grouped uncertainty, and proposal-generation cost
 The optional [neural-guided MCTS experiment](docs/tensor_game_neural_mcts.md)
 separates learned proposals from learned leaf values and reports five matched
 ablations without updating the trained model.
+The [neural value study](docs/tensor_game_value_study.md) compares trained,
+untrained, constant, and handcrafted leaf values under fixed residual proposals.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
