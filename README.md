@@ -209,6 +209,12 @@ matmul-inspector-python session create \
 See the experiment runner guide for proposal, status, context, and recovery
 commands.
 
+CPU-only candidate sampling can define and validate a finite Triton GEMM search
+space, then draw reproducible uniform or parameter-weighted configurations. It
+does not compile or benchmark kernels. See the
+[candidate sampling guide](docs/candidate_sampling.md) and the executable
+`examples/sample_kernel_candidates.py` example.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
