@@ -147,6 +147,80 @@ multiplication residuals.
 TG-3C can wrap the trained model in a sampled proposal policy and compare
 neural-guided MCTS under matched budgets. TG-3B does not make that integration.
 
+## Evaluation audit and TG-3C readiness
+
+The original `tg3b-proposal-comparison.json` mixed denominators. The deterministic
+trained model was evaluated once on 498 held-out residuals, while each stochastic
+handcrafted policy was evaluated on the same states under seeds 3, 11, and 42,
+for 1,494 state-seed evaluations. Its hit calculations were internally correct,
+but the aggregate table did not make this difference explicit. Historical
+evidence is preserved unchanged.
+
+The version-2 audit records each state, originating decomposition, policy, and
+seed. Deterministic trained and untrained models remain single-pass results;
+repeating them under policy seeds would produce identical proposals. Seeded
+policies report both per-seed and aggregate denominators.
+
+With 16 requested returned actions per state, the audited results were:
+
+| Policy | Evaluations | Known-action hits | Hit rate | Returned/requested |
+|---|---:|---:|---:|---:|
+| Trained MLP | 498 | 128 | 25.70% | 7,968 / 7,968 |
+| Untrained MLP, initialization seed 42 | 498 | 0 | 0% | 7,968 / 7,968 |
+| Residual-informed | 1,494 | 351 | 23.49% | 19,715 / 23,904 |
+| Hybrid | 1,494 | 206 | 13.79% | 22,433 / 23,904 |
+| Uniform | 1,494 | 0 | 0% | 23,904 / 23,904 |
+
+The trained model's top-1 known-action match was 5.02%, compared with 0% for the
+untrained model. Average probability mass on recorded known actions was 0.01367
+versus approximately `3.76e-6`.
+
+The paired trained-minus-residual-informed bounded-hit difference was +2.21
+percentage points over 1,494 matched state-seed comparisons. Disagreements were
+105 both hit, 279 trained only, 246 residual-informed only, and 864 neither. A
+2,000-replicate percentile bootstrap resampling the 200 originating decomposition
+groups produced a descriptive 95% interval from -3.41 to +8.03 percentage
+points. The interval includes zero. These results do not establish superiority.
+
+### Proposal budgets and costs
+
+Passing `proposal_count=16` fixes the maximum actions made available to a future
+MCTS expansion. It does not equalize computation:
+
+- Neural decoding returned all 7,968 requested actions but considered about
+  5.13 million internal beam candidates. Model forward plus decoding took about
+  8.01 CPU seconds in this audit.
+- Residual-informed sampling returned 19,715 of 23,904 requested actions after
+  539,080 attempts and about 15.40 CPU seconds. Duplicate-heavy states exhausted
+  their bounded refill attempts.
+- Hybrid returned 22,433 actions after 233,677 attempts and about 6.52 seconds.
+- Uniform returned all 23,904 actions after 24,817 attempts and about 0.27 seconds.
+
+These are CPU measurements from one audit run. They are not accelerator timings
+and do not imply equal cost per MCTS expansion.
+
+### Metric boundaries
+
+An action is *valid* when coefficients are allowed and all three factors are
+nonzero. A *known-continuation hit* additionally requires exact equality with at
+least one canonical stored next action. Padding is excluded, multiple targets
+are supported, and repeated-factor multiplicity remains in the stored completion.
+An arbitrary exact subtraction is not counted as a known hit. Conversely, a
+non-match may still be mathematically useful because stored continuations are not
+exhaustive.
+
+No proposal-quality hit is a completed decomposition. Exact trajectory success
+will remain the responsibility of TensorGame transitions when TG-3C integrates
+the policy with MCTS.
+
+### Planner access boundary
+
+A TG-3C neural proposal policy may access only the current residual, remaining
+move budget, coefficient constraints, checkpoint parameters, and configured
+proposal budget. Stored factors and known next actions may be used only after
+search for evaluation. The audited checkpoint remains validation-selected; the
+test split was not involved in checkpoint selection or tuning.
+
 ## Reference
 
 Alhussein Fawzi et al., “Discovering faster matrix multiplication algorithms

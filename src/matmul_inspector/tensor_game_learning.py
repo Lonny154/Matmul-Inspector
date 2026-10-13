@@ -160,32 +160,58 @@ def _action_from_flat(values: Sequence[int], shape: tuple[int, int, int]) -> Ran
 
 def rank_complete_actions(logits, shape: tuple[int, int, int], max_actions: int) -> tuple[tuple[RankOneAction, float], ...]:
     """Beam-rank valid complete actions under the independent coefficient model."""
+    return rank_complete_actions_audited(logits, shape, max_actions)[0]
+
+
+def rank_complete_actions_audited(logits, shape: tuple[int, int, int], max_actions: int):
+    """Return ranked actions plus explicit internal decoding-effort counters."""
     torch = _torch()
     if logits.shape != (sum(shape), 3) or max_actions <= 0:
         raise ValueError("single-example logits or max_actions are invalid")
+    started = time.perf_counter()
     log_probabilities = torch.log_softmax(logits.detach().cpu(), dim=-1)
     # Retain enough alternatives to escape a high-probability all-zero factor.
     beam_width = max(256, max_actions * 32)
     beam: list[tuple[tuple[int, ...], float]] = [((), 0.0)]
+    internal_candidates = 0
     for position in range(log_probabilities.shape[0]):
         candidates = []
         for prefix, score in beam:
             for class_index, coefficient in enumerate(COEFFICIENTS):
                 candidates.append((prefix + (coefficient,), score + float(log_probabilities[position, class_index])))
+        internal_candidates += len(candidates)
         candidates.sort(key=lambda item: (-item[1], item[0]))
         beam = candidates[:beam_width]
     accepted: dict[RankOneAction, float] = {}
+    invalid = 0
+    duplicates = 0
+    decoded = 0
     for values, score in beam:
+        decoded += 1
         action = _action_from_flat(values, shape)
         try:
             validate_action(action, shape, frozenset(COEFFICIENTS))
         except ValueError:
+            invalid += 1
             continue
         canonical = canonicalize_action(action)
+        if canonical in accepted:
+            duplicates += 1
         accepted[canonical] = max(score, accepted.get(canonical, -math.inf))
         if len(accepted) >= max_actions:
             break
-    return tuple(sorted(accepted.items(), key=lambda item: (-item[1], item[0].u, item[0].v, item[0].w)))
+    ranked = tuple(sorted(accepted.items(), key=lambda item: (-item[1], item[0].u, item[0].v, item[0].w)))
+    return ranked, {
+        "requested": max_actions,
+        "internal_candidates_considered": internal_candidates,
+        "final_beam_size": len(beam),
+        "decoded_candidates": decoded,
+        "invalid_rejected": invalid,
+        "canonical_duplicates_rejected": duplicates,
+        "returned": len(ranked),
+        "valid_unique": len(ranked),
+        "generation_seconds": time.perf_counter() - started,
+    }
 
 
 @dataclass(frozen=True)
