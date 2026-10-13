@@ -195,6 +195,60 @@ class NeuralValueEvaluator:
 
 
 @dataclass
+class DirectReturnValueEvaluator:
+    """Use a direct MCTS-return head with exact terminal overrides and clipping."""
+
+    model: Any
+    config: PolicyValueConfig
+    device: Any = "cpu"
+    name: str = field(default="neural_direct_return", init=False)
+    metrics: ValueMetrics = field(default_factory=ValueMetrics, init=False, repr=False)
+    raw_predictions: list[float] = field(default_factory=list, init=False, repr=False)
+    clip_reasons: dict[str, int] = field(default_factory=dict, init=False, repr=False)
+
+    def reset_metrics(self) -> None:
+        self.metrics = ValueMetrics()
+        self.raw_predictions = []
+        self.clip_reasons = {}
+
+    def evaluate(self, residual, remaining_moves, max_moves, target_nonzeros):
+        del target_nonzeros
+        if tensor_shape(residual) != self.config.shape:
+            raise ValueError("residual shape does not match the neural checkpoint")
+        if residual == zero_tensor(self.config.shape):
+            return float(max_moves)
+        if remaining_moves <= 0:
+            return float(-(max_moves + 1))
+        torch = _torch()
+        started = time.perf_counter()
+        tensor = torch.tensor(residual, dtype=torch.float32, device=self.device).unsqueeze(0)
+        with torch.inference_mode():
+            _, prediction = self.model(tensor)
+        self.metrics.inference_seconds += time.perf_counter() - started
+        raw = float(prediction[0].detach().cpu())
+        lower, upper = float(-(max_moves + 1)), float(max_moves)
+        if not math.isfinite(raw):
+            reason = "nonfinite"
+            value = lower
+        elif raw < lower:
+            reason = "below_terminal_lower_bound"
+            value = lower
+        elif raw > upper:
+            reason = "above_terminal_upper_bound"
+            value = upper
+        else:
+            reason = None
+            value = raw
+        self.metrics.calls += 1
+        self.metrics.clipped += int(reason is not None)
+        self.metrics.predictions.append(value)
+        self.raw_predictions.append(raw)
+        if reason is not None:
+            self.clip_reasons[reason] = self.clip_reasons.get(reason, 0) + 1
+        return value
+
+
+@dataclass
 class ConstantValueEvaluator:
     """Residual-independent nonterminal control on the MCTS leaf-value scale."""
 

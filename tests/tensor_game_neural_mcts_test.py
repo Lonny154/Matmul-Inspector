@@ -25,6 +25,7 @@ from matmul_inspector.tensor_game_neural_experiments import (
     save_experiment,
 )
 from matmul_inspector.tensor_game_neural_mcts import (
+    DirectReturnValueEvaluator,
     NeuralActionPolicy,
     NeuralResidualHybridPolicy,
     NeuralValueEvaluator,
@@ -86,6 +87,18 @@ class NeuralAdapterTest(unittest.TestCase):
         self.assertEqual(evaluator.evaluate(target, 3, 5, 1), 3.0)
         evaluator.model.value = 99.0
         self.assertEqual(evaluator.evaluate(target, 3, 5, 1), 2.0)
+        self.assertEqual(evaluator.metrics.clipped, 1)
+        zero = (((0,),),)
+        self.assertEqual(evaluator.evaluate(zero, 2, 5, 1), 5.0)
+        self.assertEqual(evaluator.evaluate(target, 0, 5, 1), -6.0)
+
+    def test_direct_return_value_preserves_semantics_and_terminal_overrides(self):
+        config = PolicyValueConfig(shape=(1, 1, 1), hidden_dim=4)
+        target = outer_product(RankOneAction((1,), (1,), (1,)))
+        evaluator = DirectReturnValueEvaluator(self.FakeModel(config.action_width, value=-2.5), config)
+        self.assertEqual(evaluator.evaluate(target, 3, 5, 1), -2.5)
+        evaluator.model.value = 99.0
+        self.assertEqual(evaluator.evaluate(target, 3, 5, 1), 5.0)
         self.assertEqual(evaluator.metrics.clipped, 1)
         zero = (((0,),),)
         self.assertEqual(evaluator.evaluate(zero, 2, 5, 1), 5.0)

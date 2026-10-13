@@ -192,6 +192,9 @@ offline learning.
 The [controlled offline ablation](docs/tensor_game_offline_ablation.md) compares
 strict policy-only, value-only, and joint updates using validation-only selection
 and a frozen held-out search plan.
+The [held-out protocol addendum](docs/tensor_game_heldout_protocol.md) resolves
+pre-execution path, comparison-matrix, bootstrap, and wall-time ambiguities while
+leaving the original frozen plan unchanged.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
