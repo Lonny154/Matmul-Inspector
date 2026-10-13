@@ -285,6 +285,30 @@ class CudaTritonRunner:
         )
 
 
+def validate_triton_candidate(candidate: SamplingRecord) -> None:
+    """Validate identity and Milestone 2B FC1 compatibility without GPU imports."""
+    if not isinstance(candidate, SamplingRecord):
+        raise ValueError("candidate must be a SamplingRecord")
+    reconstructed = TritonGemmConfig.from_dict(candidate.parameters.to_dict())
+    if candidate.candidate_id != candidate_identifier(reconstructed, candidate.context):
+        raise ValueError("candidate identity does not match its parameters and context")
+    context = candidate.context
+    if context.backend != "triton":
+        raise ValueError(f"unsupported backend {context.backend!r}; expected 'triton'")
+    if context.precision.lower() not in SUPPORTED_PRECISIONS:
+        raise ValueError(f"unsupported precision {context.precision!r}; expected FP16")
+    if (context.m, context.n, context.k) != FC1_SHAPE:
+        raise ValueError(
+            f"unsupported workload {(context.m, context.n, context.k)}; expected {FC1_SHAPE}"
+        )
+    if context.hardware_target.lower() not in SUPPORTED_HARDWARE_TARGETS:
+        raise ValueError(
+            f"unsupported hardware target {context.hardware_target!r}; expected SM 8.9"
+        )
+    if context.k % reconstructed.block_k:
+        raise ValueError(f"K={context.k} must be divisible by block_k={reconstructed.block_k}")
+
+
 class TritonGemmEvaluator:
     """Evaluate sampled FC1 configurations with the packaged Triton kernel."""
 
@@ -313,34 +337,13 @@ class TritonGemmEvaluator:
 
     @staticmethod
     def _validate_candidate(candidate: SamplingRecord) -> None:
-        if not isinstance(candidate, SamplingRecord):
-            raise ValueError("candidate must be a SamplingRecord")
-        reconstructed = TritonGemmConfig.from_dict(candidate.parameters.to_dict())
-        if candidate.candidate_id != candidate_identifier(reconstructed, candidate.context):
-            raise ValueError("candidate identity does not match its parameters and context")
-        context = candidate.context
-        if context.backend != "triton":
-            raise ValueError(f"unsupported backend {context.backend!r}; expected 'triton'")
-        if context.precision.lower() not in SUPPORTED_PRECISIONS:
-            raise ValueError(f"unsupported precision {context.precision!r}; expected FP16")
-        if (context.m, context.n, context.k) != FC1_SHAPE:
-            raise ValueError(
-                f"unsupported workload {(context.m, context.n, context.k)}; expected {FC1_SHAPE}"
-            )
-        if context.hardware_target.lower() not in SUPPORTED_HARDWARE_TARGETS:
-            raise ValueError(
-                f"unsupported hardware target {context.hardware_target!r}; expected SM 8.9"
-            )
-        if context.k % reconstructed.block_k:
-            raise ValueError(
-                f"K={context.k} must be divisible by block_k={reconstructed.block_k}"
-            )
+        validate_triton_candidate(candidate)
 
     def evaluate(self, candidate: SamplingRecord) -> EvaluationRecord:
         identity = EvaluationIdentity(self._id_factory())
         lifecycle = EvaluationLifecycle()
         try:
-            self._validate_candidate(candidate)
+            validate_triton_candidate(candidate)
         except (TypeError, ValueError) as error:
             lifecycle.transition(EvaluationStatus.FAILED)
             context_candidate = candidate if isinstance(candidate, SamplingRecord) else None
@@ -391,7 +394,6 @@ class TritonGemmEvaluator:
             ),
             extensions=extensions,
         )
-
     def _failure_record(self, identity: EvaluationIdentity, candidate: SamplingRecord,
                         error: TritonRunnerFailure) -> EvaluationRecord:
         lifecycle = EvaluationLifecycle()

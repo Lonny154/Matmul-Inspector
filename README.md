@@ -225,6 +225,11 @@ FP16 configurations with the packaged kernel on an SM 8.9 NVIDIA GPU. It records
 correctness evidence and repeated CUDA-event measurements while keeping host
 clocks separate. It does not install GPU dependencies or claim a speedup.
 
+For matched evidence, the [controlled FC1 benchmark](docs/controlled_benchmarking.md)
+uses shared inputs, preallocated outputs, deterministic interleaved rounds, and
+paired comparisons against `torch.matmul(..., out=...)`. It writes a versioned
+JSON manifest, evaluation JSONL, and Markdown report.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
