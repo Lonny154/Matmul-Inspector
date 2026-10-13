@@ -211,6 +211,24 @@ class ControlledBenchmarkTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing fields: baseline"):
             validate_manifest(missing)
 
+    def test_report_explains_deduplicated_search_winner_provenance(self):
+        result, _ = run()
+        candidate_id = result["manifest"]["candidate_ids"][0]
+        result["manifest"]["extensions"]["winner_selection"] = [{
+            "candidate_id": candidate_id, "parameters": {},
+            "discoveries": [
+                {"trial_id": "trial-a", "arm": "uniform", "logical_budget": 12,
+                 "search_latency_us": 60.25},
+                {"trial_id": "trial-b", "arm": "adaptive", "logical_budget": 9,
+                 "search_latency_us": 60.75},
+            ],
+        }]
+        report = render_markdown_report(result["manifest"])
+        self.assertIn("Search-time discovery versus confirmation", report)
+        self.assertIn("not confirmation measurements", report)
+        self.assertIn("confirmed once", report)
+        self.assertIn("trial-a uniform at budget 12 (60.250 us exploratory)", report)
+
 
 @unittest.skipUnless(os.environ.get("MATMUL_INSPECTOR_RUN_CUDA_TESTS") == "1",
                      "set MATMUL_INSPECTOR_RUN_CUDA_TESTS=1 for RTX 4060 Ti validation")

@@ -19,7 +19,7 @@ from .evaluation import (
     FailureCategory, FailureInfo, write_evaluation_jsonl,
 )
 from .sampling import SamplingRecord
-from .triton_evaluator import FC1_SHAPE, validate_triton_candidate
+from .triton_evaluator import FC1_SHAPE, _nvidia_driver_version, validate_triton_candidate
 
 
 CONTROLLED_BENCHMARK_SCHEMA_VERSION = 1
@@ -472,6 +472,22 @@ def render_markdown_report(manifest: Mapping[str, Any]) -> str:
             lines.append(f"- `{failure['candidate_id']}`: {failure['category']}: "
                          f"{failure['description']}")
         lines.append("")
+    selection = manifest["extensions"].get("winner_selection")
+    if selection:
+        lines.extend(["## Search-time discovery versus confirmation", "",
+                      "The exploratory search latencies below determined which configurations "
+                      "entered this experiment. They are not confirmation measurements. The "
+                      "controlled results in the table above come only from this randomized, "
+                      "interleaved session.", "",
+                      "Each distinct configuration was confirmed once. Repeated search "
+                      "discoveries are provenance, not independent confirmation samples.", ""])
+        for item in selection:
+            discoveries = ", ".join(
+                f"{entry['trial_id']} {entry['arm']} at budget {entry['logical_budget']} "
+                f"({entry['search_latency_us']:.3f} us exploratory)"
+                for entry in item["discoveries"])
+            lines.append(f"- `{item['candidate_id']}`: {discoveries}")
+        lines.append("")
     lines.extend(["## Artifacts", "",
                   "- Raw manifest: `experiment.json`",
                   "- Candidate evaluations: `evaluations.jsonl`", ""])
@@ -506,7 +522,8 @@ class CudaControlledBenchmarkBackend:
             "device": {"type": "cuda", "index": device_index, "name": properties.name,
                        "compute_capability": "8.9", "total_memory_bytes": properties.total_memory},
             "versions": {"torch": torch.__version__, "triton": triton.__version__,
-                         "cuda_runtime": torch.version.cuda},
+                         "cuda_runtime": torch.version.cuda,
+                         "nvidia_driver": _nvidia_driver_version(device_index)},
         }
         m, n, k = FC1_SHAPE
         torch.manual_seed(config.input_seed)

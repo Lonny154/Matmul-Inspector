@@ -118,7 +118,9 @@ deduplicated confirmation does not touch CUDA:
 
 ```sh
 python examples/confirm_triton_search.py \
-  artifacts/hardware-search/fc1-full-001/experiment.json
+  artifacts/hardware-search/fc1-pilot-seed101/experiment.json \
+  artifacts/hardware-search/fc1-pilot-seed202/experiment.json \
+  artifacts/hardware-search/fc1-pilot-seed303/experiment.json
 ```
 
 Explicit confirmation reuses the existing controlled benchmark. It benchmarks
@@ -127,9 +129,11 @@ randomized interleaved rounds:
 
 ```sh
 python examples/confirm_triton_search.py \
-  artifacts/hardware-search/fc1-full-001/experiment.json \
+  artifacts/hardware-search/fc1-pilot-seed101/experiment.json \
+  artifacts/hardware-search/fc1-pilot-seed202/experiment.json \
+  artifacts/hardware-search/fc1-pilot-seed303/experiment.json \
   --execute \
-  --output artifacts/hardware-search/fc1-full-001-confirmation
+  --output artifacts/hardware-search/fc1-winner-confirmation
 ```
 
 Confirmation is never launched automatically after search.

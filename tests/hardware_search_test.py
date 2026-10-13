@@ -25,7 +25,7 @@ from matmul_inspector.hardware_search import (
     ARM_NAMES, HardwareSearchConfig, HardwareSearchExperiment,
     default_fc1_search_space, read_hardware_search_manifest,
     render_hardware_search_report, validate_hardware_search_manifest,
-    search_winner_records, write_hardware_search,
+    search_winner_records, search_winner_selection, write_hardware_search,
 )
 
 
@@ -220,6 +220,18 @@ class HardwareSearchTests(unittest.TestCase):
         self.assertGreaterEqual(len(winners), 1)
         self.assertLessEqual(len(winners), 2)
         self.assertTrue(all(item.context.hardware_target == "sm_89" for item in winners))
+
+    def test_confirmation_selection_combines_manifests_and_preserves_discoveries(self):
+        result = experiment().execute(lambda seed, trial: FakeHardwareEvaluator())
+        single_winners, single_selection = search_winner_selection((result["manifest"],))
+        winners, selection = search_winner_selection(
+            (result["manifest"], result["manifest"]))
+        self.assertEqual([item.candidate_id for item in winners],
+                         [item.candidate_id for item in single_winners])
+        self.assertEqual(
+            [len(item["discoveries"]) for item in selection],
+            [2 * len(item["discoveries"]) for item in single_selection],
+        )
 
     def test_persistence_replay_report_and_strict_schema(self):
         result = experiment().execute(lambda seed, trial: FakeHardwareEvaluator())

@@ -12,13 +12,13 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from matmul_inspector.controlled_benchmark import ControlledBenchmarkConfig
 from matmul_inspector.hardware_search import (
-    confirm_search_winners, read_hardware_search_manifest, search_winner_records,
+    confirm_search_winners_many, read_hardware_search_manifest, search_winner_selection,
 )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("search_manifest", type=Path)
+    parser.add_argument("search_manifests", type=Path, nargs="+")
     parser.add_argument("--execute", action="store_true",
                         help="explicitly enable randomized interleaved GPU confirmation")
     parser.add_argument("--output", type=Path,
@@ -30,11 +30,12 @@ def main() -> int:
     parser.add_argument("--warmups", type=int, default=100)
     args = parser.parse_args()
 
-    manifest = read_hardware_search_manifest(args.search_manifest)
-    winners = search_winner_records(manifest)
+    manifests = [read_hardware_search_manifest(path) for path in args.search_manifests]
+    winners, selection = search_winner_selection(manifests)
     print(f"Unique search winners selected for confirmation: {len(winners)}")
-    for candidate in winners:
-        print(f"  {candidate.candidate_id}: {candidate.parameters.to_dict()}")
+    for candidate, evidence in zip(winners, selection):
+        print(f"  {candidate.candidate_id}: {candidate.parameters.to_dict()}; "
+              f"discoveries={len(evidence['discoveries'])}")
     if not args.execute:
         print("DRY RUN: controlled confirmation was not executed.")
         return 0
@@ -47,8 +48,8 @@ def main() -> int:
         samples_per_round=args.samples_per_round,
         launches_per_sample=args.launches_per_sample, warmups=args.warmups,
     )
-    output = confirm_search_winners(
-        manifest, CudaControlledBenchmarkBackend(), args.output, config)
+    output = confirm_search_winners_many(
+        manifests, CudaControlledBenchmarkBackend(), args.output, config)
     print(f"Controlled confirmation written to {output}")
     return 0
 

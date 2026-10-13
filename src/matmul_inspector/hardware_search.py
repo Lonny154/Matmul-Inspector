@@ -554,26 +554,69 @@ def confirm_search_winners(
     return write_controlled_benchmark(output, result)
 
 
+def confirm_search_winners_many(
+    manifests: Sequence[Mapping[str, Any]], backend: ControlledBenchmarkBackend,
+    output: str | Path, config: ControlledBenchmarkConfig,
+) -> Path:
+    """Confirm deduplicated winners from several completed search experiments."""
+    winners, selection = search_winner_selection(manifests)
+    result = ControlledBenchmarkRunner(backend).run(winners, config)
+    result["manifest"]["extensions"]["winner_selection"] = selection
+    result["manifest"]["extensions"]["source_experiment_ids"] = [
+        value["experiment_id"] for value in map(validate_hardware_search_manifest, manifests)
+    ]
+    return write_controlled_benchmark(output, result)
+
+
 def search_winner_records(manifest: Mapping[str, Any]) -> tuple[SamplingRecord, ...]:
     """Recover and deduplicate the best successful candidate from every trial arm."""
-    value = validate_hardware_search_manifest(manifest)
-    if value["mode"] != "hardware":
-        raise ValueError("confirmation requires a completed hardware search manifest")
+    winners, _ = search_winner_selection((manifest,))
+    return winners
+
+
+def search_winner_selection(
+    manifests: Sequence[Mapping[str, Any]],
+) -> tuple[tuple[SamplingRecord, ...], list[dict[str, Any]]]:
+    """Deduplicate winners and retain every trial/arm discovery reference."""
+    if not manifests:
+        raise ValueError("confirmation requires at least one search manifest")
     winners: dict[str, SamplingRecord] = {}
-    context = SearchContext(**value["search_space"]["context"])
-    for trial in value["trials"]:
-        for arm in ARM_NAMES:
-            successful = [item for item in trial["arms"][arm]["history"]
-                          if item["latency_us"] is not None]
-            if not successful:
-                continue
-            winner = min(successful, key=lambda item: item["latency_us"])
-            parameters = TritonGemmConfig.from_dict(winner["parameters"])
-            winners.setdefault(winner["candidate_id"], SamplingRecord(
-                winner["candidate_id"], value["search_space"]["identifier"],
-                "hardware_search_winner", 0, parameters, context, len(winners),
-                "2000-01-01T00:00:00Z", {"source_experiment_id": value["experiment_id"]},
-            ))
+    provenance: dict[str, dict[str, Any]] = {}
+    for raw in manifests:
+        value = validate_hardware_search_manifest(raw)
+        if value["mode"] != "hardware":
+            raise ValueError("confirmation requires completed hardware search manifests")
+        context = SearchContext(**value["search_space"]["context"])
+        for trial in value["trials"]:
+            for arm in ARM_NAMES:
+                successful = [item for item in trial["arms"][arm]["history"]
+                              if item["latency_us"] is not None]
+                if not successful:
+                    continue
+                winner = min(successful, key=lambda item: item["latency_us"])
+                parameters = TritonGemmConfig.from_dict(winner["parameters"])
+                discovery = {
+                    "experiment_id": value["experiment_id"],
+                    "trial_id": trial["trial_id"], "arm": arm,
+                    "search_evaluation_id": winner["evaluation_id"],
+                    "search_latency_us": winner["latency_us"],
+                    "logical_budget": winner["logical_order"] + 1,
+                }
+                if winner["candidate_id"] not in winners:
+                    winners[winner["candidate_id"]] = SamplingRecord(
+                        winner["candidate_id"], value["search_space"]["identifier"],
+                        "hardware_search_winner", 0, parameters, context, len(winners),
+                        "2000-01-01T00:00:00Z", {"discoveries": [discovery]},
+                    )
+                    provenance[winner["candidate_id"]] = {
+                        "candidate_id": winner["candidate_id"],
+                        "parameters": parameters.to_dict(), "discoveries": [discovery],
+                    }
+                else:
+                    existing = winners[winner["candidate_id"]]
+                    if existing.parameters != parameters or existing.context != context:
+                        raise ValueError("matching candidate identity has inconsistent semantics")
+                    provenance[winner["candidate_id"]]["discoveries"].append(discovery)
     if not winners:
         raise ValueError("hardware search has no successful candidates to confirm")
-    return tuple(winners.values())
+    return tuple(winners.values()), list(provenance.values())
