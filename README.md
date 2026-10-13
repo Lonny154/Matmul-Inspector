@@ -166,6 +166,9 @@ reference-guided validation and small unguided search experiments without neural
 networks or hardware dependencies.
 The [independent discovery study](docs/tensor_game_discovery.md) compares uniform,
 residual-informed, and hybrid proposals under matched CPU search budgets.
+The [synthetic demonstration engine](docs/tensor_game_synthetic_data.md) creates
+exact, leakage-checked policy/value training examples without requiring an ML
+framework.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
