@@ -90,6 +90,22 @@ def outer_product(action: RankOneAction) -> Tensor:
     )
 
 
+def subtract_action(residual: Tensor, action: RankOneAction) -> Tensor:
+    """Return the exact residual after subtracting one rank-one action."""
+    shape = tensor_shape(residual)
+    validate_action(action, shape, allowed_coefficients=None)
+    return tuple(
+        tuple(
+            tuple(
+                residual[x][y][z] - action.u[x] * action.v[y] * action.w[z]
+                for z in range(shape[2])
+            )
+            for y in range(shape[1])
+        )
+        for x in range(shape[0])
+    )
+
+
 def sum_actions(actions: Sequence[RankOneAction], shape: tuple[int, int, int]) -> Tensor:
     """Sum rank-one actions into an exact immutable tensor."""
     total = [[[0 for _ in range(shape[2])] for _ in range(shape[1])] for _ in range(shape[0])]
@@ -132,16 +148,7 @@ class TensorGame:
         if self.terminated or self.truncated:
             raise RuntimeError("cannot step a finished game")
         validate_action(action, self.shape, self.allowed_coefficients)
-        updated = tuple(
-            tuple(
-                tuple(
-                    self.residual[x][y][z] - action.u[x] * action.v[y] * action.w[z]
-                    for z in range(self.shape[2])
-                )
-                for y in range(self.shape[1])
-            )
-            for x in range(self.shape[0])
-        )
+        updated = subtract_action(self.residual, action)
         self.residual = updated
         self.history.append(action)
         self.terminated = all(value == 0 for plane in updated for row in plane for value in row)

@@ -161,6 +161,9 @@ capture conditions, methodology, numerical evidence, and limitations.
 The source tree also includes a CPU-only [TensorGame research environment](docs/tensor_game.md)
 for exact matrix multiplication tensor decomposition. Its standard and Strassen
 trajectories are known correctness references, not newly discovered algorithms.
+A bounded [sampled MCTS planner](docs/tensor_game_mcts.md) supports deterministic
+reference-guided validation and small unguided search experiments without neural
+networks or hardware dependencies.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
