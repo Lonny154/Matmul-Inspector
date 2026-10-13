@@ -183,6 +183,9 @@ The [value-scale study](docs/tensor_game_value_scale.md) traces PUCT mechanics a
 separates optimistic value magnitude from learned state ranking.
 The [experience replay guide](docs/tensor_game_experience_replay.md) records
 actual MCTS-driven environment decisions and validates exact episode replay.
+The optional [offline learning guide](docs/tensor_game_offline_learning.md)
+trains policy and direct-return value targets on validated sampled MCTS supports.
+Its TG-4A run is a pipeline smoke test, not evidence of improved discovery.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
