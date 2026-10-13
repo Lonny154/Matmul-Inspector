@@ -242,6 +242,11 @@ It enforces equal attempted-evaluation budgets, rebuilds adaptive feedback from
 the cumulative history, and records replayable fairness evidence before any GPU
 search is authorized.
 
+The [hardware adaptive-search runner](docs/hardware_adaptive_search.md) extends
+that design to the existing Triton FC1 evaluator. Its default dry run does not
+query CUDA. Real search and the separate controlled winner confirmation both
+require explicit execution flags and write new versioned artifact directories.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
