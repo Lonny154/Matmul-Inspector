@@ -169,6 +169,9 @@ residual-informed, and hybrid proposals under matched CPU search budgets.
 The [synthetic demonstration engine](docs/tensor_game_synthetic_data.md) creates
 exact, leakage-checked policy/value training examples without requiring an ML
 framework.
+The optional [policy/value learning baseline](docs/tensor_game_learning.md) trains
+a small supervised PyTorch MLP and compares held-out proposal quality without
+changing MCTS or adding reinforcement learning.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
