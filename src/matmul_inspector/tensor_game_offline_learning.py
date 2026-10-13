@@ -152,6 +152,9 @@ class ExperienceDataset:
             "episode_id": row["episode_id"], "target_id": self.target_by_episode[row["episode_id"]],
             "outcome": self.episode_by_id[row["episode_id"]]["outcome"],
             "outcome_censored": row["outcome_censored"],
+            "construction_length": self.episode_by_id[row["episode_id"]]["model_provenance"].get(
+                "construction_length_upper_bound"
+            ),
             "provenance": row["model_provenance"],
         }
 
@@ -170,7 +173,7 @@ def collate_experience(rows):
         policy[index, :count] = row["search_policy"]
         visits[index, :count] = row["visits"]
         mask[index, :count] = True
-    return {
+    result = {
         "residual": torch.stack([row["residual"] for row in rows]),
         "actions": actions, "search_policy": policy, "visits": visits, "action_mask": mask,
         "value_target": torch.stack([row["value_target"] for row in rows]),
@@ -179,8 +182,12 @@ def collate_experience(rows):
         "target_id": [row["target_id"] for row in rows],
         "outcome": [row["outcome"] for row in rows],
         "outcome_censored": [row["outcome_censored"] for row in rows],
+        "construction_length": [row["construction_length"] for row in rows],
         "provenance": [row["provenance"] for row in rows],
     }
+    if all("sample_weight" in row for row in rows):
+        result["sample_weight"] = torch.stack([row["sample_weight"] for row in rows])
+    return result
 
 
 def _move_tensors(batch, device):

@@ -189,6 +189,9 @@ Its TG-4A run is a pipeline smoke test, not evidence of improved discovery.
 The [diverse experience guide](docs/tensor_game_diverse_experience.md) defines a
 leakage-safe 200-target curriculum and staged MCTS collection audit for future
 offline learning.
+The [controlled offline ablation](docs/tensor_game_offline_ablation.md) compares
+strict policy-only, value-only, and joint updates using validation-only selection
+and a frozen held-out search plan.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
