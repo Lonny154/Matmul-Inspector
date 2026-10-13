@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
+import json
 import math
 import random
 import time
@@ -426,6 +428,7 @@ class SearchConfig:
     c_puct: float = 1.5
     node_limit: int | None = None
     max_wall_time_seconds: float | None = None
+    trace_simulations: int = 0
 
     def __post_init__(self) -> None:
         if self.simulations <= 0 or self.max_actions <= 0 or self.max_moves <= 0:
@@ -436,6 +439,8 @@ class SearchConfig:
             raise ValueError("node_limit must be positive when supplied")
         if self.max_wall_time_seconds is not None and self.max_wall_time_seconds <= 0:
             raise ValueError("max_wall_time_seconds must be positive when supplied")
+        if self.trace_simulations < 0:
+            raise ValueError("trace_simulations must be nonnegative")
 
 
 @dataclass(frozen=True)
@@ -474,6 +479,7 @@ class SearchResult:
     value_inference_seconds: float = field(default=0.0, compare=False)
     value_predictions: tuple[float, ...] = field(default=(), compare=False)
     simulations_to_first_success: int | None = field(default=None, compare=False)
+    simulation_trace: tuple[dict, ...] = field(default=(), compare=False)
 
 
 class SampledMCTS:
@@ -554,6 +560,7 @@ class SampledMCTS:
         simulations_to_first_success = None
         node_limited = False
         timed_out = False
+        simulation_trace = []
         for _ in range(self.config.simulations):
             if (
                 self.config.max_wall_time_seconds is not None
@@ -608,6 +615,29 @@ class SampledMCTS:
                     self.solution = candidate
                     if simulations_to_first_success is None:
                         simulations_to_first_success = simulations_run
+            if simulations_run <= self.config.trace_simulations:
+                action_digest = lambda action: hashlib.sha256(json.dumps(
+                    {"u": action.u, "v": action.v, "w": action.w}, separators=(",", ":")
+                ).encode()).hexdigest()
+                root_statistics = []
+                for action, statistics in root.actions.items():
+                    bonus = (
+                        self.config.c_puct * statistics.prior * math.sqrt(root.visits)
+                        / (1 + statistics.visits)
+                    )
+                    root_statistics.append({
+                        "action_digest": action_digest(action), "visits": statistics.visits,
+                        "q_value": statistics.value, "prior": statistics.prior,
+                        "puct_exploration_bonus": bonus, "puct_score": statistics.value + bonus,
+                    })
+                simulation_trace.append({
+                    "simulation": simulations_run,
+                    "selected_path": [action_digest(action) for _, action in path],
+                    "search_depth": len(path), "remaining_moves": node.remaining_moves,
+                    "leaf_value": value, "terminal_success": node.terminal,
+                    "terminal_failure": not node.terminal and node.remaining_moves == 0,
+                    "root_actions": root_statistics,
+                })
 
         exact = self.solution is not None and sum_actions(self.solution, self.shape) == self.target
         if exact:
@@ -652,4 +682,5 @@ class SampledMCTS:
             value_inference_seconds=value_metrics.inference_seconds,
             value_predictions=tuple(value_metrics.predictions),
             simulations_to_first_success=simulations_to_first_success,
+            simulation_trace=tuple(simulation_trace),
         )

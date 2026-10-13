@@ -179,6 +179,8 @@ separates learned proposals from learned leaf values and reports five matched
 ablations without updating the trained model.
 The [neural value study](docs/tensor_game_value_study.md) compares trained,
 untrained, constant, and handcrafted leaf values under fixed residual proposals.
+The [value-scale study](docs/tensor_game_value_scale.md) traces PUCT mechanics and
+separates optimistic value magnitude from learned state ranking.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
