@@ -181,6 +181,8 @@ The [neural value study](docs/tensor_game_value_study.md) compares trained,
 untrained, constant, and handcrafted leaf values under fixed residual proposals.
 The [value-scale study](docs/tensor_game_value_scale.md) traces PUCT mechanics and
 separates optimistic value magnitude from learned state ranking.
+The [experience replay guide](docs/tensor_game_experience_replay.md) records
+actual MCTS-driven environment decisions and validates exact episode replay.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
