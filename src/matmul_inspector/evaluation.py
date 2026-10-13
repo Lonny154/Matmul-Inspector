@@ -27,6 +27,7 @@ class EvaluationStatus(str, Enum):
 
 
 class FailureCategory(str, Enum):
+    INVALID_CANDIDATE = "invalid_or_unsupported_candidate"
     COMPILATION = "compilation_failure"
     CORRECTNESS = "correctness_failure"
     BENCHMARK = "benchmark_failure"

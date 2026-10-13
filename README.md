@@ -220,6 +220,11 @@ compilation, correctness, benchmark, failure, lifecycle, and persistence records
 An explicitly synthetic mock evaluator exercises the interface without invoking
 Triton, CUDA, Neuron, or accelerator hardware.
 
+The optional [Triton FC1 evaluator](docs/triton_evaluator.md) evaluates sampled
+FP16 configurations with the packaged kernel on an SM 8.9 NVIDIA GPU. It records
+correctness evidence and repeated CUDA-event measurements while keeping host
+clocks separate. It does not install GPU dependencies or claim a speedup.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.

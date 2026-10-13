@@ -29,6 +29,8 @@ a successful latency result.
 
 Failure categories are:
 
+- `invalid_or_unsupported_candidate`: candidate identity, context, parameters,
+  or requested target is not supported by the evaluator.
 - `compilation_failure`: compilation did not produce an executable candidate.
 - `correctness_failure`: the compiled candidate failed numerical validation.
 - `benchmark_failure`: timing could not be completed after correctness passed.
