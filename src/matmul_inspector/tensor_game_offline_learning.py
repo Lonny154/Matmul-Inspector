@@ -60,16 +60,28 @@ class OfflineTrainingConfig:
             raise ValueError("device must be cpu or cuda")
 
 
-def grouped_splits(buffer: ReplayBuffer) -> tuple[dict[str, str], dict[str, Any]]:
+def grouped_splits(
+    buffer: ReplayBuffer,
+    target_assignments: dict[str, str] | None = None,
+) -> tuple[dict[str, str], dict[str, Any]]:
     groups = {}
     for episode in buffer.episodes:
         groups.setdefault(episode["initial_target_digest"], []).append(episode)
     ordered = sorted(groups)
-    if len(ordered) < 3:
-        raise ValueError("at least three independent target groups are required")
-    assignments = {}
-    for index, target in enumerate(ordered):
-        assignments[target] = "test" if index == len(ordered) - 1 else "validation" if index == len(ordered) - 2 else "train"
+    if target_assignments is None:
+        if len(ordered) < 3:
+            raise ValueError("at least three independent target groups are required")
+        assignments = {}
+        for index, target in enumerate(ordered):
+            assignments[target] = "test" if index == len(ordered) - 1 else "validation" if index == len(ordered) - 2 else "train"
+        assignment_source = "deterministic_digest_fallback"
+    else:
+        if set(target_assignments) != set(groups):
+            raise ValueError("persisted target partitions do not match collected target groups")
+        if any(split not in {"train", "validation", "test"} for split in target_assignments.values()):
+            raise ValueError("persisted target partition contains an invalid split")
+        assignments = dict(target_assignments)
+        assignment_source = "persisted_precollection_target_partitions"
     episode_split = {
         episode["episode_id"]: assignments[episode["initial_target_digest"]]
         for episode in buffer.episodes
@@ -84,7 +96,7 @@ def grouped_splits(buffer: ReplayBuffer) -> tuple[dict[str, str], dict[str, Any]
     if collisions:
         raise ValueError("identical residual tensors cross grouped splits")
     return episode_split, {
-        "target_groups": len(groups), "assignments": assignments,
+        "target_groups": len(groups), "assignments": assignments, "assignment_source": assignment_source,
         "episode_counts": {name: sum(value == name for value in episode_split.values()) for name in ("train", "validation", "test")},
         "residual_collisions": collisions,
         "target_collisions": [],
@@ -100,7 +112,12 @@ class ExperienceDataset:
         if split not in {"train", "validation", "test"}:
             raise ValueError("invalid split")
         self.buffer = load_buffer(path)
-        episode_split, self.split_report = grouped_splits(self.buffer)
+        manifest = json.loads((path / "manifest.json").read_text())
+        persisted = manifest.get("metadata", {}).get("target_splits")
+        if persisted is not None:
+            collected = {episode["initial_target_digest"] for episode in self.buffer.episodes}
+            persisted = {target: value for target, value in persisted.items() if target in collected}
+        episode_split, self.split_report = grouped_splits(self.buffer, persisted)
         self.target_by_episode = {
             episode["episode_id"]: episode["initial_target_digest"]
             for episode in self.buffer.episodes

@@ -186,6 +186,9 @@ actual MCTS-driven environment decisions and validates exact episode replay.
 The optional [offline learning guide](docs/tensor_game_offline_learning.md)
 trains policy and direct-return value targets on validated sampled MCTS supports.
 Its TG-4A run is a pipeline smoke test, not evidence of improved discovery.
+The [diverse experience guide](docs/tensor_game_diverse_experience.md) defines a
+leakage-safe 200-target curriculum and staged MCTS collection audit for future
+offline learning.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:

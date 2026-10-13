@@ -168,7 +168,10 @@ def play_episode(
     configuration_id: str,
     model_provenance: dict[str, Any],
     stop_after_decisions: int | None = None,
+    episode_wall_time_seconds: float | None = None,
 ) -> tuple[EpisodeRecord, list[DecisionRecord]]:
+    if episode_wall_time_seconds is not None and episode_wall_time_seconds <= 0:
+        raise ValueError("episode wall-time limit must be positive")
     game = TensorGame(target, max_moves, frozenset(config.coefficients))
     rng = random.Random(seed)
     search_config_id = _stable_id({**asdict(config), "max_moves": max_moves, "configuration": configuration_id})
@@ -177,6 +180,10 @@ def play_episode(
     started = time.perf_counter()
     interruption = None
     while not game.terminated and not game.truncated:
+        elapsed = time.perf_counter() - started
+        if episode_wall_time_seconds is not None and elapsed >= episode_wall_time_seconds:
+            interruption = "episode_wall_time_limit"
+            break
         if stop_after_decisions is not None and len(decisions) >= stop_after_decisions:
             interruption = "configured_stop_condition"
             break
@@ -188,7 +195,11 @@ def play_episode(
             SearchConfig(
                 simulations=config.simulations, max_actions=config.max_actions,
                 max_moves=max_moves - depth, seed=decision_seed, c_puct=config.c_puct,
-                node_limit=config.node_limit, max_wall_time_seconds=config.wall_time_seconds,
+                node_limit=config.node_limit,
+                max_wall_time_seconds=min(
+                    config.wall_time_seconds,
+                    max(1e-9, episode_wall_time_seconds - elapsed),
+                ) if episode_wall_time_seconds is not None else config.wall_time_seconds,
             ), evaluator_factory(),
         ).run()
         improved = search_policy(result.root_actions, config.search_temperature)

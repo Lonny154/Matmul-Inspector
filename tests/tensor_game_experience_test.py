@@ -64,6 +64,18 @@ class ExperienceTest(unittest.TestCase):
         self.assertEqual(interrupted["outcome"], "interrupted")
         self.assertEqual(rows, [])
 
+    def test_episode_wall_time_limit_is_censored(self):
+        target = matrix_multiplication_tensor(1, 1, 1)
+        episode, rows = play_episode(
+            target, 1, policy_factory=lambda: FixedPolicy(RankOneAction((1,), (1,), (1,))),
+            evaluator_factory=HeuristicValueEvaluator,
+            config=CollectionConfig(simulations=3, max_actions=1, node_limit=10),
+            seed=3, experiment_id="wall-limit", configuration_id="fixed",
+            model_provenance={"type": "none"}, episode_wall_time_seconds=1e-12,
+        )
+        self.assertEqual((episode["outcome"], episode["stopping_reason"]), ("interrupted", "episode_wall_time_limit"))
+        self.assertEqual(rows, [])
+
     def test_buffer_duplicates_capacity_corruption_and_reload(self):
         first, first_rows = self._episode(RankOneAction((1,), (1,), (1,)))
         buffer = ReplayBuffer(capacity_episodes=1)
