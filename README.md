@@ -195,6 +195,8 @@ and a frozen held-out search plan.
 The [held-out protocol addendum](docs/tensor_game_heldout_protocol.md) resolves
 pre-execution path, comparison-matrix, bootstrap, and wall-time ambiguities while
 leaving the original frozen plan unchanged.
+The [offline-learning held-out case study](docs/tensor_game_offline_learning_case_study.md)
+reports the completed 1,800-trial discovery evaluation and its exact evidence audit.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
