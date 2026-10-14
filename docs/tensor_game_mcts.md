@@ -107,6 +107,44 @@ repeat up to simulation_limit:
 PYTHONPATH=src python examples/tensor_game_mcts.py
 ```
 
+## Residual candidate providers
+
+The installed CLI can run the residual-guided workflow on a target record or
+manifest. Bounded residual ranking is the default:
+
+```sh
+matmul-inspector tensor-game-search \
+  --target-json targets.json --target-id example
+
+matmul-inspector tensor-game-search \
+  --target-json targets.json --target-id example \
+  --candidate-provider exhaustive
+```
+
+`bounded_128` streams all 6,400 `(u,v)` pairs
+through a fixed 128-entry heap ranked by a continuous-relaxation bound, then
+exactly evaluates those 128 pairs. It preserves
+legal coefficients and exact final scores but is not guaranteed to reproduce
+the exhaustive top 12.
+
+Python callers can use:
+
+```python
+from matmul_inspector.tensor_game_bounded_residual import (
+    create_residual_candidate_provider,
+)
+
+policy = create_residual_candidate_provider()  # bounded_128
+exhaustive = create_residual_candidate_provider("exhaustive")
+```
+
+Both policies implement the existing `ActionPolicy` interface and can be passed
+to `SampledMCTS`. Unsupported provider identifiers raise `ValueError`.
+Bounded ranking is an approximation and may produce a different candidate set
+from exhaustive ranking. The tested corpora showed no discovery regression, but
+that does not prove universal equivalence. Performance depends on workload and
+hardware.
+
 The example runs a bounded reference-guided seven-term Strassen search and then
 a small unguided budget. Failure in the unguided run is reported directly.
 

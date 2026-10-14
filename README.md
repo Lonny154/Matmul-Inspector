@@ -197,6 +197,57 @@ pre-execution path, comparison-matrix, bootstrap, and wall-time ambiguities whil
 leaving the original frozen plan unchanged.
 The [offline-learning held-out case study](docs/tensor_game_offline_learning_case_study.md)
 reports the completed 1,800-trial discovery evaluation and its exact evidence audit.
+The [policy-regression investigation](docs/tensor_game_policy_regression.md) traces
+the policy-only failure to critical one-step actions removed by bounded decoding.
+The [candidate-coverage investigation](docs/tensor_game_candidate_coverage.md)
+tests bounded recall, experiment-only proposal unions, and training support.
+The [out-of-sample policy evaluation](docs/tensor_game_out_of_sample_policy.md)
+compares frozen, trained, and equal-budget hybrid proposals on fresh targets.
+The [search calibration study](docs/tensor_game_search_calibration.md) validates
+reference trajectories and separates candidate coverage from search budget.
+The [held-out policy and search evaluation](docs/tensor_game_heldout_evaluation.md)
+compares all frozen candidate providers under the preregistered TG-4G protocol.
+The [residual-supervision feasibility study](docs/tensor_game_residual_supervision.md)
+audits teacher compatibility, supervision overlap, multi-step limits, and cost.
+The [coverage-aware policy study](docs/tensor_game_coverage_training.md) tests
+verified-positive supervision against a reproduced MCTS-only control.
+The [coverage-retention investigation](docs/tensor_game_coverage_retention.md)
+compares individual-positive supervision and selective frozen-policy retention.
+The [prefix-coverage investigation](docs/tensor_game_prefix_coverage.md) traces
+the exact beam stages and tests an experimental prefix-survival objective.
+The [final-ranking investigation](docs/tensor_game_final_ranking.md) tests a
+decoder-cutoff hinge under matched tiny-set training and validation.
+The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
+tests broader verified-positive coverage and audits beam-aware supervision cost.
+The [policy-interference investigation](docs/tensor_game_policy_interference.md)
+separates local gradient effects from independent-token combinatorial dilution.
+The [conditional-policy study](docs/tensor_game_conditional_policy.md) implements
+and evaluates an isolated `u -> v -> w` policy and conditional beam decoder.
+The [adaptive-routing study](docs/tensor_game_adaptive_routing.md) compares
+frozen, exhaustive residual, fixed-mix, and train-selected proposal routing cost.
+The [bounded-residual study](docs/tensor_game_bounded_residual.md) evaluates a
+continuous-bound coarse-to-fine approximation to exhaustive residual ranking.
+The [held-out bounded-search study](docs/tensor_game_heldout_bounded_search.md)
+compares bounded and exhaustive residual providers in paired end-to-end search.
+The [provider-integration study](docs/tensor_game_provider_integration.md)
+documents opt-in residual-provider selection and the expanded regression corpus.
+The [bounded-memory study](docs/tensor_game_bounded_memory.md) validates an
+exact-output-equivalent streaming heap selector for the opt-in bounded provider.
+The [streaming integration report](docs/tensor_game_streaming_integration.md)
+records its integration and permanent differential/search regressions.
+The [default-readiness study](docs/tensor_game_default_readiness.md) evaluates
+the integrated provider on an independent structurally targeted corpus. The
+[optimization history](docs/tensor_game_optimization_history.md) records the
+TG-4C through TG-4V decision trail, including negative results.
+The [rollout decision](docs/tensor_game_rollout_decision.md) applies the final
+release gates on a 150-target corpus while preserving exhaustive as the default.
+The [cross-machine verification guide](docs/tensor_game_cross_machine_verification.md)
+prepares an integrity-pinned, resumable TG-4X run for a separate CPU host.
+The [default-rollout gate report](docs/tensor_game_default_rollout.md) records
+the repaired TG-4Y release gates and the rollout of `bounded_128` as the public
+default. Explicit `exhaustive` selection remains available as a fallback.
+The [release-preparation summary](docs/tensor_game_release_preparation.md)
+collects usage, evidence, limitations, and the remaining publication checklist.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
