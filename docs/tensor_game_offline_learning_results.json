@@ -1,0 +1,65 @@
+{
+  "analysis_artifacts": {
+    "analysis.json": "069f92a8a49633a84c6c142b3426a5a16cd7a6267c11db596018bfec68116254",
+    "evidence_audit.json": "26efb28b3c61f256a0741b08eeb7a66e3c7856556dabe31795e36eaf43a1be49",
+    "report.md": "176de38ca53499405a0ef0a702d1e0dfbf6952adf2870b0838c34aa1a8cb11cf"
+  },
+  "analysis_directory": "artifacts/tensor-game/tg4b2c-heldout-v1-analysis",
+  "analysis_method": {
+    "bootstrap_confidence": 0.95,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20261013,
+    "cluster_unit": "originating_target_group",
+    "paired_unit": "target_group_and_search_seed"
+  },
+  "configuration_successes": {
+    "frozen_policy_frozen_value": 24,
+    "frozen_policy_heuristic_value": 24,
+    "joint_balanced_policy_value": 0,
+    "joint_natural_policy_value": 0,
+    "policy_only_natural_policy_heuristic_value": 0,
+    "residual_constant_max_control": 18,
+    "residual_frozen_checkpoint_value": 18,
+    "residual_heuristic_control": 18,
+    "residual_value_only_balanced_checkpoint_value": 18,
+    "residual_value_only_natural_checkpoint_value": 18
+  },
+  "evidence_distribution": "Raw trial and analysis artifacts are retained locally under ignored artifacts directories and are not versioned or downloadable from this repository.",
+  "evidence_status": {
+    "bounded_search_failures": 1539,
+    "completed_successes": 138,
+    "episode_timeouts": 123,
+    "independently_verified_successes": 138,
+    "infrastructure_failures": 0,
+    "interruptions": 0,
+    "recorded_trials": 1800
+  },
+  "experiment_id": "tg4b2c-heldout-v1",
+  "primary_comparison": {
+    "baseline": "frozen_policy_heuristic_value",
+    "bootstrap_95_percentile_interval": [
+      -0.26666666666666666,
+      -0.03333333333333333
+    ],
+    "candidate": "policy_only_natural_policy_heuristic_value",
+    "candidate_minus_baseline_success_rate": -0.13333333333333333,
+    "paired_trial_losses": 24,
+    "paired_trial_ties": 156,
+    "paired_trial_wins": 0
+  },
+  "protocol": {
+    "addendum_content_digest": "6c55696e316cb1746fd1d736ad5bd0a9f798a238a0874040bd2109406c753615",
+    "addendum_file_sha256": "8ef8814eadfc650a17d29cf75fb790dadfd6761fbf767e53ef532f799aedb78c",
+    "approval_file_sha256": "6e52c7a0528209443808cdffb31238e37a661ec5f4de8756a0b0ba706d82f9f9",
+    "frozen_plan_sha256": "addb8863ea5c9e78a3a298db6ca1a2cb4b6d83d81a91226df9883b73c124d0a6"
+  },
+  "raw_evidence_directory": "artifacts/tensor-game/tg4b2c-heldout-v1",
+  "schema_version": 1,
+  "trial_design": {
+    "configurations": 10,
+    "seeds_per_target": 6,
+    "target_groups": 30,
+    "trials_per_configuration": 180,
+    "total_trials": 1800
+  }
+}

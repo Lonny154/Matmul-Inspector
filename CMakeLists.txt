@@ -251,6 +251,66 @@ if(BUILD_TESTING)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
+        add_test(NAME tensor-game-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_test.py")
+        set_tests_properties(tensor-game-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-search-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_search_test.py")
+        set_tests_properties(tensor-game-search-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-discovery-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_discovery_test.py")
+        set_tests_properties(tensor-game-discovery-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-dataset-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_dataset_test.py")
+        set_tests_properties(tensor-game-dataset-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-learning-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_learning_test.py")
+        set_tests_properties(tensor-game-learning-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-evaluation-audit-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_evaluation_audit_test.py")
+        set_tests_properties(tensor-game-evaluation-audit-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-neural-mcts-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_neural_mcts_test.py")
+        set_tests_properties(tensor-game-neural-mcts-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-value-study-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_value_study_test.py")
+        set_tests_properties(tensor-game-value-study-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-value-scale-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_value_scale_test.py")
+        set_tests_properties(tensor-game-value-scale-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-experience-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_experience_test.py")
+        set_tests_properties(tensor-game-experience-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-offline-learning-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_offline_learning_test.py")
+        set_tests_properties(tensor-game-offline-learning-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-diverse-experience-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_diverse_experience_test.py")
+        set_tests_properties(tensor-game-diverse-experience-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-offline-ablation-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_offline_ablation_test.py")
+        set_tests_properties(tensor-game-offline-ablation-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-protocol-addendum-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_protocol_addendum_test.py")
+        set_tests_properties(tensor-game-protocol-addendum-tests PROPERTIES LABELS "cpu")
+        add_test(NAME tensor-game-heldout-execution-tests COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/src" "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/tensor_game_heldout_execution_test.py")
+        set_tests_properties(tensor-game-heldout-execution-tests PROPERTIES LABELS "cpu")
         add_test(NAME process-reproducibility-tests COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/process_reproducibility_test.py" $<TARGET_FILE:matmul-inspector>
             $<TARGET_FILE:matmul-compare-outputs>)

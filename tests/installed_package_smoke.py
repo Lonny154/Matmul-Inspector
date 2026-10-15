@@ -111,6 +111,30 @@ def main():
         for command_name in ("experiment", "experiment-batch", "session"):
             if command_name not in help_text:
                 raise RuntimeError(f"installed help omitted {command_name!r}")
+        target = root / "tensor-game-target.json"
+        target.write_text(json.dumps({
+            "target_id": "installed-smoke",
+            "construction_length": 1,
+            "target": [[[1 if i == j == k else 0 for k in range(4)]
+                        for j in range(4)] for i in range(4)],
+        }), encoding="utf-8")
+        default_search = json.loads(execute(args.command, [
+            "tensor-game-search", "--target-json", str(target), "--simulations", "1",
+        ], root))
+        exhaustive_search = json.loads(execute(args.command, [
+            "tensor-game-search", "--target-json", str(target),
+            "--candidate-provider", "exhaustive", "--simulations", "1",
+        ], root))
+        if (default_search["candidate_provider"], default_search["provider_is_default"]) != ("bounded_128", True):
+            raise RuntimeError(f"unexpected installed default provider: {default_search}")
+        if (exhaustive_search["candidate_provider"], exhaustive_search["provider_is_default"]) != ("exhaustive", False):
+            raise RuntimeError(f"unexpected installed fallback provider: {exhaustive_search}")
+        invalid_provider = execute_failure(args.command, [
+            "tensor-game-search", "--target-json", str(target),
+            "--candidate-provider", "invalid",
+        ], root)
+        if "invalid choice" not in invalid_provider.stderr:
+            raise RuntimeError(f"invalid provider error was not actionable: {invalid_provider.stderr}")
         execute(args.command, ["experiment", "--print-default-config"], root)
         missing_gpu = execute_failure(
             args.command, ["experiment", "--output-root", str(root / "gpu-missing")], root)
@@ -144,7 +168,7 @@ def main():
         print(f"installed package: {location}")
         print(f"license expression: {license_expression}")
         print(f"primary CLI: {version}")
-        print("PTX, SASS, NKI, report, and optional-GPU boundary smoke checks: PASS")
+        print("PTX, SASS, NKI, report, Tensor Game, and optional-GPU boundary smoke checks: PASS")
 
 
 if __name__ == "__main__":

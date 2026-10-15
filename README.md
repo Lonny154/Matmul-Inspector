@@ -158,6 +158,98 @@ capture conditions, methodology, numerical evidence, and limitations.
 | GPU experiment runner | Single experiments, batches, persistent sessions, allocating/preallocated modes, and explicitly trusted local Triton candidates | Python package; optional PyTorch/Triton and compatible NVIDIA environment |
 | Research experiments | Additional Triton Transformer projections and Trainium NKI GEMM studies | Source checkout; additional toolchains/hardware |
 
+The source tree also includes a CPU-only [TensorGame research environment](docs/tensor_game.md)
+for exact matrix multiplication tensor decomposition. Its standard and Strassen
+trajectories are known correctness references, not newly discovered algorithms.
+A bounded [sampled MCTS planner](docs/tensor_game_mcts.md) supports deterministic
+reference-guided validation and small unguided search experiments without neural
+networks or hardware dependencies.
+The [independent discovery study](docs/tensor_game_discovery.md) compares uniform,
+residual-informed, and hybrid proposals under matched CPU search budgets.
+The [synthetic demonstration engine](docs/tensor_game_synthetic_data.md) creates
+exact, leakage-checked policy/value training examples without requiring an ML
+framework.
+The optional [policy/value learning baseline](docs/tensor_game_learning.md) trains
+a small supervised PyTorch MLP and compares held-out proposal quality without
+changing MCTS or adding reinforcement learning.
+Its versioned evaluation audit reports explicit deterministic and seeded
+denominators, paired outcomes, grouped uncertainty, and proposal-generation cost.
+The optional [neural-guided MCTS experiment](docs/tensor_game_neural_mcts.md)
+separates learned proposals from learned leaf values and reports five matched
+ablations without updating the trained model.
+The [neural value study](docs/tensor_game_value_study.md) compares trained,
+untrained, constant, and handcrafted leaf values under fixed residual proposals.
+The [value-scale study](docs/tensor_game_value_scale.md) traces PUCT mechanics and
+separates optimistic value magnitude from learned state ranking.
+The [experience replay guide](docs/tensor_game_experience_replay.md) records
+actual MCTS-driven environment decisions and validates exact episode replay.
+The optional [offline learning guide](docs/tensor_game_offline_learning.md)
+trains policy and direct-return value targets on validated sampled MCTS supports.
+Its TG-4A run is a pipeline smoke test, not evidence of improved discovery.
+The [diverse experience guide](docs/tensor_game_diverse_experience.md) defines a
+leakage-safe 200-target curriculum and staged MCTS collection audit for future
+offline learning.
+The [controlled offline ablation](docs/tensor_game_offline_ablation.md) compares
+strict policy-only, value-only, and joint updates using validation-only selection
+and a frozen held-out search plan.
+The [held-out protocol addendum](docs/tensor_game_heldout_protocol.md) resolves
+pre-execution path, comparison-matrix, bootstrap, and wall-time ambiguities while
+leaving the original frozen plan unchanged.
+The [offline-learning held-out case study](docs/tensor_game_offline_learning_case_study.md)
+reports the completed 1,800-trial discovery evaluation and its exact evidence audit.
+The [policy-regression investigation](docs/tensor_game_policy_regression.md) traces
+the policy-only failure to critical one-step actions removed by bounded decoding.
+The [candidate-coverage investigation](docs/tensor_game_candidate_coverage.md)
+tests bounded recall, experiment-only proposal unions, and training support.
+The [out-of-sample policy evaluation](docs/tensor_game_out_of_sample_policy.md)
+compares frozen, trained, and equal-budget hybrid proposals on fresh targets.
+The [search calibration study](docs/tensor_game_search_calibration.md) validates
+reference trajectories and separates candidate coverage from search budget.
+The [held-out policy and search evaluation](docs/tensor_game_heldout_evaluation.md)
+compares all frozen candidate providers under the preregistered TG-4G protocol.
+The [residual-supervision feasibility study](docs/tensor_game_residual_supervision.md)
+audits teacher compatibility, supervision overlap, multi-step limits, and cost.
+The [coverage-aware policy study](docs/tensor_game_coverage_training.md) tests
+verified-positive supervision against a reproduced MCTS-only control.
+The [coverage-retention investigation](docs/tensor_game_coverage_retention.md)
+compares individual-positive supervision and selective frozen-policy retention.
+The [prefix-coverage investigation](docs/tensor_game_prefix_coverage.md) traces
+the exact beam stages and tests an experimental prefix-survival objective.
+The [final-ranking investigation](docs/tensor_game_final_ranking.md) tests a
+decoder-cutoff hinge under matched tiny-set training and validation.
+The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
+tests broader verified-positive coverage and audits beam-aware supervision cost.
+The [policy-interference investigation](docs/tensor_game_policy_interference.md)
+separates local gradient effects from independent-token combinatorial dilution.
+The [conditional-policy study](docs/tensor_game_conditional_policy.md) implements
+and evaluates an isolated `u -> v -> w` policy and conditional beam decoder.
+The [adaptive-routing study](docs/tensor_game_adaptive_routing.md) compares
+frozen, exhaustive residual, fixed-mix, and train-selected proposal routing cost.
+The [bounded-residual study](docs/tensor_game_bounded_residual.md) evaluates a
+continuous-bound coarse-to-fine approximation to exhaustive residual ranking.
+The [held-out bounded-search study](docs/tensor_game_heldout_bounded_search.md)
+compares bounded and exhaustive residual providers in paired end-to-end search.
+The [provider-integration study](docs/tensor_game_provider_integration.md)
+documents opt-in residual-provider selection and the expanded regression corpus.
+The [bounded-memory study](docs/tensor_game_bounded_memory.md) validates an
+exact-output-equivalent streaming heap selector for the opt-in bounded provider.
+The [streaming integration report](docs/tensor_game_streaming_integration.md)
+records its integration and permanent differential/search regressions.
+The [default-readiness study](docs/tensor_game_default_readiness.md) evaluates
+the integrated provider on an independent structurally targeted corpus. The
+[optimization history](docs/tensor_game_optimization_history.md) records the
+TG-4C through TG-4V decision trail, including negative results.
+The [rollout decision](docs/tensor_game_rollout_decision.md) applies the final
+release gates on a 150-target corpus while preserving exhaustive as the default.
+The [cross-machine verification guide](docs/tensor_game_cross_machine_verification.md)
+records the completed integrity-pinned, resumable TG-4X run on a separate AWS
+CPU host and the current clean-checkout reproduction procedure.
+The [default-rollout gate report](docs/tensor_game_default_rollout.md) records
+the repaired TG-4Y release gates and the rollout of `bounded_128` as the public
+default. Explicit `exhaustive` selection remains available as a fallback.
+The [release-preparation summary](docs/tensor_game_release_preparation.md)
+collects usage, evidence, limitations, and the remaining publication checklist.
+
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
 
