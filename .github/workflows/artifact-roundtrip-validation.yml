@@ -109,7 +109,7 @@ jobs:
           assert isinstance(default, BoundedResidualPolicy)
           assert default.name == "bounded_128"
           assert isinstance(exhaustive, ExhaustiveResidualPolicy)
-          assert exhaustive.name == "exhaustive"
+          assert exhaustive.name == "exhaustive_residual"
           print("Installed Python API and Tensor Game providers: PASS")
           PY
       - name: Report verified artifact identity
