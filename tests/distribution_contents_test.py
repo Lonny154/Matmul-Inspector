@@ -19,6 +19,9 @@ PACKAGE_FILES = {
     "matmul_inspector/sass.py", "matmul_inspector/nki.py", "matmul_inspector/reporting.py",
     "matmul_inspector/experiment.py", "matmul_inspector/experiment_batch.py",
     "matmul_inspector/experiment_session.py", "matmul_inspector/triton_fc1.py",
+    "matmul_inspector/tensor_game.py", "matmul_inspector/tensor_game_search.py",
+    "matmul_inspector/tensor_game_residual.py", "matmul_inspector/tensor_game_bounded_residual.py",
+    "matmul_inspector/tensor_game_cli.py",
 }
 
 

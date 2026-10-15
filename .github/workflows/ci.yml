@@ -26,6 +26,14 @@ jobs:
         run: python -m pip install build
       - name: Build wheel and source distribution
         run: python -m build --outdir dist
+      - name: Run CPU-only Tensor Game production tests
+        run: |
+          python -m pip install pytest
+          PYTHONPATH=src python -m pytest -q \
+            tests/tensor_game_bounded_residual_test.py \
+            tests/tensor_game_bounded_memory_test.py \
+            tests/tensor_game_provider_integration_test.py \
+            tests/tensor_game_search_test.py
       - name: Audit distribution contents
         run: python tests/distribution_contents_test.py dist/*.whl dist/*.tar.gz
       - name: Smoke-test clean wheel installation outside the checkout
