@@ -35,8 +35,8 @@ The public installation target is:
 pip install matmul-inspector
 ```
 
-Version 0.1.0 is published. For 0.2.0 prerelease testing, build locally and install
-one of the generated archives:
+Versions 0.1.0 and 0.2.0 are published. For 0.3.0 release-candidate testing,
+build locally and install one of the generated archives:
 
 ```sh
 python3 -m pip install build
@@ -58,6 +58,7 @@ matmul-inspector report ...
 matmul-inspector experiment ...
 matmul-inspector experiment-batch ...
 matmul-inspector session ...
+matmul-inspector tensor-game-search ...
 ```
 
 `matmul-inspector-python` is an alias for the same dispatcher.
@@ -94,7 +95,7 @@ Install a CUDA-enabled PyTorch build using PyTorch's platform-specific
 instructions, then install the optional dependencies with:
 
 ```sh
-python -m pip install "matmul-inspector[gpu]==0.2.0"
+python -m pip install "matmul-inspector[gpu]==0.3.0"
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
@@ -268,3 +269,17 @@ implementation work described here.
 - [ ] With explicit release approval, create and push `v0.2.0`.
 - [ ] Verify the published 0.2.0 wheel from production PyPI before creating an
   optional GitHub Release.
+
+## v0.3.0 release-candidate checklist
+
+- [x] Tensor Game search and residual-provider modules included in both archives.
+- [x] `bounded_128` is the public default and `exhaustive` remains explicit.
+- [x] Project, import, CLI, and distribution versions set to 0.3.0.
+- [x] Wheel and source distribution built, audited, and installed locally.
+- [x] Installed Tensor Game default, fallback, invalid-provider, and deterministic
+  smoke paths validated from both distribution formats.
+- [x] Release workflow and artifact-integrity checks validated without publishing.
+- [ ] Review the local release-candidate commit and evidence bundle.
+- [ ] Run and review the manual BUILD-ONLY workflow after an approved push.
+- [ ] With explicit publication approval, merge to `main`, create `v0.3.0`, and
+  allow the tag workflow to publish the already validated distributions.

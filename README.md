@@ -11,11 +11,11 @@ of those outcomes can safely be inferred from another.
 Install the Python toolkit from [PyPI](https://pypi.org/project/matmul-inspector/):
 
 ```sh
-python -m pip install matmul-inspector==0.2.0
+python -m pip install matmul-inspector==0.3.0
 matmul-inspector-python --version
 ```
 
-Version 0.2.0 supports Python 3.10–3.13. Saved-artifact analysis has no mandatory
+Version 0.3.0 supports Python 3.10–3.13. Saved-artifact analysis has no mandatory
 CUDA, AWS Neuron, GPU, or native-library dependency. The optional experiment
 commands require an NVIDIA GPU, a compatible driver, CUDA-enabled PyTorch, and
 Triton; installing Matmul Inspector does not install or configure a driver and
@@ -363,7 +363,8 @@ an experimental laboratory, not a replacement for a tuned BLAS.
 - [Transformer optimization study](docs/transformer_optimization.md)
 - [CUDA/Triton experiment runner](docs/experiment_runner.md)
 - [AI-assisted FC1 kernel search case study](docs/ai_assisted_kernel_search_case_study.md)
-- [Python toolkit release guide](docs/python_toolkit_release.md) and
+- [Python toolkit release guide](docs/python_toolkit_release.md),
+  [0.3.0 release notes](docs/release_notes_0_3_0.md), and
   [0.2.0 release notes](docs/release_notes_0_2_0.md)
 - [Checked-in RTX 4060 Ti floating-point captures](results/examples/rtx4060ti-controlled-fp/README.md)
 
@@ -373,7 +374,7 @@ an experimental laboratory, not a replacement for a tuned BLAS.
   Python standard library.
 - GPU experiments are optional. Follow PyTorch's platform-specific installation
   instructions for a CUDA-enabled build, then install
-  `matmul-inspector[gpu]==0.2.0`. The extra requests PyTorch and Triton but does
+  `matmul-inspector[gpu]==0.3.0`. The extra requests PyTorch and Triton but does
   not configure NVIDIA drivers, select a system CUDA driver, or guarantee GPU
   compatibility. Verify `torch.cuda.is_available()` before running experiments.
 - Creating PTX/CUBIN/SASS requires NVIDIA compiler tools; running CUDA benchmarks

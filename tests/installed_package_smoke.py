@@ -103,7 +103,7 @@ def main():
             raise RuntimeError(f"unexpected license expression: {license_expression!r}")
         version = execute(args.command, ["--version"], root)
         alias_version = execute(args.alias, ["--version"], root)
-        if version != "matmul-inspector 0.2.0" or alias_version != version:
+        if version != "matmul-inspector 0.3.0" or alias_version != version:
             raise RuntimeError(f"unexpected versions: {version!r}, {alias_version!r}")
         help_text = execute(args.command, ["--help"], root)
         if "Compiler-artifact analysis and optional GPU experiment toolkit" not in help_text:
