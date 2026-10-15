@@ -421,6 +421,8 @@ def select_puct(node: SearchNode, c_puct: float) -> RankOneAction:
 
 @dataclass(frozen=True)
 class SearchConfig:
+    """Search limits, including a cooperative between-simulation wall-time limit."""
+
     simulations: int = 1000
     max_actions: int = 16
     max_moves: int = 7

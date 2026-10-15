@@ -242,7 +242,8 @@ TG-4C through TG-4V decision trail, including negative results.
 The [rollout decision](docs/tensor_game_rollout_decision.md) applies the final
 release gates on a 150-target corpus while preserving exhaustive as the default.
 The [cross-machine verification guide](docs/tensor_game_cross_machine_verification.md)
-prepares an integrity-pinned, resumable TG-4X run for a separate CPU host.
+records the completed integrity-pinned, resumable TG-4X run on a separate AWS
+CPU host and the current clean-checkout reproduction procedure.
 The [default-rollout gate report](docs/tensor_game_default_rollout.md) records
 the repaired TG-4Y release gates and the rollout of `bounded_128` as the public
 default. Explicit `exhaustive` selection remains available as a fallback.

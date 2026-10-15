@@ -4,6 +4,10 @@ import pytest
 from examples.tensor_game_cross_machine_verification import RESULT_FIELDS,compare,load_inputs,schedule,validate_resume
 
 ROOT=Path("artifacts/tensor-game/tg4w-rollout-decision-v1")
+pytestmark=pytest.mark.skipif(
+    not ROOT.is_dir(),
+    reason="optional TG-4X evidence test requires the ignored frozen artifact bundle",
+)
 def test_frozen_inputs_and_schedule_are_exact():
     manifest,spec,hashes=load_inputs(ROOT)
     assert hashes["target_manifest.json"].startswith("c55792") and hashes["evaluation_spec.json"].startswith("1f5126")

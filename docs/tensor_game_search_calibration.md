@@ -44,7 +44,8 @@ floor.
 
 The frozen regime for TG-4G uses depth one as primary with 16 simulations and
 depth two as a stress group with 64 simulations. Both use 12 candidates, PUCT 1.5,
-a 2,000-node cap, a ten-second hard timeout, the nonzero heuristic, and seeds 3,
+a 2,000-node cap, a ten-second cooperative between-simulation timeout, the
+nonzero heuristic, and seeds 3,
 19, and 35. Depths three and four are excluded because the augmented control
 remained at zero through 256 simulations. Calibration outcomes are not unbiased
 generalization estimates.

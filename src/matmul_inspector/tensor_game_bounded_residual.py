@@ -4,18 +4,33 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass,field
+import hashlib
 import itertools
 import heapq
+import json
 import math
 import time
 from typing import Any, Sequence
 
 from .tensor_game import RankOneAction, subtract_action
-from .tensor_game_experience import action_identity
-from .tensor_game_residual_supervision import COEFFICIENTS, squared_norm
 from .tensor_game_search import InstrumentedPolicy,ProposalMetrics,ProposedAction,canonicalize_action,quantize_ratio
 
+COEFFICIENTS = (-1, 0, 1)
 VECTORS = tuple(vector for vector in itertools.product(COEFFICIENTS, repeat=4) if any(vector))
+
+
+def squared_norm(tensor: Any) -> int:
+    return sum(value * value for plane in tensor for row in plane for value in row)
+
+
+def action_identity(action: RankOneAction) -> str:
+    action = canonicalize_action(action)
+    payload = {"u": list(action.u), "v": list(action.v), "w": list(action.w)}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def action_from_payload(value: dict[str, Sequence[int]]) -> RankOneAction:
+    return canonicalize_action(RankOneAction(value["u"], value["v"], value["w"]))
 
 
 @dataclass(frozen=True)
@@ -136,17 +151,47 @@ class BoundedResidualPolicy(InstrumentedPolicy):
         del rng
         if remaining_moves<=0 or max_actions<=0:return ()
         started=time.perf_counter();rows,audit=bounded_residual_candidates_memory_efficient(residual,self.pair_budget,max_actions)
-        from .tensor_game_experience import action_from_payload
         actions=[canonicalize_action(action_from_payload(row["action"])) for row in rows]
         self.fully_evaluated_pairs+=audit["fully_evaluated_pairs"]
         self.metrics.attempted+=audit["fully_evaluated_pairs"];self.metrics.valid+=audit["unique_legal_candidates"];self.metrics.accepted+=len(actions);self.metrics.generation_seconds+=time.perf_counter()-started
         return tuple(ProposedAction(action,1/len(actions),(self.name,)) for action in actions) if actions else ()
 
 
+@dataclass
+class ExhaustiveResidualPolicy(InstrumentedPolicy):
+    """Exact residual policy retained as an explicit production fallback."""
+
+    shape: tuple[int,int,int]=(4,4,4)
+    name: str=field(default="exhaustive_residual",init=False)
+    metrics: ProposalMetrics=field(default_factory=ProposalMetrics,init=False)
+
+    def __post_init__(self):
+        if self.shape != (4, 4, 4):
+            raise ValueError("exhaustive currently supports shape (4, 4, 4)")
+
+    def propose_actions(self,residual,remaining_moves,rng,max_actions):
+        del rng
+        if remaining_moves <= 0 or max_actions <= 0:
+            return ()
+        started=time.perf_counter();candidates={}
+        for u in VECTORS:
+            uu=sum(x*x for x in u)
+            for v in VECTORS:
+                denominator=uu*sum(x*x for x in v)
+                contraction=tuple(sum(residual[i][j][k]*u[i]*v[j] for i in range(4) for j in range(4)) for k in range(4))
+                w=tuple(quantize_ratio(x,denominator,COEFFICIENTS) for x in contraction)
+                if not any(w):continue
+                action=canonicalize_action(RankOneAction(u,v,w));score=squared_norm(subtract_action(residual,action))
+                candidates[action]=min(score,candidates.get(action,math.inf))
+        ranked=sorted(candidates,key=lambda action:(candidates[action],action.u,action.v,action.w))[:max_actions]
+        self.metrics.attempted+=len(VECTORS)**2;self.metrics.valid+=len(candidates);self.metrics.accepted+=len(ranked)
+        self.metrics.generation_seconds+=time.perf_counter()-started
+        return tuple(ProposedAction(action,1/len(ranked),("residual_norm",)) for action in ranked) if ranked else ()
+
+
 def create_residual_candidate_provider(identifier:str="bounded_128",shape:tuple[int,int,int]=(4,4,4)):
     """Create a residual provider; bounded_128 is the public default."""
     if identifier=="exhaustive":
-        from .tensor_game_search_calibration import ExhaustiveResidualPolicy
         return ExhaustiveResidualPolicy(shape)
     if identifier=="bounded_128":return BoundedResidualPolicy(shape)
     raise ValueError(f"unsupported candidate provider {identifier!r}; expected 'exhaustive' or 'bounded_128'")

@@ -1,4 +1,4 @@
-import json,random
+import random
 
 from matmul_inspector.tensor_game_bounded_residual import bounded_residual_candidates,bounded_residual_candidates_memory_efficient,coarse_pair_scores,coarse_pair_scores_streaming
 
@@ -26,8 +26,7 @@ def test_sparse_dense_random_and_degenerate_differential_suite():
     states=[tuple(tuple(tuple(rng.choice((-1,0,0,0,1)) for _ in range(4)) for _ in range(4)) for _ in range(4)) for _ in range(5)]
     for residual in states:assert_equivalent(residual)
 
-def test_existing_tg4q_and_tg4s_states_are_exact():
-    paths=("artifacts/tensor-game/tg4i-coverage-training-v1/training_labels.jsonl","artifacts/tensor-game/tg4s-provider-integration-v1/regression_targets.json")
-    labels=[json.loads(line)["residual"] for line in open(paths[0]) if line.strip()][:4]
-    labels += [x["target"] for x in json.load(open(paths[1]))["targets"]]
-    for residual in labels:assert_equivalent(residual)
+def test_seeded_regression_states_are_exact_without_external_artifacts():
+    rng=random.Random(20261015)
+    states=[tuple(tuple(tuple(rng.randint(-3,3) for _ in range(4)) for _ in range(4)) for _ in range(4)) for _ in range(8)]
+    for residual in states:assert_equivalent(residual)

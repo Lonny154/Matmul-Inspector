@@ -1,6 +1,7 @@
 """Deterministic CPU tests for sampled TensorGame MCTS."""
 
 import random
+import time
 import unittest
 
 from matmul_inspector.tensor_game import (
@@ -12,6 +13,9 @@ from matmul_inspector.tensor_game import (
 )
 from matmul_inspector.tensor_game_search import (
     ActionStatistics,
+    InstrumentedPolicy,
+    ProposalMetrics,
+    ProposedAction,
     ReferenceGuidedPolicy,
     SampledMCTS,
     SearchConfig,
@@ -20,6 +24,18 @@ from matmul_inspector.tensor_game_search import (
     canonicalize_action,
     select_puct,
 )
+
+
+class SlowPolicy(InstrumentedPolicy):
+    name = "slow_test_policy"
+
+    def __init__(self):
+        self.metrics = ProposalMetrics()
+
+    def propose_actions(self, residual, remaining_moves, rng, max_actions):
+        del residual, remaining_moves, rng, max_actions
+        time.sleep(0.02)
+        return (ProposedAction(RankOneAction((1,), (1,), (1,)), 1.0),)
 
 
 class PolicyTest(unittest.TestCase):
@@ -68,6 +84,19 @@ class PolicyTest(unittest.TestCase):
 
 
 class MCTSTest(unittest.TestCase):
+    def test_wall_time_limit_is_checked_between_simulations(self):
+        target = matrix_multiplication_tensor(1, 1, 1)
+        one = SampledMCTS(target, SlowPolicy(), SearchConfig(
+            simulations=1, max_actions=1, max_moves=1, max_wall_time_seconds=0.005,
+        )).run()
+        self.assertGreater(one.search_wall_seconds, one.config.max_wall_time_seconds)
+        self.assertEqual(one.termination_reason, "simulation_budget_exhausted")
+        two = SampledMCTS(target, SlowPolicy(), SearchConfig(
+            simulations=2, max_actions=1, max_moves=1, max_wall_time_seconds=0.005,
+        )).run()
+        self.assertEqual(two.simulations_run, 1)
+        self.assertEqual(two.termination_reason, "wall_time_limit_reached")
+
     def test_state_identity_includes_remaining_budget(self):
         target = matrix_multiplication_tensor(1, 1, 1)
         search = SampledMCTS(target, UniformSampledPolicy((1, 1, 1)), SearchConfig(simulations=1))

@@ -81,6 +81,15 @@ prior mass. It still traverses normal transitions and cannot report success
 without reaching and reconstructing the zero residual. A guided Strassen result
 is a replay found with privileged reference information, not a new discovery.
 
+## Wall-time limit
+
+`max_wall_time_seconds` is a cooperative limit. The search checks elapsed time
+before each simulation. It does not interrupt selection, expansion, candidate
+generation, evaluation, or backup. A slow provider call can therefore finish
+after the requested duration. If the final allowed simulation overruns, the
+termination reason remains `simulation_budget_exhausted`. If another simulation
+would start, the search reports `wall_time_limit_reached` before starting it.
+
 ## Pseudocode
 
 ```text

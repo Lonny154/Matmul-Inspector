@@ -1,8 +1,9 @@
-# TG-4X cross-machine verification preparation
+# TG-4X cross-machine verification
 
-TG-4X is prepared but has not been run on AWS. The workflow reuses the exact
-TG-4W target manifest and evaluation specification. It does not generate new
-targets or alter search settings.
+TG-4X completed on an AWS CPU host using the exact TG-4W target manifest and
+evaluation specification. The workflow did not generate new targets or alter
+search settings. The raw local and AWS evidence remains in ignored artifact
+directories and is not available from a clean checkout.
 
 > Follow-up: the full AWS search replay was later completed successfully. Its
 > installed CLI audit exposed one missing transferred dependency,
@@ -42,10 +43,37 @@ command validates that existing rows are a unique exact prefix of the frozen
 schedule, then continues with the next trial. Reordered, duplicated, incomplete,
 or schema-incompatible rows are rejected.
 
-## Files to transfer
+## Current clean-checkout procedure
 
-The current Git revision predates the uncommitted provider integration. Transfer
-these files into the isolated EC2 clone, preserving their relative paths:
+Clone or fetch the tracked `research/tensor-game` branch on the target host.
+Create a CPU-only virtual environment and install the checkout. All Python
+modules required by the runner and installed CLI are tracked. CUDA, NKI,
+Neuron, model checkpoints, and historical benchmark outputs are not required.
+The frozen input bundle is evidence data rather than package data. Copy its four
+hash-pinned manifest/specification files into
+`artifacts/tensor-game/tg4w-rollout-decision-v1/` before running the integrity
+check. Verify the SHA-256 values above after transfer.
+
+```sh
+git clone https://github.com/Lonny154/Matmul-Inspector.git matmul-inspector-tg4x
+cd matmul-inspector-tg4x
+git switch research/tensor-game
+python3 -m venv .venv-tg4x
+. .venv-tg4x/bin/activate
+python -m pip install .
+matmul-inspector tensor-game-search --help
+```
+
+Record `host_metadata.json` for provenance. Keep local and AWS timing summaries
+separate. Restart an interrupted full run with the identical command. The runner
+accepts only an exact schedule prefix before resuming.
+
+## Historical transfer procedure
+
+The following procedure records the original TG-4X execution. It targeted an
+older detached checkout that predated provider integration and therefore needed
+a source overlay. It is retained for provenance only. Do not use it for a new
+run; use the tracked-branch installation above.
 
 ```text
 examples/tensor_game_cross_machine_verification.py
@@ -65,7 +93,7 @@ The core Tensor Game and MCTS modules are already tracked at revision
 `4a83b8d6677de426297226f2f72ab5c959bd3554`. No CUDA, NKI, Neuron, model-weight,
 or Trainium artifact is required.
 
-## EC2 setup
+## Historical EC2 setup
 
 Run this in a normal shell on the existing instance. Do not activate the Neuron
 virtual environment. The commands clone the existing repository locally, so the
@@ -116,7 +144,7 @@ python -m pip install --upgrade pip setuptools
 python -m pip install -e .
 ```
 
-## Integrity and smoke commands
+## Historical integrity and smoke commands
 
 ```sh
 cd "$HOME/matmul-inspector-tg4x"
@@ -137,9 +165,9 @@ Inspect `host_metadata.json`, `compatibility.json`, `results.csv`, and
 targets and their unchanged search budgets. Smoke timings are not part of the
 full comparison.
 
-## Full execution and deterministic resume
+## Historical full execution and deterministic resume
 
-Do not run this command until the AWS benchmark is intentionally authorized.
+This command was used for the completed AWS run.
 
 ```sh
 cd "$HOME/matmul-inspector-tg4x"

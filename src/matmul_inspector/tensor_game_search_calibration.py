@@ -8,6 +8,7 @@ from .tensor_game import RankOneAction, TensorGame, outer_product, subtract_acti
 from .tensor_game_experience import action_from_payload, action_identity, tensor_digest
 from .tensor_game_search import (HeuristicValueEvaluator, InstrumentedPolicy, ProposalMetrics,
     ProposedAction, SampledMCTS, SearchConfig, canonicalize_action, quantize_ratio)
+from .tensor_game_bounded_residual import ExhaustiveResidualPolicy
 
 def squared_norm(tensor): return sum(x*x for plane in tensor for row in plane for x in row)
 
@@ -44,27 +45,6 @@ class ReferencePathPolicy(InstrumentedPolicy):
         self.metrics.attempted+=len(actions); self.metrics.valid+=len(actions); self.metrics.accepted+=len(actions)
         self.metrics.generation_seconds+=time.perf_counter()-started
         return tuple(ProposedAction(a,1/len(actions),("reference",) if a==ref else ("frozen",)) for a in actions) if actions else ()
-
-@dataclass
-class ExhaustiveResidualPolicy(InstrumentedPolicy):
-    shape: tuple[int,int,int]=(4,4,4); name: str=field(default="exhaustive_residual",init=False)
-    metrics: ProposalMetrics=field(default_factory=ProposalMetrics,init=False)
-    def propose_actions(self,residual,remaining_moves,rng,max_actions):
-        del rng; started=time.perf_counter(); values=(-1,0,1); candidates={}
-        vectors=[v for v in itertools.product(values,repeat=4) if any(v)]
-        for u in vectors:
-            uu=sum(x*x for x in u)
-            for v in vectors:
-                denom=uu*sum(x*x for x in v)
-                contraction=tuple(sum(residual[i][j][k]*u[i]*v[j] for i in range(4) for j in range(4)) for k in range(4))
-                w=tuple(quantize_ratio(x,denom,values) for x in contraction)
-                if not any(w): continue
-                action=canonicalize_action(RankOneAction(u,v,w)); score=squared_norm(subtract_action(residual,action))
-                candidates[action]=min(score,candidates.get(action,math.inf))
-        ranked=sorted(candidates,key=lambda a:(candidates[a],a.u,a.v,a.w))[:max_actions]
-        self.metrics.attempted+=len(vectors)**2; self.metrics.valid+=len(candidates); self.metrics.accepted+=len(ranked)
-        self.metrics.generation_seconds+=time.perf_counter()-started
-        return tuple(ProposedAction(a,1/len(ranked),("residual_norm",)) for a in ranked)
 
 def run_search(target,policy,simulations,seed,max_moves,node_limit=2000,timeout=10.0):
     result=SampledMCTS(target,policy,SearchConfig(simulations=simulations,max_actions=12,max_moves=max_moves,
