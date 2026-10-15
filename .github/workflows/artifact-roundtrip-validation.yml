@@ -1,0 +1,118 @@
+name: Artifact round-trip validation
+
+on:
+  push:
+    branches:
+      - validation/artifact-actions-roundtrip
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Build distributions and record source hashes
+        run: |
+          python -m pip install build
+          python -m build --outdir dist
+          cd dist
+          sha256sum ./*.whl ./*.tar.gz | tee SHA256SUMS
+      - name: Audit source distribution contents
+        run: python tests/distribution_contents_test.py dist/*.whl dist/*.tar.gz
+      - name: Upload round-trip fixture
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: matmul-inspector-artifact-roundtrip
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+      - name: Record GitHub artifact identity
+        run: |
+          printf 'artifact-id=%s\n' '${{ steps.upload.outputs.artifact-id }}'
+          printf 'artifact-digest=%s\n' '${{ steps.upload.outputs.artifact-digest }}'
+
+  download-and-verify:
+    needs: build-and-upload
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Download exact uploaded artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build-and-upload.outputs.artifact_id }}
+          path: roundtrip
+          merge-multiple: true
+      - name: Verify flat layout and SHA-256 round trip
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob dotglob
+          entries=(roundtrip/*)
+          wheels=(roundtrip/*.whl)
+          sdists=(roundtrip/*.tar.gz)
+          checksums=(roundtrip/SHA256SUMS)
+          if (( ${#entries[@]} != 3 || ${#wheels[@]} != 1 || ${#sdists[@]} != 1 || ${#checksums[@]} != 1 )); then
+            printf 'Unexpected downloaded artifact layout:\n' >&2
+            printf '  %s\n' "${entries[@]:-<nothing>}" >&2
+            exit 1
+          fi
+          for entry in "${entries[@]}"; do
+            if [[ ! -f "$entry" || -L "$entry" ]]; then
+              printf 'Rejected non-regular or nested entry: %s\n' "$entry" >&2
+              exit 1
+            fi
+          done
+          cd roundtrip
+          sha256sum -c SHA256SUMS
+      - name: Inspect downloaded archives
+        run: |
+          unzip -t roundtrip/*.whl
+          unzip -l roundtrip/*.whl
+          tar -tzf roundtrip/*.tar.gz
+      - name: Re-audit downloaded distributions
+        run: python tests/distribution_contents_test.py roundtrip/*.whl roundtrip/*.tar.gz
+      - name: Install downloaded wheel and run smoke tests
+        run: |
+          python -m venv /tmp/matmul-inspector-artifact-wheel
+          /tmp/matmul-inspector-artifact-wheel/bin/python -m pip install --no-deps roundtrip/*.whl
+          python tests/installed_package_smoke.py \
+            --python /tmp/matmul-inspector-artifact-wheel/bin/python \
+            --command /tmp/matmul-inspector-artifact-wheel/bin/matmul-inspector \
+            --alias /tmp/matmul-inspector-artifact-wheel/bin/matmul-inspector-python
+      - name: Verify installed Python provider API
+        run: |
+          /tmp/matmul-inspector-artifact-wheel/bin/python - <<'PY'
+          from matmul_inspector.tensor_game_residual import (
+              BoundedResidualPolicy,
+              ExhaustiveResidualPolicy,
+              create_residual_candidate_provider,
+          )
+
+          default = create_residual_candidate_provider()
+          exhaustive = create_residual_candidate_provider("exhaustive")
+          assert isinstance(default, BoundedResidualPolicy)
+          assert default.name == "bounded_128"
+          assert isinstance(exhaustive, ExhaustiveResidualPolicy)
+          assert exhaustive.name == "exhaustive"
+          print("Installed Python API and Tensor Game providers: PASS")
+          PY
+      - name: Report verified artifact identity
+        run: |
+          printf 'verified-artifact-id=%s\n' '${{ needs.build-and-upload.outputs.artifact_id }}'
+          printf 'verified-artifact-digest=%s\n' '${{ needs.build-and-upload.outputs.artifact_digest }}'
