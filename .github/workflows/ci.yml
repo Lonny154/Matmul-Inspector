@@ -16,16 +16,24 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install distribution build frontend
         run: python -m pip install build
       - name: Build wheel and source distribution
         run: python -m build --outdir dist
+      - name: Run CPU-only Tensor Game production tests
+        run: |
+          python -m pip install pytest
+          PYTHONPATH=src python -m pytest -q \
+            tests/tensor_game_bounded_residual_test.py \
+            tests/tensor_game_bounded_memory_test.py \
+            tests/tensor_game_provider_integration_test.py \
+            tests/tensor_game_search_test.py
       - name: Audit distribution contents
         run: python tests/distribution_contents_test.py dist/*.whl dist/*.tar.gz
       - name: Smoke-test clean wheel installation outside the checkout
@@ -54,7 +62,7 @@ jobs:
         compiler: [g++, clang++]
         build_type: [Debug, Release]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Configure CPU-only
@@ -77,7 +85,7 @@ jobs:
         run: >-
           ./build/matmul-inspector compare --reference cpu --candidate cpu
           --sizes 4,17 --seed 42 --output results/ci-smoke
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: cpu-${{ matrix.compiler }}-${{ matrix.build_type }}
@@ -93,7 +101,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends cmake g++ git python3 python3-numpy ca-certificates
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Configure CUDA compilation without hardware tests
