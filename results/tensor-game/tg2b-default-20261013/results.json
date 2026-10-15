@@ -1,0 +1,1317 @@
+{
+  "format_version": 1,
+  "created_at_utc": "2026-10-13T16:05:27.444186+00:00",
+  "experiment": "tg2b_independent_tensor_decomposition",
+  "config": {
+    "seeds": [
+      3,
+      11
+    ],
+    "simulations": 200,
+    "max_actions": 12,
+    "c_puct": 1.5,
+    "node_limit": 200,
+    "coefficients": [
+      -1,
+      0,
+      1
+    ],
+    "hybrid_residual_probability": 0.5,
+    "max_wall_time_seconds": 2.0
+  },
+  "environment": {
+    "python": "3.13.11",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "curriculum": [
+    {
+      "identifier": "level1_rank_one_2x2x2",
+      "category": "synthetic_rank_one",
+      "shape": [
+        2,
+        2,
+        2
+      ],
+      "digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "max_moves": 1,
+      "evidence": "constructed from one nonzero rank-one term"
+    },
+    {
+      "identifier": "level2_rank_two_2x2x2",
+      "category": "synthetic_rank_two",
+      "shape": [
+        2,
+        2,
+        2
+      ],
+      "digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "max_moves": 2,
+      "evidence": "two-term upper bound; mode-0 flattening has exact matrix rank 2"
+    },
+    {
+      "identifier": "level3_matmul_1x2x1",
+      "category": "matrix_multiplication",
+      "shape": [
+        2,
+        2,
+        1
+      ],
+      "digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "max_moves": 2,
+      "evidence": "exact 1x2 by 2x1 matrix multiplication tensor"
+    },
+    {
+      "identifier": "level4_matmul_2x2_eight",
+      "category": "matrix_multiplication",
+      "shape": [
+        4,
+        4,
+        4
+      ],
+      "digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "max_moves": 8,
+      "evidence": "independent search with an eight-action limit"
+    },
+    {
+      "identifier": "level5_matmul_2x2_seven",
+      "category": "matrix_multiplication",
+      "shape": [
+        4,
+        4,
+        4
+      ],
+      "digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "max_moves": 7,
+      "evidence": "independent stretch search with a seven-action limit"
+    }
+  ],
+  "trials": [
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 13,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 14,
+      "valid_proposals": 13,
+      "accepted_proposals": 12,
+      "duplicate_proposals": 1,
+      "proposal_generation_seconds": 0.0001597660011611879,
+      "search_wall_seconds": 0.0028434139967430383,
+      "simulations_per_second": 70337.98111322802
+    },
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 13,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 22,
+      "valid_proposals": 14,
+      "accepted_proposals": 12,
+      "duplicate_proposals": 2,
+      "proposal_generation_seconds": 0.00018549799278844148,
+      "search_wall_seconds": 0.002792282000882551,
+      "simulations_per_second": 71626.00336813631
+    },
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "residual_informed",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 1,
+      "solution": [
+        {
+          "u": [
+            -1,
+            1
+          ],
+          "v": [
+            -1,
+            -1
+          ],
+          "w": [
+            1,
+            -1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 10,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 600,
+      "valid_proposals": 358,
+      "accepted_proposals": 9,
+      "duplicate_proposals": 349,
+      "proposal_generation_seconds": 0.0072082789993146434,
+      "search_wall_seconds": 0.011714690990629606,
+      "simulations_per_second": 17072.58007573369
+    },
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "residual_informed",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 1,
+      "solution": [
+        {
+          "u": [
+            -1,
+            1
+          ],
+          "v": [
+            -1,
+            -1
+          ],
+          "w": [
+            1,
+            -1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 10,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 600,
+      "valid_proposals": 355,
+      "accepted_proposals": 9,
+      "duplicate_proposals": 346,
+      "proposal_generation_seconds": 0.006781080999644473,
+      "search_wall_seconds": 0.009519954997813329,
+      "simulations_per_second": 21008.502671067108
+    },
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "hybrid",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 13,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 20,
+      "valid_proposals": 17,
+      "accepted_proposals": 12,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.0003668640129035339,
+      "search_wall_seconds": 0.0030585820059059188,
+      "simulations_per_second": 65389.77853587489
+    },
+    {
+      "target_id": "level1_rank_one_2x2x2",
+      "target_category": "synthetic_rank_one",
+      "target_digest_sha256": "39c2d4292b845a78f01680cd217beb440cd9976d74b169071e65802b85190232",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "hybrid",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 1,
+      "solution": [
+        {
+          "u": [
+            -1,
+            1
+          ],
+          "v": [
+            -1,
+            -1
+          ],
+          "w": [
+            1,
+            -1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 12,
+      "expanded_nodes": 1,
+      "transposition_hits": 0,
+      "maximum_depth": 1,
+      "proposal_attempts": 31,
+      "valid_proposals": 21,
+      "accepted_proposals": 11,
+      "duplicate_proposals": 1,
+      "proposal_generation_seconds": 0.00039540999568998814,
+      "search_wall_seconds": 0.0036428409948712215,
+      "simulations_per_second": 54902.204153730905
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 151,
+      "expanded_nodes": 13,
+      "transposition_hits": 2,
+      "maximum_depth": 2,
+      "proposal_attempts": 218,
+      "valid_proposals": 160,
+      "accepted_proposals": 156,
+      "duplicate_proposals": 4,
+      "proposal_generation_seconds": 0.0018863890290958807,
+      "search_wall_seconds": 0.008154596012900583,
+      "simulations_per_second": 24526.04637723312
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 150,
+      "expanded_nodes": 13,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 246,
+      "valid_proposals": 170,
+      "accepted_proposals": 156,
+      "duplicate_proposals": 14,
+      "proposal_generation_seconds": 0.0019159639778081328,
+      "search_wall_seconds": 0.008120569997117855,
+      "simulations_per_second": 24628.813010784197
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "residual_informed",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1,
+            0
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            0,
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 4,
+      "expanded_nodes": 3,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1800,
+      "valid_proposals": 560,
+      "accepted_proposals": 4,
+      "duplicate_proposals": 556,
+      "proposal_generation_seconds": 0.01923532299406361,
+      "search_wall_seconds": 0.021754877001512796,
+      "simulations_per_second": 9193.340876443124
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "residual_informed",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1,
+            0
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            0,
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 4,
+      "expanded_nodes": 3,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1800,
+      "valid_proposals": 521,
+      "accepted_proposals": 4,
+      "duplicate_proposals": 517,
+      "proposal_generation_seconds": 0.01933487199130468,
+      "search_wall_seconds": 0.02169658400816843,
+      "simulations_per_second": 9218.040956341472
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "hybrid",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1,
+            0
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            0,
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 20,
+      "expanded_nodes": 8,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1881,
+      "valid_proposals": 677,
+      "accepted_proposals": 73,
+      "duplicate_proposals": 2,
+      "proposal_generation_seconds": 0.020187617992633022,
+      "search_wall_seconds": 0.024995703002787195,
+      "simulations_per_second": 8001.375275490295
+    },
+    {
+      "target_id": "level2_rank_two_2x2x2",
+      "target_category": "synthetic_rank_two",
+      "target_digest_sha256": "795f1fab934401ae3aba83548926e382484b170a759dc1f480a23e7c2781d286",
+      "tensor_shape": [
+        2,
+        2,
+        2
+      ],
+      "strategy": "hybrid",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1,
+            0
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            0,
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 20,
+      "expanded_nodes": 10,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 2100,
+      "valid_proposals": 863,
+      "accepted_proposals": 96,
+      "duplicate_proposals": 3,
+      "proposal_generation_seconds": 0.023555334002594464,
+      "search_wall_seconds": 0.02813781199802179,
+      "simulations_per_second": 7107.87320684568
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            -1
+          ]
+        },
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            -1
+          ],
+          "w": [
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 65,
+      "expanded_nodes": 13,
+      "transposition_hits": 13,
+      "maximum_depth": 2,
+      "proposal_attempts": 372,
+      "valid_proposals": 194,
+      "accepted_proposals": 156,
+      "duplicate_proposals": 38,
+      "proposal_generation_seconds": 0.0024979870213428512,
+      "search_wall_seconds": 0.008790318999672309,
+      "simulations_per_second": 22752.302846740346
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 132,
+      "expanded_nodes": 13,
+      "transposition_hits": 25,
+      "maximum_depth": 2,
+      "proposal_attempts": 373,
+      "valid_proposals": 206,
+      "accepted_proposals": 156,
+      "duplicate_proposals": 50,
+      "proposal_generation_seconds": 0.002446556987706572,
+      "search_wall_seconds": 0.008523110998794436,
+      "simulations_per_second": 23465.610154354352
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "residual_informed",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 4,
+      "expanded_nodes": 3,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1800,
+      "valid_proposals": 560,
+      "accepted_proposals": 4,
+      "duplicate_proposals": 556,
+      "proposal_generation_seconds": 0.015740344999358058,
+      "search_wall_seconds": 0.01802161001251079,
+      "simulations_per_second": 11097.78759284869
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "residual_informed",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 4,
+      "expanded_nodes": 3,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1800,
+      "valid_proposals": 521,
+      "accepted_proposals": 4,
+      "duplicate_proposals": 517,
+      "proposal_generation_seconds": 0.016474940988700837,
+      "search_wall_seconds": 0.01855944999260828,
+      "simulations_per_second": 10776.18141052965
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "hybrid",
+      "seed": 3,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 9,
+      "expanded_nodes": 8,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 1681,
+      "valid_proposals": 644,
+      "accepted_proposals": 76,
+      "duplicate_proposals": 4,
+      "proposal_generation_seconds": 0.014741492996108718,
+      "search_wall_seconds": 0.01884633999725338,
+      "simulations_per_second": 10612.140077550734
+    },
+    {
+      "target_id": "level3_matmul_1x2x1",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "eab1a5ea501b54c9f965fe00fdefcb4b9b79907c0ecb92e8932e04c1cb2a015f",
+      "tensor_shape": [
+        2,
+        2,
+        1
+      ],
+      "strategy": "hybrid",
+      "seed": 11,
+      "success": true,
+      "exact_reconstruction": true,
+      "terms": 2,
+      "solution": [
+        {
+          "u": [
+            -1,
+            0
+          ],
+          "v": [
+            -1,
+            0
+          ],
+          "w": [
+            1
+          ]
+        },
+        {
+          "u": [
+            0,
+            -1
+          ],
+          "v": [
+            0,
+            -1
+          ],
+          "w": [
+            1
+          ]
+        }
+      ],
+      "termination_reason": "solution_found",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 19,
+      "expanded_nodes": 10,
+      "transposition_hits": 1,
+      "maximum_depth": 2,
+      "proposal_attempts": 2068,
+      "valid_proposals": 756,
+      "accepted_proposals": 89,
+      "duplicate_proposals": 8,
+      "proposal_generation_seconds": 0.01818117299990263,
+      "search_wall_seconds": 0.02216033000149764,
+      "simulations_per_second": 9025.13635791902
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 0,
+      "maximum_depth": 3,
+      "proposal_attempts": 2484,
+      "valid_proposals": 2400,
+      "accepted_proposals": 2400,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.033279116978519596,
+      "search_wall_seconds": 0.047273341988329776,
+      "simulations_per_second": 4230.714216256879
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 0,
+      "maximum_depth": 3,
+      "proposal_attempts": 2482,
+      "valid_proposals": 2400,
+      "accepted_proposals": 2400,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.03178271497017704,
+      "search_wall_seconds": 0.044942264998098835,
+      "simulations_per_second": 4450.153992204453
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "residual_informed",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "wall_time_limit_reached",
+      "simulations_permitted": 200,
+      "simulations_completed": 118,
+      "node_limit": 200,
+      "unique_states": 118,
+      "expanded_nodes": 118,
+      "transposition_hits": 66,
+      "maximum_depth": 5,
+      "proposal_attempts": 70800,
+      "valid_proposals": 17902,
+      "accepted_proposals": 599,
+      "duplicate_proposals": 17303,
+      "proposal_generation_seconds": 1.9982056269655004,
+      "search_wall_seconds": 2.007962203002535,
+      "simulations_per_second": 58.76604640443575
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "residual_informed",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "wall_time_limit_reached",
+      "simulations_permitted": 200,
+      "simulations_completed": 120,
+      "node_limit": 200,
+      "unique_states": 120,
+      "expanded_nodes": 120,
+      "transposition_hits": 72,
+      "maximum_depth": 5,
+      "proposal_attempts": 72000,
+      "valid_proposals": 18150,
+      "accepted_proposals": 603,
+      "duplicate_proposals": 17547,
+      "proposal_generation_seconds": 1.9926008039619774,
+      "search_wall_seconds": 2.0025092040013988,
+      "simulations_per_second": 59.92481820319073
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "hybrid",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 15,
+      "maximum_depth": 4,
+      "proposal_attempts": 17478,
+      "valid_proposals": 5547,
+      "accepted_proposals": 2335,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.4848968900332693,
+      "search_wall_seconds": 0.49853523199271876,
+      "simulations_per_second": 401.17525736460095
+    },
+    {
+      "target_id": "level4_matmul_2x2_eight",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "hybrid",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 13,
+      "maximum_depth": 4,
+      "proposal_attempts": 16187,
+      "valid_proposals": 5264,
+      "accepted_proposals": 2336,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.4469221350445878,
+      "search_wall_seconds": 0.460318058001576,
+      "simulations_per_second": 434.4821944815279
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 0,
+      "maximum_depth": 3,
+      "proposal_attempts": 2484,
+      "valid_proposals": 2400,
+      "accepted_proposals": 2400,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.027747983011067845,
+      "search_wall_seconds": 0.039378087007207796,
+      "simulations_per_second": 5078.966887431374
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "uniform_sampled",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 0,
+      "maximum_depth": 3,
+      "proposal_attempts": 2482,
+      "valid_proposals": 2400,
+      "accepted_proposals": 2400,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.02822617812489625,
+      "search_wall_seconds": 0.03991275900625624,
+      "simulations_per_second": 5010.92896055245
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "residual_informed",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "wall_time_limit_reached",
+      "simulations_permitted": 200,
+      "simulations_completed": 118,
+      "node_limit": 200,
+      "unique_states": 118,
+      "expanded_nodes": 118,
+      "transposition_hits": 66,
+      "maximum_depth": 5,
+      "proposal_attempts": 70800,
+      "valid_proposals": 17902,
+      "accepted_proposals": 599,
+      "duplicate_proposals": 17303,
+      "proposal_generation_seconds": 1.995689447998302,
+      "search_wall_seconds": 2.005214563003392,
+      "simulations_per_second": 58.846570425491365
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "residual_informed",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "wall_time_limit_reached",
+      "simulations_permitted": 200,
+      "simulations_completed": 117,
+      "node_limit": 200,
+      "unique_states": 117,
+      "expanded_nodes": 117,
+      "transposition_hits": 70,
+      "maximum_depth": 5,
+      "proposal_attempts": 70200,
+      "valid_proposals": 17752,
+      "accepted_proposals": 590,
+      "duplicate_proposals": 17162,
+      "proposal_generation_seconds": 2.0037191770679783,
+      "search_wall_seconds": 2.013722501011216,
+      "simulations_per_second": 58.10135206874183
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "hybrid",
+      "seed": 3,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 15,
+      "maximum_depth": 4,
+      "proposal_attempts": 17478,
+      "valid_proposals": 5547,
+      "accepted_proposals": 2335,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.4981854609650327,
+      "search_wall_seconds": 0.5127280419983435,
+      "simulations_per_second": 390.0703367432479
+    },
+    {
+      "target_id": "level5_matmul_2x2_seven",
+      "target_category": "matrix_multiplication",
+      "target_digest_sha256": "8082552e2d797c277655fcbfc881e2dd7ff094ce79ae77ab21200ba7fb16c242",
+      "tensor_shape": [
+        4,
+        4,
+        4
+      ],
+      "strategy": "hybrid",
+      "seed": 11,
+      "success": false,
+      "exact_reconstruction": false,
+      "terms": null,
+      "solution": null,
+      "termination_reason": "simulation_budget_exhausted",
+      "simulations_permitted": 200,
+      "simulations_completed": 200,
+      "node_limit": 200,
+      "unique_states": 200,
+      "expanded_nodes": 200,
+      "transposition_hits": 13,
+      "maximum_depth": 4,
+      "proposal_attempts": 16187,
+      "valid_proposals": 5264,
+      "accepted_proposals": 2336,
+      "duplicate_proposals": 0,
+      "proposal_generation_seconds": 0.45187205499678385,
+      "search_wall_seconds": 0.46562439801346045,
+      "simulations_per_second": 429.53075666412633
+    }
+  ]
+}
