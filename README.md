@@ -301,6 +301,22 @@ matmul-inspector-python session create \
 See the experiment runner guide for proposal, status, context, and recovery
 commands.
 
+## Technical Case Studies
+
+- [Tensor Game search optimization](docs/CaseStudy/TensorGame.md) — follows a
+  failed offline policy update through candidate-coverage diagnosis, bounded
+  residual ranking, streaming-heap memory reduction, and matched CPU benchmarks.
+  The case study includes evidence-backed figures and their reproducible
+  generation requirements.
+- [AI-assisted FC1 kernel search](docs/ai_assisted_kernel_search_case_study.md) —
+  separates candidate correctness, CUDA-event timing, and compiler evidence in a
+  controlled Triton optimization workflow.
+- [CUDA PTX/SASS FMA analysis](docs/cuda_ptx_sass_fma_case_study.md) — connects
+  source changes to PTX, final SASS, numerical behavior, and measured latency.
+- [Trainium1 NKI GEMM](docs/trainium1_nki_gemm_case_study.md) — compares source,
+  compiler artifacts, numerical results, and hardware measurements without
+  conflating those evidence layers.
+
 ## How artifact comparison works
 
 1. Read existing artifacts without modifying them.
