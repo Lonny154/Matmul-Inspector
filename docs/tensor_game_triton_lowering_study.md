@@ -5,9 +5,8 @@
 Can the existing algebraic cost descriptors predict meaningful GPU execution
 differences after valid Tensor Game decompositions are lowered to Triton?
 
-This milestone establishes the lowering and measurement path. The current
-execution environment did not expose PyTorch, Triton, or a usable GPU, so no GPU
-latency, numerical-error, PTX, SASS, or resource result is claimed here.
+This milestone establishes and validates the lowering and measurement path on a
+local NVIDIA GeForce RTX 4060 Ti (compute capability 8.9).
 
 ## Lowering architecture
 
@@ -67,8 +66,13 @@ PyTorch FP32 matrix multiplication using `rtol=5e-3` and `atol=5e-3`. Maximum
 absolute, mean absolute, and maximum elementwise relative errors are saved.
 Bitwise agreement is not required because Strassen changes operation order.
 
-CPU validation currently passes. GPU correctness is pending because this
-environment lacks the optional dependencies and CUDA access.
+All 32 benchmark correctness rows passed. Across the 16 cases per algorithm,
+conventional reached maximum absolute error `1.373291e-4`; its largest per-case
+mean absolute error was `1.039860e-5`. Strassen reached maximum absolute error
+`2.403259e-4`; its largest per-case mean absolute error was `1.980958e-5`.
+Maximum elementwise relative error was large near reference values close to
+zero, so absolute error and the configured elementwise tolerance determine the
+pass result. The dedicated GPU test file also passed all 15 tests.
 
 ## Benchmark configuration
 
@@ -101,49 +105,103 @@ timings, distributions, and speedups. The script uses a dedicated Triton cache
 and copies available TTIR, TTGIR, PTX, CUBIN, SASS, and metadata files into a
 compiler-artifacts directory with SHA-256 digests.
 
+The additional phase and compiler summaries are reproducible with:
+
+```bash
+PYTHONPATH=src /home/daniel/IsaacLab/.venv/bin/python \
+  scripts/profile_tensor_game_triton_phases.py \
+  --output artifacts/tensor-game/triton-lowering-v1/phases.json \
+  --sizes 128 256 512 1024 --warmups 10 --iterations 30 --runs 5
+
+python scripts/analyze_tensor_game_triton_compiler.py \
+  --artifact-root artifacts/tensor-game/triton-lowering-v1/compiler-artifacts \
+  --sass-dir artifacts/tensor-game/triton-lowering-v1/sass \
+  --output artifacts/tensor-game/triton-lowering-v1/compiler_summary_v2.json
+```
+
 ## Measured results
 
-No GPU results were produced in this environment. PyTorch and Triton imports
-both failed, and the GPU-management probe reported that device access was
-blocked. Therefore Experiments A–C are implemented but not executed here.
+The environment used Python 3.12.13, PyTorch 2.11.0+cu128, CUDA runtime 12.8,
+Triton 3.6.0, NVIDIA driver 616.92, and an RTX 4060 Ti with 16,380 MiB. PyTorch
+TF32 was disabled and the Triton dot used IEEE FP32 inputs. Values below are the
+median of five independent run medians. The range is the minimum and maximum of
+those five medians.
 
-The CPU-side evidence is:
+| Size | PyTorch/cuBLAS | Conventional | Strassen | Conventional / PyTorch | Strassen / conventional |
+|---:|---:|---:|---:|---:|---:|
+| 128 | 0.0408 ms (0.0391–0.0658) | 0.6119 ms (0.5924–1.3982) | 0.6928 ms (0.6768–1.5952) | 14.99× slower | 13.2% slower |
+| 256 | 0.0330 ms (0.0246–0.0428) | 0.6154 ms (0.5756–0.6532) | 0.6736 ms (0.6369–0.7178) | 18.63× slower | 9.5% slower |
+| 512 | 0.0638 ms (0.0438–0.0709) | 0.6282 ms (0.5978–0.9508) | 0.7218 ms (0.6650–0.9871) | 9.85× slower | 14.9% slower |
+| 1024 | 0.2257 ms (0.2222–0.2626) | 1.2691 ms (0.6713–1.4816) | 1.4047 ms (0.7138–1.7419) | 5.62× slower | 10.7% slower |
 
-- Both reference decompositions pass exact reconstruction through the shared
-  validation interface.
-- Deterministic manifests preserve the expected rank and coefficient vectors.
-- Invalid decompositions fail before GPU runtime loading.
-- Existing Tensor Game search and hardware-cost code is unchanged by execution.
+These are complete-operation CUDA-event latencies. They include device-side
+preparation, seven or eight Triton GEMMs, reconstruction, and output copies.
+They exclude Python host-call latency, JIT compilation, and one-time setup.
+Allocator work outside the recorded event interval may not be fully represented.
+The nonmonotonic small-size PyTorch timings and wide ranges in several lowering
+runs show that this experiment should not support fine-grained percentage
+claims beyond the large observed gaps.
+
+A separate diagnostic measured phases independently:
+
+| Size | Algorithm | Preparation | GEMM-only rank batch | Reconstruction |
+|---:|---|---:|---:|---:|
+| 128 | Conventional | 0.3267 ms | 0.2421 ms | 0.1730 ms |
+| 128 | Strassen | 0.2774 ms | 0.1300 ms | 0.1631 ms |
+| 256 | Conventional | 0.2354 ms | 0.1464 ms | 0.1419 ms |
+| 256 | Strassen | 0.2755 ms | 0.1343 ms | 0.1693 ms |
+| 512 | Conventional | 0.2334 ms | 0.1459 ms | 0.1365 ms |
+| 512 | Strassen | 0.4444 ms | 0.1705 ms | 0.2324 ms |
+| 1024 | Conventional | 0.3579 ms | 0.3593 ms | 0.1769 ms |
+| 1024 | Strassen | 0.4540 ms | 0.3145 ms | 0.2344 ms |
+
+The phase medians come from separate invocations with precomputed dependencies.
+They must not be summed to reconstruct the complete latency. Raw run medians also
+show high variation for several phase/size combinations. At 1024, the expected
+seven-versus-eight GEMM advantage is visible in isolation, but higher preparation
+and reconstruction medians accompany a slower complete Strassen operation.
 
 ## Static cost versus measured runtime
 
 The static model predicts that Strassen trades one fewer block GEMM and one fewer
-peak block temporary for six more total matrix additions. The runtime also
+peak block temporary for six more total matrix additions. The measured 1024
+phase medians agree with that direction: lower isolated GEMM time and higher
+preparation and reconstruction time. At smaller sizes, launch, allocation, and
+measurement variability are large enough that the phase ordering is not stable.
+The runtime also
 introduces separate launches or framework operations for every combination,
 GEMM, reconstruction update, and copy. The algebraic descriptor does not model
 launch overhead, allocation behavior, bytes moved, cache reuse, or the Triton
-kernel's tiling. Whether rank reduction wins is therefore an open measurement,
-not an optimization claim.
+kernel's tiling. Rank reduction did not win in the complete measured path.
 
 ## Compiler observations
 
-There are no compiled artifacts from this environment. When run on CUDA, the
-script preserves available Triton cache intermediates. PTX must be reported as
-virtual ISA, not final machine code. Register allocation, shared memory, and
-final SASS require compiler metadata or disassembly evidence. They must not be
-inferred from Python or Triton source.
+Four matrix-size specializations produced TTIR, TTGIR, PTX 8.7 targeting `sm_89`,
+CUBIN, metadata, and saved SASS. Their hashes are recorded in `results.json` and
+`compiler_summary_v2.json`. Triton metadata reports four warps, three stages,
+8,192 bytes of dynamic shared memory, and no global scratch. `cuobjdump` reports
+48 registers per thread, zero local memory, zero stack, and zero static shared
+memory for every specialization. The dynamic and static shared-memory fields are
+different evidence and are not contradictory.
+
+Each saved PTX contains 128 static `fma.rn.f32` occurrences and no MMA/WGMMA
+text. Each final SASS disassembly contains 128 static `FFMA` occurrences and no
+HMMA/IMMA/BMMA text. These are static occurrences, not executed instruction
+counts. The PTX is virtual ISA; the separately saved `nvdisasm` output is the
+final-machine-code evidence used for the SASS statement.
 
 ## Limitations and next experiment
 
 This is a nonrecursive 2×2 block lowering. It materializes every combination and
 product, uses a fixed untuned 32×32×16 FP32 GEMM tile, and does not fuse additions
-or reuse output storage. The benchmark does not yet separate preparation, GEMM,
-and reconstruction timings. GPU correctness and all performance claims remain
-pending.
+or reuse output storage. The fixed IEEE FP32 kernel lowers to scalar FFMA rather
+than Tensor Core MMA and was intentionally not tuned. Phase measurements are
+isolated diagnostics and do not establish an additive causal breakdown. CUDA
+events exclude host overhead, and no Nsight trace was collected to count every
+PyTorch preparation/reconstruction launch or memory transaction.
 
-The next milestone is to run the frozen command on the RTX 4060 Ti, audit all
-correctness rows, and inspect the captured compiler artifacts. If correctness
-passes, add event-timed phase instrumentation without changing the complete-path
-benchmark. Use those measurements to test whether launch and materialization
-cost explain any gap between the rank-7 and rank-8 implementations before trying
-fusion or a hardware-aware search score.
+The next experiment should capture one Nsight Systems trace at 1024 to verify
+launch counts, allocation activity, and the device timeline. Then test a
+preallocated implementation with identical arithmetic and fixed kernel geometry.
+That isolates allocation and materialization overhead before considering fusion,
+tile tuning, TF32, or a hardware-aware search score.

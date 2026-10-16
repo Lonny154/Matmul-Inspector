@@ -1,0 +1,119 @@
+{
+  "schema": "tensor_game_triton_compiler_summary.v1",
+  "notes": [
+    "PTX counts are static text occurrences, not dynamic instruction counts.",
+    "cuobjdump reports final-binary registers/local/stack/static shared memory; Triton metadata separately reports dynamic shared memory.",
+    "PTX is virtual ISA and is not final SASS.",
+    "SASS counts are static disassembly occurrences, not dynamic instruction counts."
+  ],
+  "specializations": [
+    {
+      "specialization": "3PVFODYB6BQOQJDY2CLJZPD6EPQY5L4HG7GR5T54XY3YRPE3UQLA",
+      "compiler_hash": "dbea570f01f060e82478d0969cbc7e23e18eaf8737cd1ecfbcbe3788bc9ba416",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 8192,
+      "registers_per_thread": 48,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "ptx_version": "8.7",
+      "ptx_target": "sm_89",
+      "ptx_fma_rn_f32_static_occurrences": 128,
+      "ptx_mma_static_occurrences": 0,
+      "sass_path": "artifacts/tensor-game/triton-lowering-v1/sass/3PVFODYB6BQOQJDY2CLJZPD6EPQY5L4HG7GR5T54XY3YRPE3UQLA.sass",
+      "sass_bytes": 21453,
+      "sass_sha256": "1d43db09be86e72146261591a7e3202bf8336f009774a6fa7faee21fed5f4432",
+      "sass_ffma_static_occurrences": 128,
+      "sass_hmma_static_occurrences": 0,
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fp32_gemm_kernel:\n  REG:48 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "specialization": "AOZSNKTVTNS2FXHJAXMGPS5YHQX622F4LMRGWSDMTJ6NUG5OAA6Q",
+      "compiler_hash": "03b326aa759b65a2dce905d867cbb83c2fed68bc5b226b486c9a7cda1bae003d",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 8192,
+      "registers_per_thread": 48,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "ptx_version": "8.7",
+      "ptx_target": "sm_89",
+      "ptx_fma_rn_f32_static_occurrences": 128,
+      "ptx_mma_static_occurrences": 0,
+      "sass_path": "artifacts/tensor-game/triton-lowering-v1/sass/AOZSNKTVTNS2FXHJAXMGPS5YHQX622F4LMRGWSDMTJ6NUG5OAA6Q.sass",
+      "sass_bytes": 21453,
+      "sass_sha256": "61f791bdcd268515044d14fe3860fbd8862b0d69c82e1c511e62fb55e9b24819",
+      "sass_ffma_static_occurrences": 128,
+      "sass_hmma_static_occurrences": 0,
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fp32_gemm_kernel:\n  REG:48 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "specialization": "BHOKJHNS5UICS7V5PLIFJ6YH56LKIXHYXB434LOXMAEVHIZEI2DQ",
+      "compiler_hash": "09dca49db2ed10297ebd7ad054fb07ef96a45cf8b879be2dd7600953a3244687",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 8192,
+      "registers_per_thread": 48,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "ptx_version": "8.7",
+      "ptx_target": "sm_89",
+      "ptx_fma_rn_f32_static_occurrences": 128,
+      "ptx_mma_static_occurrences": 0,
+      "sass_path": "artifacts/tensor-game/triton-lowering-v1/sass/BHOKJHNS5UICS7V5PLIFJ6YH56LKIXHYXB434LOXMAEVHIZEI2DQ.sass",
+      "sass_bytes": 21455,
+      "sass_sha256": "ac832937a06aac166191b8bd73f265cee16b756742e2a8c769ed25884ac1e794",
+      "sass_ffma_static_occurrences": 128,
+      "sass_hmma_static_occurrences": 0,
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fp32_gemm_kernel:\n  REG:48 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "specialization": "EKW66V2UVFLQ4PYFZOBWMDD5DCZ5PMGFANOYVIFHPS5LUJ3UMLKA",
+      "compiler_hash": "22adef5754a9570e3f05cb83660c7d18b3d7b0c5035d8aa0a77cbaba277462d4",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 8192,
+      "registers_per_thread": 48,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "ptx_version": "8.7",
+      "ptx_target": "sm_89",
+      "ptx_fma_rn_f32_static_occurrences": 128,
+      "ptx_mma_static_occurrences": 0,
+      "sass_path": "artifacts/tensor-game/triton-lowering-v1/sass/EKW66V2UVFLQ4PYFZOBWMDD5DCZ5PMGFANOYVIFHPS5LUJ3UMLKA.sass",
+      "sass_bytes": 21459,
+      "sass_sha256": "c58b851801266524ff7358de4f937032c218f029aabd5778a44bcd43a7c748ee",
+      "sass_ffma_static_occurrences": 128,
+      "sass_hmma_static_occurrences": 0,
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fp32_gemm_kernel:\n  REG:48 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    }
+  ]
+}
