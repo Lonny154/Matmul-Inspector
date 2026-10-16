@@ -6,7 +6,11 @@ import torch
 import triton
 import triton.language as tl
 
-from .tensor_game_triton_lowering import validate_dot_precision, validate_execution_strategy
+from .tensor_game_triton_lowering import (
+    validate_dot_precision,
+    validate_execution_strategy,
+    validate_reconstruction_strategy,
+)
 
 
 @triton.jit
@@ -81,6 +85,42 @@ def _fused_input_gemm_kernel(
     tl.store(output_ptrs, accumulator, mask=(offs_m[:, None] < half) & (offs_n[None, :] < half))
 
 
+@triton.jit
+def _fused_reconstruction_kernel(
+    p0, p1, p2, p3, p4, p5, p6, p7, output,
+    half: tl.constexpr, rank: tl.constexpr,
+    w00: tl.constexpr, w01: tl.constexpr, w02: tl.constexpr, w03: tl.constexpr,
+    w10: tl.constexpr, w11: tl.constexpr, w12: tl.constexpr, w13: tl.constexpr,
+    w20: tl.constexpr, w21: tl.constexpr, w22: tl.constexpr, w23: tl.constexpr,
+    w30: tl.constexpr, w31: tl.constexpr, w32: tl.constexpr, w33: tl.constexpr,
+    w40: tl.constexpr, w41: tl.constexpr, w42: tl.constexpr, w43: tl.constexpr,
+    w50: tl.constexpr, w51: tl.constexpr, w52: tl.constexpr, w53: tl.constexpr,
+    w60: tl.constexpr, w61: tl.constexpr, w62: tl.constexpr, w63: tl.constexpr,
+    w70: tl.constexpr, w71: tl.constexpr, w72: tl.constexpr, w73: tl.constexpr,
+    block: tl.constexpr,
+):
+    output_block = tl.program_id(0)
+    offs_m = tl.program_id(1) * block + tl.arange(0, block)
+    offs_n = tl.program_id(2) * block + tl.arange(0, block)
+    mask = (offs_m[:, None] < half) & (offs_n[None, :] < half)
+    product_offsets = offs_m[:, None] * half + offs_n[None, :]
+    accumulator = tl.zeros((block, block), dtype=tl.float32)
+    pointers = (p0, p1, p2, p3, p4, p5, p6, p7)
+    coefficients = (
+        (w00, w01, w02, w03), (w10, w11, w12, w13),
+        (w20, w21, w22, w23), (w30, w31, w32, w33),
+        (w40, w41, w42, w43), (w50, w51, w52, w53),
+        (w60, w61, w62, w63), (w70, w71, w72, w73),
+    )
+    for index in tl.static_range(0, rank):
+        row = coefficients[index]
+        coefficient = tl.where(output_block == 0, row[0], tl.where(output_block == 1, row[1], tl.where(output_block == 2, row[2], row[3])))
+        accumulator += coefficient * tl.load(pointers[index] + product_offsets, mask=mask, other=0.0)
+    output_row = (output_block // 2) * half + offs_m
+    output_col = (output_block % 2) * half + offs_n
+    tl.store(output + output_row[:, None] * (2 * half) + output_col[None, :], accumulator, mask=mask)
+
+
 def fp32_gemm(left, right, precision: str = "ieee"):
     """Contiguous CUDA FP32 GEMM with an explicit Triton dot precision."""
     precision = validate_dot_precision(precision)
@@ -134,12 +174,47 @@ def _combination(blocks, coefficients):
     return result
 
 
+def fused_reconstruction(products, actions, output_size):
+    """Reconstruct all four output blocks in one Triton kernel launch."""
+    half = output_size // 2
+    output = torch.empty((output_size, output_size), device=products[0].device, dtype=torch.float32)
+    padded = list(products) + [products[0]] * (8 - len(products))
+    coefficients = [int(value) for action in actions for value in action.w]
+    coefficients += [0] * (32 - len(coefficients))
+    grid = (4, triton.cdiv(half, 32), triton.cdiv(half, 32))
+    _fused_reconstruction_kernel[grid](
+        *padded, output, half, len(products), *coefficients, block=32,
+        num_warps=4, num_stages=3,
+    )
+    return output
+
+
+def baseline_reconstruction(products, actions, output_size):
+    """Existing eager reconstruction path, retained as the default reference."""
+    half = output_size // 2
+    output_blocks = []
+    for output_index in range(4):
+        block = torch.zeros_like(products[0])
+        for action, product in zip(actions, products):
+            coefficient = action.w[output_index]
+            if coefficient:
+                block.add_(product, alpha=float(coefficient))
+        output_blocks.append(block)
+    output = torch.empty((output_size, output_size), device=products[0].device, dtype=torch.float32)
+    for index, block in enumerate(output_blocks):
+        i, j = divmod(index, 2)
+        output[i * half:(i + 1) * half, j * half:(j + 1) * half].copy_(block)
+    return output
+
+
 def execute_lowering(
-    lowering, left, right, precision: str = "ieee", strategy: str = "unfused"
+    lowering, left, right, precision: str = "ieee", strategy: str = "unfused",
+    reconstruction: str = "baseline",
 ):
     """Execute a validated lowering with sequential materialization."""
     precision = validate_dot_precision(precision)
     strategy = validate_execution_strategy(strategy)
+    reconstruction = validate_reconstruction_strategy(reconstruction)
     if left.ndim != 2 or right.ndim != 2 or left.shape != right.shape:
         raise ValueError("lowering expects two equally sized square 2-D matrices")
     if left.shape[0] != left.shape[1] or left.shape[0] % 2:
@@ -162,16 +237,6 @@ def execute_lowering(
     else:
         for action in lowering.actions:
             products.append(fused_input_gemm(left, right, action.u, action.v, precision))
-    output_blocks = []
-    for output_index in range(4):
-        block = torch.zeros_like(products[0])
-        for action, product in zip(lowering.actions, products):
-            coefficient = action.w[output_index]
-            if coefficient:
-                block.add_(product, alpha=float(coefficient))
-        output_blocks.append(block)
-    output = torch.empty_like(left)
-    for index, block in enumerate(output_blocks):
-        i, j = divmod(index, 2)
-        output[i * half:(i + 1) * half, j * half:(j + 1) * half].copy_(block)
-    return output
+    if reconstruction == "fused":
+        return fused_reconstruction(products, lowering.actions, left.shape[0])
+    return baseline_reconstruction(products, lowering.actions, left.shape[0])

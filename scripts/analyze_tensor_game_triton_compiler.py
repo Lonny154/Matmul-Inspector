@@ -33,6 +33,7 @@ def main() -> int:
         ttir = (directory / f"{stem}.ttir").read_text(encoding="utf-8")
         precision = "tf32x3" if "tf32x3" in ttir else "ieee"
         strategy = "fused_input" if "fused_input" in stem else "unfused"
+        reconstruction = "fused" if "fused_reconstruction" in stem else None
         resource_text = subprocess.run(
             [args.cuobjdump, "--dump-resource-usage", str(cubin)],
             check=True, capture_output=True, text=True,
@@ -55,6 +56,7 @@ def main() -> int:
             "dot_input_precision": precision,
             "execution_strategy": strategy,
             "kernel_name": stem,
+            "reconstruction_strategy": reconstruction,
             "compiler_hash": metadata["hash"],
             "target": metadata["target"],
             "triton_version": metadata["triton_version"],
@@ -71,6 +73,7 @@ def main() -> int:
             "ptx_mma_static_occurrences": len(re.findall(r"\b(?:mma|wgmma)\.", ptx)),
             "ptx_global_load_static_occurrences": len(re.findall(r"\bld\.global", ptx)),
             "ptx_async_global_to_shared_static_occurrences": ptx.count(".shared.global"),
+            "ptx_store_global_static_occurrences": len(re.findall(r"\bst\.global", ptx)),
             "sass_path": str(sass_path) if sass_path is not None else None,
             "sass_bytes": len(sass_bytes),
             "sass_sha256": hashlib.sha256(sass_bytes).hexdigest(),
@@ -78,6 +81,7 @@ def main() -> int:
             "sass_hmma_static_occurrences": len(re.findall(r"\b(?:HMMA|IMMA|BMMA)\b", sass)),
             "sass_global_load_static_occurrences": len(re.findall(r"\bLDG(?:\.|\b)", sass)),
             "sass_global_to_shared_load_static_occurrences": len(re.findall(r"\bLDGSTS(?:\.|\b)", sass)),
+            "sass_global_store_static_occurrences": len(re.findall(r"\bSTG(?:\.|\b)", sass)),
             "resource_tool_output": resource_text.strip(),
         })
     payload = {

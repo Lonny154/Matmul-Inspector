@@ -17,6 +17,7 @@ from .tensor_game_hardware_cost import decomposition_cost
 
 DOT_PRECISIONS = ("ieee", "tf32x3")
 EXECUTION_STRATEGIES = ("unfused", "fused_input")
+RECONSTRUCTION_STRATEGIES = ("baseline", "fused")
 
 
 def validate_dot_precision(precision: str) -> str:
@@ -31,6 +32,15 @@ def validate_execution_strategy(strategy: str) -> str:
             f"unsupported execution strategy {strategy!r}; expected one of {EXECUTION_STRATEGIES}"
         )
     return strategy
+
+
+def validate_reconstruction_strategy(reconstruction: str) -> str:
+    if reconstruction not in RECONSTRUCTION_STRATEGIES:
+        raise ValueError(
+            f"unsupported reconstruction strategy {reconstruction!r}; "
+            f"expected one of {RECONSTRUCTION_STRATEGIES}"
+        )
+    return reconstruction
 
 
 @dataclass(frozen=True)
@@ -62,12 +72,13 @@ class BilinearLowering:
     metadata: LoweringMetadata
 
     def execute(
-        self, left, right, precision: str = "ieee", strategy: str = "unfused"
+        self, left, right, precision: str = "ieee", strategy: str = "unfused",
+        reconstruction: str = "baseline",
     ):
         """Execute on contiguous square CUDA FP32 tensors via Triton."""
         from .tensor_game_triton_runtime import execute_lowering
 
-        return execute_lowering(self, left, right, precision, strategy)
+        return execute_lowering(self, left, right, precision, strategy, reconstruction)
 
 
 def create_lowering(name: str, actions: Sequence[RankOneAction]) -> BilinearLowering:
@@ -122,10 +133,12 @@ def lowering_manifest(
     lowering: BilinearLowering,
     precision: str = "ieee",
     strategy: str = "unfused",
+    reconstruction: str = "baseline",
 ) -> dict[str, object]:
     """Return deterministic JSON-ready coefficients and lowering metadata."""
     precision = validate_dot_precision(precision)
     strategy = validate_execution_strategy(strategy)
+    reconstruction = validate_reconstruction_strategy(reconstruction)
     metadata = asdict(lowering.metadata)
     metadata["triton_dot_input_precision"] = precision
     return {
@@ -135,18 +148,24 @@ def lowering_manifest(
         "supported_dot_input_precisions": list(DOT_PRECISIONS),
         "execution_strategy": strategy,
         "supported_execution_strategies": list(EXECUTION_STRATEGIES),
+        "reconstruction_strategy": reconstruction,
+        "supported_reconstruction_strategies": list(RECONSTRUCTION_STRATEGIES),
         "strategy_metadata": {
             "preparation_kernel_launches": (
                 2 * lowering.metadata.rank + lowering.metadata.execution_preparation_updates
                 if strategy == "unfused" else 0
             ),
             "gemm_kernel_launches": lowering.metadata.block_gemms,
-            "reconstruction_kernel_launches": lowering.metadata.execution_reconstruction_updates + 4,
-            "output_assembly_copy_launches": 4,
+            "reconstruction_kernel_launches": lowering.metadata.execution_reconstruction_updates + 4 if reconstruction == "baseline" else 1,
+            "output_assembly_copy_launches": 4 if reconstruction == "baseline" else 0,
+            "intermediate_output_block_buffers": 4 if reconstruction == "baseline" else 0,
             "total_device_kernel_launches_estimate": (
                 (2 * lowering.metadata.rank + lowering.metadata.execution_preparation_updates)
                 if strategy == "unfused" else 0
-            ) + lowering.metadata.block_gemms + lowering.metadata.execution_reconstruction_updates + 8,
+            ) + lowering.metadata.block_gemms + (
+                lowering.metadata.execution_reconstruction_updates + 8
+                if reconstruction == "baseline" else 1
+            ),
             "full_size_input_combination_buffers": 2 * lowering.metadata.rank if strategy == "unfused" else 0,
             "rank_product_buffers": lowering.metadata.rank,
             "input_combinations_formed_in_gemm_load_path": strategy == "fused_input",
