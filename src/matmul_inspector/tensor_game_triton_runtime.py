@@ -149,11 +149,12 @@ def fp32_gemm(left, right, precision: str = "ieee"):
     return output
 
 
-def fused_input_gemm(left, right, u, v, precision: str = "ieee"):
+def fused_input_gemm(left, right, u, v, precision: str = "ieee", output=None):
     """Form one pair of 2x2 block combinations inside the GEMM load path."""
     precision = validate_dot_precision(precision)
     half = left.shape[0] // 2
-    output = torch.empty((half, half), device=left.device, dtype=torch.float32)
+    if output is None:
+        output = torch.empty((half, half), device=left.device, dtype=torch.float32)
     grid = (triton.cdiv(half, 32), triton.cdiv(half, 32))
     _fused_input_gemm_kernel[grid](
         left, right, output, half,
@@ -174,10 +175,11 @@ def _combination(blocks, coefficients):
     return result
 
 
-def fused_reconstruction(products, actions, output_size):
+def fused_reconstruction(products, actions, output_size, output=None):
     """Reconstruct all four output blocks in one Triton kernel launch."""
     half = output_size // 2
-    output = torch.empty((output_size, output_size), device=products[0].device, dtype=torch.float32)
+    if output is None:
+        output = torch.empty((output_size, output_size), device=products[0].device, dtype=torch.float32)
     padded = list(products) + [products[0]] * (8 - len(products))
     coefficients = [int(value) for action in actions for value in action.w]
     coefficients += [0] * (32 - len(coefficients))
@@ -187,6 +189,20 @@ def fused_reconstruction(products, actions, output_size):
         num_warps=4, num_stages=3,
     )
     return output
+
+
+def execute_fused_preallocated(lowering, left, right, products, output):
+    """Execute fused-input/fused-output IEEE lowering into caller-owned buffers."""
+    if len(products) != len(lowering.actions):
+        raise ValueError("one preallocated product buffer is required per rank term")
+    half = left.shape[0] // 2
+    if any(tuple(buffer.shape) != (half, half) for buffer in products):
+        raise ValueError("preallocated product buffers have the wrong shape")
+    if tuple(output.shape) != tuple(left.shape):
+        raise ValueError("preallocated output has the wrong shape")
+    for buffer, action in zip(products, lowering.actions):
+        fused_input_gemm(left, right, action.u, action.v, "ieee", output=buffer)
+    return fused_reconstruction(products, lowering.actions, left.shape[0], output=output)
 
 
 def baseline_reconstruction(products, actions, output_size):

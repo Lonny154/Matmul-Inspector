@@ -153,3 +153,22 @@ def test_fused_reconstruction_matches_baseline_and_pytorch(algorithm, size):
     fused = lowering.execute(left, right, "ieee", "fused_input", "fused")
     torch.testing.assert_close(fused, left @ right, rtol=2e-4, atol=2e-4)
     torch.testing.assert_close(fused, baseline, rtol=2e-4, atol=2e-4)
+
+
+@pytest.mark.parametrize("algorithm", ("conventional", "strassen"))
+def test_preallocated_diagnostic_path_matches_allocating_path(algorithm):
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("triton")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is unavailable")
+    from matmul_inspector.tensor_game_triton_runtime import execute_fused_preallocated
+    torch.manual_seed(10102)
+    size = 256
+    left = torch.randn((size, size), device="cuda")
+    right = torch.randn((size, size), device="cuda")
+    lowering = reference_lowering(algorithm)
+    products = [torch.empty((size // 2, size // 2), device="cuda") for _ in lowering.actions]
+    output = torch.empty_like(left)
+    actual = execute_fused_preallocated(lowering, left, right, products, output)
+    expected = lowering.execute(left, right, "ieee", "fused_input", "fused")
+    torch.testing.assert_close(actual, expected, rtol=2e-4, atol=2e-4)
