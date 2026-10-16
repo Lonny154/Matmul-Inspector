@@ -29,6 +29,7 @@ def main() -> int:
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--seed", type=int, default=20261016)
     parser.add_argument("--precisions", nargs="+", choices=("ieee", "tf32x3"), default=("ieee",))
+    parser.add_argument("--strategies", nargs="+", choices=("unfused", "fused_input"), default=("unfused",))
     args = parser.parse_args()
     if args.output.exists():
         parser.error("--output must not already exist")
@@ -36,7 +37,7 @@ def main() -> int:
     import torch
 
     from matmul_inspector.tensor_game_triton_lowering import reference_lowering
-    from matmul_inspector.tensor_game_triton_runtime import _combination, fp32_gemm
+    from matmul_inspector.tensor_game_triton_runtime import _combination, fp32_gemm, fused_input_gemm
 
     if not torch.cuda.is_available():
         parser.error("CUDA is unavailable")
@@ -52,15 +53,22 @@ def main() -> int:
         b_blocks = tuple(right[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
         for algorithm in ("conventional", "strassen"):
             for precision in args.precisions:
+              for strategy in args.strategies:
                 lowering = reference_lowering(algorithm)
                 combinations = [(_combination(a_blocks, action.u), _combination(b_blocks, action.v)) for action in lowering.actions]
-                products = [fp32_gemm(a, b, precision) for a, b in combinations]
+                products = (
+                    [fp32_gemm(a, b, precision) for a, b in combinations]
+                    if strategy == "unfused"
+                    else [fused_input_gemm(left, right, action.u, action.v, precision) for action in lowering.actions]
+                )
 
                 def preparation():
                     return [(_combination(a_blocks, action.u), _combination(b_blocks, action.v)) for action in lowering.actions]
 
                 def gemms():
-                    return [fp32_gemm(a, b, precision) for a, b in combinations]
+                    if strategy == "unfused":
+                        return [fp32_gemm(a, b, precision) for a, b in combinations]
+                    return [fused_input_gemm(left, right, action.u, action.v, precision) for action in lowering.actions]
 
                 def reconstruction():
                     output_blocks = []
@@ -77,7 +85,9 @@ def main() -> int:
                         output[i * half:(i + 1) * half, j * half:(j + 1) * half].copy_(block)
                     return output
 
-                phases = {"preparation": preparation, "gemm_only": gemms, "reconstruction": reconstruction}
+                phases = {"gemm_only" if strategy == "unfused" else "fused_gemm": gemms, "reconstruction": reconstruction}
+                if strategy == "unfused":
+                    phases["preparation"] = preparation
                 for function in phases.values():
                     for _ in range(args.warmups):
                         function()
@@ -90,18 +100,20 @@ def main() -> int:
                             start = torch.cuda.Event(enable_timing=True)
                             end = torch.cuda.Event(enable_timing=True)
                             start.record(); phases[phase](); end.record(); end.synchronize()
-                            raw.append({"size": size, "algorithm": algorithm, "precision": precision, "phase": phase, "run": run, "elapsed_ms": start.elapsed_time(end)})
+                            raw.append({"size": size, "algorithm": algorithm, "precision": precision, "strategy": strategy, "phase": phase, "run": run, "elapsed_ms": start.elapsed_time(end)})
 
     summaries = []
     for size in args.sizes:
         for algorithm in ("conventional", "strassen"):
             for precision in args.precisions:
-                for phase in ("preparation", "gemm_only", "reconstruction"):
-                    run_medians = [statistics.median(row["elapsed_ms"] for row in raw if row["size"] == size and row["algorithm"] == algorithm and row["precision"] == precision and row["phase"] == phase and row["run"] == run) for run in range(args.runs)]
-                    summaries.append({"size": size, "algorithm": algorithm, "precision": precision, "phase": phase, "run_medians_ms": run_medians, **distribution(run_medians)})
+                for strategy in args.strategies:
+                    phases = ("preparation", "gemm_only", "reconstruction") if strategy == "unfused" else ("fused_gemm", "reconstruction")
+                    for phase in phases:
+                        run_medians = [statistics.median(row["elapsed_ms"] for row in raw if row["size"] == size and row["algorithm"] == algorithm and row["precision"] == precision and row["strategy"] == strategy and row["phase"] == phase and row["run"] == run) for run in range(args.runs)]
+                        summaries.append({"size": size, "algorithm": algorithm, "precision": precision, "strategy": strategy, "phase": phase, "run_medians_ms": run_medians, **distribution(run_medians)})
     payload = {
         "schema": "tensor_game_triton_phase_profile.v1",
-        "configuration": {"sizes": args.sizes, "warmups": args.warmups, "iterations": args.iterations, "runs": args.runs, "seed": args.seed, "precisions": args.precisions, "timing": "CUDA events; phases measured separately and must not be summed as a substitute for complete-operation latency"},
+        "configuration": {"sizes": args.sizes, "warmups": args.warmups, "iterations": args.iterations, "runs": args.runs, "seed": args.seed, "precisions": args.precisions, "strategies": args.strategies, "timing": "CUDA events; phases measured separately and must not be summed as a substitute for complete-operation latency; fused_gemm includes in-kernel input combination"},
         "summaries": summaries,
         "raw_timings": raw,
     }

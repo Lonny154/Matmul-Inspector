@@ -6,7 +6,7 @@ import torch
 import triton
 import triton.language as tl
 
-from .tensor_game_triton_lowering import validate_dot_precision
+from .tensor_game_triton_lowering import validate_dot_precision, validate_execution_strategy
 
 
 @triton.jit
@@ -37,6 +37,50 @@ def _fp32_gemm_kernel(
     tl.store(output_ptrs, accumulator, mask=(offs_m[:, None] < m) & (offs_n[None, :] < n))
 
 
+@triton.jit
+def _fused_input_gemm_kernel(
+    a_ptr, b_ptr, c_ptr,
+    half: tl.constexpr,
+    stride_a0: tl.constexpr, stride_a1: tl.constexpr,
+    stride_b0: tl.constexpr, stride_b1: tl.constexpr,
+    stride_c0: tl.constexpr, stride_c1: tl.constexpr,
+    u0: tl.constexpr, u1: tl.constexpr, u2: tl.constexpr, u3: tl.constexpr,
+    v0: tl.constexpr, v1: tl.constexpr, v2: tl.constexpr, v3: tl.constexpr,
+    block_m: tl.constexpr, block_n: tl.constexpr, block_k: tl.constexpr,
+    input_precision: tl.constexpr,
+):
+    pid_m = tl.program_id(0)
+    pid_n = tl.program_id(1)
+    offs_m = pid_m * block_m + tl.arange(0, block_m)
+    offs_n = pid_n * block_n + tl.arange(0, block_n)
+    offs_k = tl.arange(0, block_k)
+    accumulator = tl.zeros((block_m, block_n), dtype=tl.float32)
+    for offset in range(0, half, block_k):
+        a = tl.zeros((block_m, block_k), dtype=tl.float32)
+        b = tl.zeros((block_k, block_n), dtype=tl.float32)
+        a_mask = (offs_m[:, None] < half) & (offset + offs_k[None, :] < half)
+        b_mask = (offset + offs_k[:, None] < half) & (offs_n[None, :] < half)
+        if u0 != 0:
+            a += u0 * tl.load(a_ptr + offs_m[:, None] * stride_a0 + (offset + offs_k[None, :]) * stride_a1, mask=a_mask, other=0.0)
+        if u1 != 0:
+            a += u1 * tl.load(a_ptr + offs_m[:, None] * stride_a0 + (half + offset + offs_k[None, :]) * stride_a1, mask=a_mask, other=0.0)
+        if u2 != 0:
+            a += u2 * tl.load(a_ptr + (half + offs_m[:, None]) * stride_a0 + (offset + offs_k[None, :]) * stride_a1, mask=a_mask, other=0.0)
+        if u3 != 0:
+            a += u3 * tl.load(a_ptr + (half + offs_m[:, None]) * stride_a0 + (half + offset + offs_k[None, :]) * stride_a1, mask=a_mask, other=0.0)
+        if v0 != 0:
+            b += v0 * tl.load(b_ptr + (offset + offs_k[:, None]) * stride_b0 + offs_n[None, :] * stride_b1, mask=b_mask, other=0.0)
+        if v1 != 0:
+            b += v1 * tl.load(b_ptr + (offset + offs_k[:, None]) * stride_b0 + (half + offs_n[None, :]) * stride_b1, mask=b_mask, other=0.0)
+        if v2 != 0:
+            b += v2 * tl.load(b_ptr + (half + offset + offs_k[:, None]) * stride_b0 + offs_n[None, :] * stride_b1, mask=b_mask, other=0.0)
+        if v3 != 0:
+            b += v3 * tl.load(b_ptr + (half + offset + offs_k[:, None]) * stride_b0 + (half + offs_n[None, :]) * stride_b1, mask=b_mask, other=0.0)
+        accumulator = tl.dot(a, b, accumulator, input_precision=input_precision, out_dtype=tl.float32)
+    output_ptrs = c_ptr + offs_m[:, None] * stride_c0 + offs_n[None, :] * stride_c1
+    tl.store(output_ptrs, accumulator, mask=(offs_m[:, None] < half) & (offs_n[None, :] < half))
+
+
 def fp32_gemm(left, right, precision: str = "ieee"):
     """Contiguous CUDA FP32 GEMM with an explicit Triton dot precision."""
     precision = validate_dot_precision(precision)
@@ -65,6 +109,23 @@ def fp32_gemm(left, right, precision: str = "ieee"):
     return output
 
 
+def fused_input_gemm(left, right, u, v, precision: str = "ieee"):
+    """Form one pair of 2x2 block combinations inside the GEMM load path."""
+    precision = validate_dot_precision(precision)
+    half = left.shape[0] // 2
+    output = torch.empty((half, half), device=left.device, dtype=torch.float32)
+    grid = (triton.cdiv(half, 32), triton.cdiv(half, 32))
+    _fused_input_gemm_kernel[grid](
+        left, right, output, half,
+        left.stride(0), left.stride(1), right.stride(0), right.stride(1),
+        output.stride(0), output.stride(1),
+        *tuple(int(value) for value in u), *tuple(int(value) for value in v),
+        block_m=32, block_n=32, block_k=16, input_precision=precision,
+        num_warps=4, num_stages=3,
+    )
+    return output
+
+
 def _combination(blocks, coefficients):
     result = torch.zeros_like(blocks[0], memory_format=torch.contiguous_format)
     for coefficient, block in zip(coefficients, blocks):
@@ -73,9 +134,12 @@ def _combination(blocks, coefficients):
     return result
 
 
-def execute_lowering(lowering, left, right, precision: str = "ieee"):
+def execute_lowering(
+    lowering, left, right, precision: str = "ieee", strategy: str = "unfused"
+):
     """Execute a validated lowering with sequential materialization."""
     precision = validate_dot_precision(precision)
+    strategy = validate_execution_strategy(strategy)
     if left.ndim != 2 or right.ndim != 2 or left.shape != right.shape:
         raise ValueError("lowering expects two equally sized square 2-D matrices")
     if left.shape[0] != left.shape[1] or left.shape[0] % 2:
@@ -89,11 +153,15 @@ def execute_lowering(lowering, left, right, precision: str = "ieee"):
     if not left.is_contiguous() or not right.is_contiguous():
         raise ValueError("lowering expects contiguous inputs")
     half = left.shape[0] // 2
-    a_blocks = tuple(left[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
-    b_blocks = tuple(right[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
     products = []
-    for action in lowering.actions:
-        products.append(fp32_gemm(_combination(a_blocks, action.u), _combination(b_blocks, action.v), precision))
+    if strategy == "unfused":
+        a_blocks = tuple(left[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
+        b_blocks = tuple(right[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
+        for action in lowering.actions:
+            products.append(fp32_gemm(_combination(a_blocks, action.u), _combination(b_blocks, action.v), precision))
+    else:
+        for action in lowering.actions:
+            products.append(fused_input_gemm(left, right, action.u, action.v, precision))
     output_blocks = []
     for output_index in range(4):
         block = torch.zeros_like(products[0])

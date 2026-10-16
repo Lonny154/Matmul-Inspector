@@ -19,6 +19,10 @@ def test_reference_lowerings_share_contract_and_expected_metadata():
     tf32x3_manifest = lowering_manifest(strassen, "tf32x3")
     assert tf32x3_manifest["selected_dot_input_precision"] == "tf32x3"
     assert tf32x3_manifest["metadata"]["triton_dot_input_precision"] == "tf32x3"
+    fused_manifest = lowering_manifest(strassen, strategy="fused_input")
+    assert fused_manifest["execution_strategy"] == "fused_input"
+    assert fused_manifest["strategy_metadata"]["preparation_kernel_launches"] == 0
+    assert fused_manifest["strategy_metadata"]["full_size_input_combination_buffers"] == 0
 
 
 def test_invalid_decomposition_is_rejected_before_runtime_import():
@@ -37,6 +41,11 @@ def test_unknown_precision_is_clear_without_gpu_execution():
         lowering_manifest(reference_lowering("strassen"), "tf32")
 
 
+def test_unknown_strategy_is_clear_without_gpu_execution():
+    with pytest.raises(ValueError, match="unsupported execution strategy"):
+        lowering_manifest(reference_lowering("strassen"), strategy="recursive")
+
+
 def test_default_gpu_precision_matches_explicit_ieee():
     torch = pytest.importorskip("torch")
     pytest.importorskip("triton")
@@ -51,8 +60,9 @@ def test_default_gpu_precision_matches_explicit_ieee():
 
 @pytest.mark.parametrize("algorithm", ("conventional", "strassen"))
 @pytest.mark.parametrize("precision", ("ieee", "tf32x3"))
+@pytest.mark.parametrize("strategy", ("unfused", "fused_input"))
 @pytest.mark.parametrize("size", (128, 256, 512, 1024))
-def test_gpu_lowering_matches_pytorch(algorithm, precision, size):
+def test_gpu_lowering_matches_pytorch(algorithm, precision, strategy, size):
     torch = pytest.importorskip("torch")
     pytest.importorskip("triton")
     if not torch.cuda.is_available():
@@ -63,7 +73,7 @@ def test_gpu_lowering_matches_pytorch(algorithm, precision, size):
     old_tf32 = torch.backends.cuda.matmul.allow_tf32
     torch.backends.cuda.matmul.allow_tf32 = False
     try:
-        actual = reference_lowering(algorithm).execute(left, right, precision)
+        actual = reference_lowering(algorithm).execute(left, right, precision, strategy)
         expected = left @ right
     finally:
         torch.backends.cuda.matmul.allow_tf32 = old_tf32
@@ -72,8 +82,9 @@ def test_gpu_lowering_matches_pytorch(algorithm, precision, size):
 
 @pytest.mark.parametrize("algorithm", ("conventional", "strassen"))
 @pytest.mark.parametrize("precision", ("ieee", "tf32x3"))
+@pytest.mark.parametrize("strategy", ("unfused", "fused_input"))
 @pytest.mark.parametrize("case", ("zero", "identity", "negative"))
-def test_gpu_lowering_special_cases(algorithm, precision, case):
+def test_gpu_lowering_special_cases(algorithm, precision, strategy, case):
     torch = pytest.importorskip("torch")
     pytest.importorskip("triton")
     if not torch.cuda.is_available():
@@ -92,8 +103,25 @@ def test_gpu_lowering_special_cases(algorithm, precision, case):
     old_tf32 = torch.backends.cuda.matmul.allow_tf32
     torch.backends.cuda.matmul.allow_tf32 = False
     try:
-        actual = reference_lowering(algorithm).execute(left, right, precision)
+        actual = reference_lowering(algorithm).execute(left, right, precision, strategy)
         expected = left @ right
     finally:
         torch.backends.cuda.matmul.allow_tf32 = old_tf32
     torch.testing.assert_close(actual, expected, rtol=2e-4, atol=2e-4)
+
+
+@pytest.mark.parametrize("algorithm", ("conventional", "strassen"))
+def test_fused_and_unfused_outputs_match_within_tolerance(algorithm):
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("triton")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is unavailable")
+    torch.manual_seed(8128)
+    left = torch.randn((256, 256), device="cuda")
+    right = torch.randn((256, 256), device="cuda")
+    lowering = reference_lowering(algorithm)
+    torch.testing.assert_close(
+        lowering.execute(left, right, "ieee", "fused_input"),
+        lowering.execute(left, right, "ieee", "unfused"),
+        rtol=2e-4, atol=2e-4,
+    )

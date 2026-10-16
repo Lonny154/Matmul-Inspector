@@ -25,12 +25,14 @@ def main() -> int:
     rows = []
     for cubin in sorted(args.artifact_root.glob("*/*.cubin")):
         directory = cubin.parent
-        metadata_path = directory / "_fp32_gemm_kernel.json"
-        ptx_path = directory / "_fp32_gemm_kernel.ptx"
+        stem = cubin.stem
+        metadata_path = directory / f"{stem}.json"
+        ptx_path = directory / f"{stem}.ptx"
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         ptx = ptx_path.read_text(encoding="utf-8")
-        ttir = (directory / "_fp32_gemm_kernel.ttir").read_text(encoding="utf-8")
+        ttir = (directory / f"{stem}.ttir").read_text(encoding="utf-8")
         precision = "tf32x3" if "tf32x3" in ttir else "ieee"
+        strategy = "fused_input" if "fused_input" in stem else "unfused"
         resource_text = subprocess.run(
             [args.cuobjdump, "--dump-resource-usage", str(cubin)],
             check=True, capture_output=True, text=True,
@@ -51,6 +53,8 @@ def main() -> int:
         rows.append({
             "specialization": directory.name,
             "dot_input_precision": precision,
+            "execution_strategy": strategy,
+            "kernel_name": stem,
             "compiler_hash": metadata["hash"],
             "target": metadata["target"],
             "triton_version": metadata["triton_version"],
@@ -65,11 +69,15 @@ def main() -> int:
             "ptx_target": re.search(r"\.target\s+([^\s]+)", ptx).group(1),
             "ptx_fma_rn_f32_static_occurrences": ptx.count("fma.rn.f32"),
             "ptx_mma_static_occurrences": len(re.findall(r"\b(?:mma|wgmma)\.", ptx)),
+            "ptx_global_load_static_occurrences": len(re.findall(r"\bld\.global", ptx)),
+            "ptx_async_global_to_shared_static_occurrences": ptx.count(".shared.global"),
             "sass_path": str(sass_path) if sass_path is not None else None,
             "sass_bytes": len(sass_bytes),
             "sass_sha256": hashlib.sha256(sass_bytes).hexdigest(),
             "sass_ffma_static_occurrences": len(re.findall(r"\bFFMA\b", sass)),
             "sass_hmma_static_occurrences": len(re.findall(r"\b(?:HMMA|IMMA|BMMA)\b", sass)),
+            "sass_global_load_static_occurrences": len(re.findall(r"\bLDG(?:\.|\b)", sass)),
+            "sass_global_to_shared_load_static_occurrences": len(re.findall(r"\bLDGSTS(?:\.|\b)", sass)),
             "resource_tool_output": resource_text.strip(),
         })
     payload = {
