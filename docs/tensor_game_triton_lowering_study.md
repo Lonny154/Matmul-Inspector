@@ -205,3 +205,114 @@ launch counts, allocation activity, and the device timeline. Then test a
 preallocated implementation with identical arithmetic and fixed kernel geometry.
 That isolates allocation and materialization overhead before considering fusion,
 tile tuning, TF32, or a hardware-aware search score.
+
+## TF32x3 Tensor Core Precision Study
+
+### Hypothesis and controlled configuration
+
+The experiment tested whether Triton's `tf32x3` mode would move the fixed FP32
+block GEMM onto Tensor Cores and reduce enough multiplication time to improve the
+complete conventional or Strassen lowering. IEEE remained the default. Precision
+is an explicit JIT `constexpr`, is validated against `ieee` and `tf32x3`, and is
+recorded in lowering manifests and compiler-artifact rows.
+
+Both modes used the same 32×32×16 tile, four warps, three stages, FP32 inputs,
+FP32 accumulation, decompositions, materialization schedule, and output path.
+PyTorch `allow_tf32` was false. The final paired run used seed `20261016`, ten
+warmups, five independent runs, 30 samples per implementation per run, and a
+randomized implementation order per run. Compilation occurred during correctness
+and warmup work before recorded samples. Raw evidence is separate from the IEEE
+baseline under `artifacts/tensor-game/triton-lowering-tf32x3-v1/`.
+
+```bash
+PYTHONPATH=src /home/daniel/IsaacLab/.venv/bin/python \
+  scripts/benchmark_tensor_game_triton_lowering.py \
+  --output artifacts/tensor-game/triton-lowering-tf32x3-v1/results_final.json \
+  --sizes 128 256 512 1024 --warmups 10 --iterations 30 --runs 5 \
+  --precisions ieee tf32x3
+```
+
+### Correctness
+
+All 64 rows passed the unchanged `rtol=5e-3`, `atol=5e-3` acceptance rule.
+Relative error is elementwise `abs(actual-reference) / max(abs(reference), 1e-12)`;
+its maximum is not informative near zero and is retained only as a diagnostic.
+
+| Algorithm | Precision | Maximum absolute error | Largest per-case mean absolute error |
+|---|---|---:|---:|
+| Conventional | IEEE | 1.373291e-4 | 1.039860e-5 |
+| Conventional | TF32x3 | 6.484985e-5 | 6.795623e-6 |
+| Strassen | IEEE | 2.403259e-4 | 1.980958e-5 |
+| Strassen | TF32x3 | 7.629395e-5 | 9.149402e-6 |
+
+On these inputs TF32x3 did not increase the recorded worst absolute or mean
+error. This observation is specific to the tested tensors and operation order;
+it is not a general accuracy guarantee for TF32x3.
+
+### Complete-operation latency
+
+Values are medians of five run medians. TF32x3 speedup is IEEE divided by
+TF32x3, so values below 1 mean TF32x3 was slower.
+
+| Size | PyTorch | Conventional IEEE | Conventional TF32x3 | TF32x3 speedup | Strassen IEEE | Strassen TF32x3 | TF32x3 speedup | Strassen / conventional: IEEE, TF32x3 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 128 | 0.0410 ms | 0.7058 ms | 0.6911 ms | 1.021× | 0.7613 ms | 0.7557 ms | 1.007× | 1.079×, 1.093× |
+| 256 | 0.0444 ms | 0.6174 ms | 0.6169 ms | 1.001× | 0.6923 ms | 0.7084 ms | 0.977× | 1.121×, 1.148× |
+| 512 | 0.0664 ms | 0.6251 ms | 0.6572 ms | 0.951× | 0.7059 ms | 0.7198 ms | 0.981× | 1.129×, 1.095× |
+| 1024 | 0.2110 ms | 0.6670 ms | 0.9354 ms | 0.713× | 0.7373 ms | 0.9103 ms | 0.810× | 1.105×, 0.973× |
+
+The 128 and 256 differences are too small relative to observed variation to
+support a reliable benefit. At 512, TF32x3 is modestly slower. At 1024, where
+the five-run ranges are separated, TF32x3 is 40.2% slower for conventional and
+23.5% slower for Strassen. Strassen becomes 2.7% faster than conventional under
+TF32x3 at 1024, but both remain much slower than their IEEE forms and PyTorch.
+This is a relative crossover inside an unsuccessful precision mode, not an
+optimization result.
+
+### Phase evidence
+
+The separately measured 1024 rank-GEMM batches were:
+
+| Algorithm | IEEE GEMM-only | TF32x3 GEMM-only | IEEE / TF32x3 |
+|---|---:|---:|---:|
+| Conventional | 0.3629 ms | 0.6979 ms | 0.520× |
+| Strassen | 0.3050 ms | 0.6216 ms | 0.491× |
+
+Thus Tensor Core instruction use did not improve isolated GEMM execution for
+this fixed small-tile TF32x3 kernel. Preparation and reconstruction do not depend
+algorithmically on dot precision, but their phase measurements still varied
+because each phase was timed in separate eager invocations. Phase medians are
+not added to estimate complete latency. Several smaller-size phase runs shifted
+substantially, so the 1024 result and its tighter GEMM-only ranges provide the
+clearest evidence.
+
+### Compiler and resource evidence
+
+IEEE and TF32x3 produced distinct cache keys and hashes for all four matrix-size
+specializations. Both target PTX 8.7 / `sm_89`, use four warps and three stages,
+and report 8,192 bytes of dynamic shared memory with no global scratch.
+
+| Precision | PTX static arithmetic | SASS static arithmetic | Registers/thread | Local / stack |
+|---|---|---|---:|---:|
+| IEEE | 128 `fma.rn.f32`, no MMA | 128 `FFMA`, no HMMA | 48 | 0 / 0 bytes |
+| TF32x3 | 24 `mma.sync`, no FP32 FMA | 24 or 96 `HMMA`, no FFMA | 70–72 | 0 / 0 bytes |
+
+This establishes actual Tensor Core lowering for TF32x3. Static instruction
+occurrences are not dynamic counts. The 24-versus-96 SASS difference reflects
+specialization structure and does not by itself measure work. TF32x3's higher
+register requirement and its multi-MMA accuracy construction are plausible costs,
+but the experiment does not isolate their individual latency effects.
+
+### Conclusion and next experiment
+
+For this fixed geometry, Tensor Core execution changes the generated machine
+instructions but does not improve the block GEMMs or complete operations.
+Reducing rank still helps Strassen's GEMM-only phase relative to conventional at
+1024, yet the total pipeline remains dominated by an unfavorable combination of
+TF32x3 GEMM cost, launches, materialization, and reconstruction.
+
+The next controlled experiment should compare plain `tf32` against IEEE and
+TF32x3 with the same schedule. Plain TF32 uses fewer correction operations and
+may reveal whether Tensor Core throughput can help before addressing fusion or
+preallocation. It must use an explicitly defined accuracy gate and remain
+separate from any search-policy change.

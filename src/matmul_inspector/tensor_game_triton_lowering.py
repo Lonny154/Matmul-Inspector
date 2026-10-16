@@ -15,6 +15,14 @@ from .tensor_game import (
 )
 from .tensor_game_hardware_cost import decomposition_cost
 
+DOT_PRECISIONS = ("ieee", "tf32x3")
+
+
+def validate_dot_precision(precision: str) -> str:
+    if precision not in DOT_PRECISIONS:
+        raise ValueError(f"unsupported dot precision {precision!r}; expected one of {DOT_PRECISIONS}")
+    return precision
+
 
 @dataclass(frozen=True)
 class LoweringMetadata:
@@ -44,11 +52,11 @@ class BilinearLowering:
     actions: tuple[RankOneAction, ...]
     metadata: LoweringMetadata
 
-    def execute(self, left, right):
+    def execute(self, left, right, precision: str = "ieee"):
         """Execute on contiguous square CUDA FP32 tensors via Triton."""
         from .tensor_game_triton_runtime import execute_lowering
 
-        return execute_lowering(self, left, right)
+        return execute_lowering(self, left, right, precision)
 
 
 def create_lowering(name: str, actions: Sequence[RankOneAction]) -> BilinearLowering:
@@ -99,11 +107,16 @@ def reference_lowering(name: str) -> BilinearLowering:
     raise ValueError("unknown reference lowering; expected 'conventional' or 'strassen'")
 
 
-def lowering_manifest(lowering: BilinearLowering) -> dict[str, object]:
+def lowering_manifest(lowering: BilinearLowering, precision: str = "ieee") -> dict[str, object]:
     """Return deterministic JSON-ready coefficients and lowering metadata."""
+    precision = validate_dot_precision(precision)
+    metadata = asdict(lowering.metadata)
+    metadata["triton_dot_input_precision"] = precision
     return {
         "schema": "tensor_game_triton_lowering.v1",
-        "metadata": asdict(lowering.metadata),
+        "metadata": metadata,
+        "selected_dot_input_precision": precision,
+        "supported_dot_input_precisions": list(DOT_PRECISIONS),
         "actions": [
             {"u": list(action.u), "v": list(action.v), "w": list(action.w)}
             for action in lowering.actions

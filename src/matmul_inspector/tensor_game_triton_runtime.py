@@ -6,6 +6,8 @@ import torch
 import triton
 import triton.language as tl
 
+from .tensor_game_triton_lowering import validate_dot_precision
+
 
 @triton.jit
 def _fp32_gemm_kernel(
@@ -15,6 +17,7 @@ def _fp32_gemm_kernel(
     stride_bk: tl.constexpr, stride_bn: tl.constexpr,
     stride_cm: tl.constexpr, stride_cn: tl.constexpr,
     block_m: tl.constexpr, block_n: tl.constexpr, block_k: tl.constexpr,
+    input_precision: tl.constexpr,
 ):
     pid_m = tl.program_id(0)
     pid_n = tl.program_id(1)
@@ -27,15 +30,16 @@ def _fp32_gemm_kernel(
     for offset in range(0, k, block_k):
         a = tl.load(a_ptrs, mask=(offs_m[:, None] < m) & (offset + offs_k[None, :] < k), other=0.0)
         b = tl.load(b_ptrs, mask=(offset + offs_k[:, None] < k) & (offs_n[None, :] < n), other=0.0)
-        accumulator = tl.dot(a, b, accumulator, input_precision="ieee", out_dtype=tl.float32)
+        accumulator = tl.dot(a, b, accumulator, input_precision=input_precision, out_dtype=tl.float32)
         a_ptrs += block_k * stride_ak
         b_ptrs += block_k * stride_bk
     output_ptrs = c_ptr + offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn
     tl.store(output_ptrs, accumulator, mask=(offs_m[:, None] < m) & (offs_n[None, :] < n))
 
 
-def fp32_gemm(left, right):
-    """Contiguous CUDA FP32 GEMM with IEEE FP32 Triton dot inputs."""
+def fp32_gemm(left, right, precision: str = "ieee"):
+    """Contiguous CUDA FP32 GEMM with an explicit Triton dot precision."""
+    precision = validate_dot_precision(precision)
     if left.ndim != 2 or right.ndim != 2 or left.shape[1] != right.shape[0]:
         raise ValueError("fp32_gemm expects compatible 2-D matrices")
     if not left.is_cuda or not right.is_cuda:
@@ -55,6 +59,7 @@ def fp32_gemm(left, right):
         left.stride(0), left.stride(1), right.stride(0), right.stride(1),
         output.stride(0), output.stride(1),
         block_m=block_m, block_n=block_n, block_k=block_k,
+        input_precision=precision,
         num_warps=4, num_stages=3,
     )
     return output
@@ -68,8 +73,9 @@ def _combination(blocks, coefficients):
     return result
 
 
-def execute_lowering(lowering, left, right):
+def execute_lowering(lowering, left, right, precision: str = "ieee"):
     """Execute a validated lowering with sequential materialization."""
+    precision = validate_dot_precision(precision)
     if left.ndim != 2 or right.ndim != 2 or left.shape != right.shape:
         raise ValueError("lowering expects two equally sized square 2-D matrices")
     if left.shape[0] != left.shape[1] or left.shape[0] % 2:
@@ -87,7 +93,7 @@ def execute_lowering(lowering, left, right):
     b_blocks = tuple(right[i * half:(i + 1) * half, j * half:(j + 1) * half] for i in range(2) for j in range(2))
     products = []
     for action in lowering.actions:
-        products.append(fp32_gemm(_combination(a_blocks, action.u), _combination(b_blocks, action.v)))
+        products.append(fp32_gemm(_combination(a_blocks, action.u), _combination(b_blocks, action.v), precision))
     output_blocks = []
     for output_index in range(4):
         block = torch.zeros_like(products[0])

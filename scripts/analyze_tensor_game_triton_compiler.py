@@ -29,6 +29,8 @@ def main() -> int:
         ptx_path = directory / "_fp32_gemm_kernel.ptx"
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         ptx = ptx_path.read_text(encoding="utf-8")
+        ttir = (directory / "_fp32_gemm_kernel.ttir").read_text(encoding="utf-8")
+        precision = "tf32x3" if "tf32x3" in ttir else "ieee"
         resource_text = subprocess.run(
             [args.cuobjdump, "--dump-resource-usage", str(cubin)],
             check=True, capture_output=True, text=True,
@@ -48,6 +50,7 @@ def main() -> int:
             raise RuntimeError(f"could not parse resource usage for {cubin}")
         rows.append({
             "specialization": directory.name,
+            "dot_input_precision": precision,
             "compiler_hash": metadata["hash"],
             "target": metadata["target"],
             "triton_version": metadata["triton_version"],
