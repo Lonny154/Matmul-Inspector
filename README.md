@@ -308,6 +308,9 @@ commands.
   residual ranking, streaming-heap memory reduction, and matched CPU benchmarks.
   The case study includes evidence-backed figures and their reproducible
   generation requirements.
+- [Tensor Game hardware-cost study](docs/tensor_game_hardware_cost_study.md) —
+  adds optional static algebraic descriptors and deterministic Pareto analysis
+  without changing the default bounded search ranking.
 - [AI-assisted FC1 kernel search](docs/ai_assisted_kernel_search_case_study.md) —
   separates candidate correctness, CUDA-event timing, and compiler evidence in a
   controlled Triton optimization workflow.

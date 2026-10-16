@@ -99,7 +99,7 @@ def bounded_residual_candidates(residual: Any, pair_budget: int, limit: int=12) 
     return rows,{"enumerated_uv_pairs":len(pairs),"fully_evaluated_pairs":pair_budget,"unique_legal_candidates":len(candidates),"returned_candidates":len(rows),"coarse_scoring_ms":coarse_ns/1e6,"exact_rescoring_ms":exact_ns/1e6,"ranking_dedup_ms":ranking_ns/1e6,"total_ms":(time.perf_counter_ns()-total_start)/1e6,"bound_semantics":"continuous-relaxation lower bound on residual score; prefix selection is heuristic"}
 
 
-def bounded_residual_candidates_memory_efficient(residual:Any,pair_budget:int=128,limit:int=12)->tuple[list[dict[str,Any]],dict[str,Any]]:
+def bounded_residual_candidates_memory_efficient(residual:Any,pair_budget:int=128,limit:int=12,*,analyze_costs:bool=False)->tuple[list[dict[str,Any]],dict[str,Any]]:
     """Exact-output-equivalent bounded ranking with O(pair_budget) records."""
     if limit<=0:raise ValueError("limit must be positive")
     total_start=time.perf_counter_ns();start=total_start;pairs=coarse_pair_scores_streaming(residual,pair_budget);coarse_ns=time.perf_counter_ns()-start
@@ -110,7 +110,17 @@ def bounded_residual_candidates_memory_efficient(residual:Any,pair_budget:int=12
         action=canonicalize_action(RankOneAction(pair.u,pair.v,w));score=exact_score_from_contraction(residual_norm,pair.contraction,pair.q,w);candidates[action]=min(score,candidates.get(action,math.inf))
     exact_ns=time.perf_counter_ns()-start;start=time.perf_counter_ns();ordered=sorted(candidates.items(),key=lambda item:(item[1],item[0].u,item[0].v,item[0].w));ties=Counter(score for _,score in ordered)
     rows=[{"action":{"u":list(a.u),"v":list(a.v),"w":list(a.w)},"action_id":action_identity(a),"score":score,"rank":rank,"score_tie_count":ties[score]} for rank,(a,score) in enumerate(ordered[:limit],1)];ranking_ns=time.perf_counter_ns()-start
-    return rows,{"enumerated_uv_pairs":len(VECTORS)**2,"fully_evaluated_pairs":pair_budget,"retained_coarse_records":len(pairs),"unique_legal_candidates":len(candidates),"returned_candidates":len(rows),"coarse_scoring_ms":coarse_ns/1e6,"exact_rescoring_ms":exact_ns/1e6,"ranking_dedup_ms":ranking_ns/1e6,"total_ms":(time.perf_counter_ns()-total_start)/1e6,"selection":"fixed_size_heap_exact_ties","bound_semantics":"identical to bounded_residual_candidates"}
+    audit={"enumerated_uv_pairs":len(VECTORS)**2,"fully_evaluated_pairs":pair_budget,"retained_coarse_records":len(pairs),"unique_legal_candidates":len(candidates),"returned_candidates":len(rows),"coarse_scoring_ms":coarse_ns/1e6,"exact_rescoring_ms":exact_ns/1e6,"ranking_dedup_ms":ranking_ns/1e6,"total_ms":(time.perf_counter_ns()-total_start)/1e6,"selection":"fixed_size_heap_exact_ties","bound_semantics":"identical to bounded_residual_candidates"}
+    if analyze_costs:
+        from .tensor_game_hardware_cost import action_cost, as_json, candidate_objectives, pareto_frontier
+        analysis_start=time.perf_counter_ns();objectives=candidate_objectives(ordered,residual_norm);frontier=pareto_frontier(objectives);frontier_indices={item.candidate_index for item in frontier}
+        analysis_rows=[]
+        for index,((action,score),objective) in enumerate(zip(ordered,objectives)):
+            analysis_rows.append({"action_id":action_identity(action),"score":score,"residual_reduction":objective.residual_reduction,"cost":as_json(action_cost(action)),"pareto_optimal":index in frontier_indices})
+        analysis_ns=time.perf_counter_ns()-analysis_start
+        audit["cost_analysis"]={"candidate_count":len(analysis_rows),"pareto_frontier_size":len(frontier),"analysis_ms":analysis_ns/1e6,"objectives":{"residual_reduction":"maximize","preparation_additions":"minimize"},"candidates":analysis_rows}
+        audit["total_ms"]=(time.perf_counter_ns()-total_start)/1e6
+    return rows,audit
 
 
 def profile_exhaustive(residual: Any, limit: int=12) -> tuple[list[dict[str,Any]],dict[str,float|int]]:
