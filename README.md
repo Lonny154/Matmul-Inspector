@@ -223,6 +223,9 @@ heuristic pair filtering, exact scoring, and downstream search.
 The [multi-w provider study](docs/tensor_game_multi_w_provider_study.md) tests
 bounded output-factor alternatives and measures their recall, search impact, and
 CPU evaluation cost without changing the default provider.
+The [quota-provider study](docs/tensor_game_quota_provider_study.md) adds exact
+separable top-k output generation and protects baseline proposals while tracing
+remaining interference in global beam scheduling.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
