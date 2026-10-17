@@ -232,6 +232,9 @@ without changing the default global beam policy.
 The [Strassen w-coverage study](docs/tensor_game_w_coverage_study.md) exhaustively
 separates pair, output-factor, complete-action, and admission cutoffs across all
 5,040 known term orderings without changing the solver.
+The [structural-pairs study](docs/tensor_game_structural_pairs_study.md) tests a
+fixed-budget, sign-invariant pair-diversity quota and records its negative exact
+coverage result alongside matched rank-7 and rank-8 searches.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
