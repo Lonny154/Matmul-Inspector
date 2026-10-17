@@ -247,6 +247,9 @@ The [meet-in-the-middle study](docs/tensor_game_meet_in_middle_study.md) tests
 bounded exact 3+4 complement matching with separate ordinary and oracle pools.
 The [algebraic-pools study](docs/tensor_game_algebraic_pools_study.md) derives
 bounded action proposals from exact low-rank residual-slice combinations.
+The [algebraic output-completion study](docs/tensor_game_algebraic_w_completion_study.md)
+compares residual, structural, and exact slice-projection `w` selection on a
+frozen algebraic pair manifest.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
