@@ -24,6 +24,15 @@ from .tensor_game_search import canonicalize_action, quantize_ratio
 Strategy = Literal["residual", "diversity"]
 
 
+@dataclass(frozen=True)
+class ProvenancedAction:
+    """A candidate action labelled by its incoming-edge origin."""
+
+    action: RankOneAction
+    provenance: Literal["baseline", "alternative"]
+    source: str
+
+
 def top_k_w_vectors(
     contraction: Sequence[int], q: int, k: int, *, complete_score_budget: int | None = None
 ) -> tuple[tuple[dict[str, Any], ...], dict[str, Any]]:
@@ -319,7 +328,7 @@ class QuotaMultiWProvider:
         self.depth = depth
         self.remaining_moves = remaining_moves
 
-    def __call__(self, residual: Tensor, limit: int) -> tuple[RankOneAction, ...]:
+    def _propose(self, residual: Tensor, limit: int) -> tuple[tuple[ProvenancedAction, ...], dict[str, Any]]:
         if limit != self.total_returned:
             raise ValueError(f"quota provider requires limit={self.total_returned}")
         started = time.perf_counter()
@@ -339,7 +348,21 @@ class QuotaMultiWProvider:
         self.generation_seconds += time.perf_counter() - started
         if len(self.trace) < self.trace_limit:
             self.trace.append({"depth": self.depth, "remaining_moves": self.remaining_moves, "audit": audit, "rows": rows})
-        return tuple(action_from_payload(row["action"]) for row in rows)
+        proposed = tuple(ProvenancedAction(
+            action_from_payload(row["action"]),
+            "alternative" if "alternative" in row["source"] else "baseline",
+            row["source"],
+        ) for row in rows)
+        return proposed, audit
+
+    def propose_with_provenance(self, residual: Tensor, limit: int) -> tuple[ProvenancedAction, ...]:
+        """Return edge labels for opt-in provenance-aware beam admission."""
+        proposed, _ = self._propose(residual, limit)
+        return proposed
+
+    def __call__(self, residual: Tensor, limit: int) -> tuple[RankOneAction, ...]:
+        proposed, _ = self._propose(residual, limit)
+        return tuple(item.action for item in proposed)
 
     def diagnostic_summary(self) -> dict[str, Any]:
         return {

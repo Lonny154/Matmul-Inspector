@@ -226,6 +226,9 @@ CPU evaluation cost without changing the default provider.
 The [quota-provider study](docs/tensor_game_quota_provider_study.md) adds exact
 separable top-k output generation and protects baseline proposals while tracing
 remaining interference in global beam scheduling.
+The [provenance-aware beam study](docs/tensor_game_provenance_beam_study.md)
+adds optional per-edge admission quotas and depth-level interference diagnostics
+without changing the default global beam policy.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
