@@ -217,6 +217,9 @@ The [prefix-coverage investigation](docs/tensor_game_prefix_coverage.md) traces
 the exact beam stages and tests an experimental prefix-survival objective.
 The [final-ranking investigation](docs/tensor_game_final_ranking.md) tests a
 decoder-cutoff hinge under matched tiny-set training and validation.
+The [proposal-coverage study](docs/tensor_game_proposal_coverage_study.md)
+separates ternary action representability, deterministic output-factor choice,
+heuristic pair filtering, exact scoring, and downstream search.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
