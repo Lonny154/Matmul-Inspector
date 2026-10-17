@@ -1,0 +1,98 @@
+{
+  "schema": "tensor_game_hardware_aware_search_analysis.v1",
+  "source_sha256": "d000fc5900b5530035496e1bba0fae8ec8a9204799d00e54d7d8631ac4644cf1",
+  "policy_diagnostics": {
+    "baseline": {
+      "trials": 6,
+      "provider_calls": 1506,
+      "candidate_instances": 6120,
+      "preparation_cost_histogram": {
+        "0": 6120
+      },
+      "residual_reduction_histogram": {
+        "1": 6120
+      },
+      "reranked_candidate_instances": 0,
+      "changed_selected_action_instances": 0
+    },
+    "pareto": {
+      "trials": 6,
+      "provider_calls": 1506,
+      "candidate_instances": 6120,
+      "preparation_cost_histogram": {
+        "0": 6120
+      },
+      "residual_reduction_histogram": {
+        "1": 6120
+      },
+      "reranked_candidate_instances": 0,
+      "changed_selected_action_instances": 0
+    },
+    "weighted_0.25": {
+      "trials": 6,
+      "provider_calls": 1506,
+      "candidate_instances": 6120,
+      "preparation_cost_histogram": {
+        "0": 6120
+      },
+      "residual_reduction_histogram": {
+        "1": 6120
+      },
+      "reranked_candidate_instances": 0,
+      "changed_selected_action_instances": 0
+    },
+    "weighted_0.5": {
+      "trials": 6,
+      "provider_calls": 1506,
+      "candidate_instances": 6120,
+      "preparation_cost_histogram": {
+        "0": 6120
+      },
+      "residual_reduction_histogram": {
+        "1": 6120
+      },
+      "reranked_candidate_instances": 0,
+      "changed_selected_action_instances": 0
+    },
+    "weighted_1": {
+      "trials": 6,
+      "provider_calls": 1506,
+      "candidate_instances": 6120,
+      "preparation_cost_histogram": {
+        "0": 6120
+      },
+      "residual_reduction_histogram": {
+        "1": 6120
+      },
+      "reranked_candidate_instances": 0,
+      "changed_selected_action_instances": 0
+    }
+  },
+  "matched_against_baseline": {
+    "pareto": {
+      "trials": 6,
+      "identical_success": 6,
+      "identical_nodes": 6,
+      "identical_solution_ids": 6
+    },
+    "weighted_0.25": {
+      "trials": 6,
+      "identical_success": 6,
+      "identical_nodes": 6,
+      "identical_solution_ids": 6
+    },
+    "weighted_0.5": {
+      "trials": 6,
+      "identical_success": 6,
+      "identical_nodes": 6,
+      "identical_solution_ids": 6
+    },
+    "weighted_1": {
+      "trials": 6,
+      "identical_success": 6,
+      "identical_nodes": 6,
+      "identical_solution_ids": 6
+    }
+  },
+  "conclusion": "No policy changed candidate ordering or selection because bounded_128 exposed only zero-preparation, unit-residual-reduction actions on every visited state."
+}

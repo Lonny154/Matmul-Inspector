@@ -64,6 +64,8 @@ def discover(config: DiscoveryConfig, provider: CandidateProvider = bounded_128_
                 exhausted = True
                 break
             nodes_expanded += 1
+            if hasattr(provider, "set_context"):
+                provider.set_context(depth, config.rank - depth)
             actions = tuple(provider(residual, config.max_actions))
             for action in actions:
                 generated += 1
@@ -124,6 +126,7 @@ def discover(config: DiscoveryConfig, provider: CandidateProvider = bounded_128_
         "duplicate_state_paths": duplicate_states,
         "depth_reached": depth_reached,
         "budget_exhausted": exhausted,
+        "termination_reason": "exact_solution" if records else ("node_budget" if exhausted else "depth_limit_or_frontier_exhausted"),
         "wall_seconds": time.perf_counter() - started,
     }
 
