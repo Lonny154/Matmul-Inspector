@@ -243,6 +243,8 @@ The [experimental feasibility-gate study](docs/tensor_game_feasibility_gate_stud
 measures opt-in late-depth exact pruning under matched CPU search limits.
 The [feasibility-guided exploration study](docs/tensor_game_feasible_exploration_study.md)
 combines exact pruning with quota multi-`w` proposals and provenance admission.
+The [meet-in-the-middle study](docs/tensor_game_meet_in_middle_study.md) tests
+bounded exact 3+4 complement matching with separate ordinary and oracle pools.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
