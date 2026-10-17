@@ -241,6 +241,8 @@ The [exact tensor-rank feasibility study](docs/tensor_game_rank_feasibility_stud
 tests rational flattening-rank lower bounds as offline impossibility checks.
 The [experimental feasibility-gate study](docs/tensor_game_feasibility_gate_study.md)
 measures opt-in late-depth exact pruning under matched CPU search limits.
+The [feasibility-guided exploration study](docs/tensor_game_feasible_exploration_study.md)
+combines exact pruning with quota multi-`w` proposals and provenance admission.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)

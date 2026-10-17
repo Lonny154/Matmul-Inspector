@@ -32,6 +32,7 @@ class DiscoveryConfig:
     alternative_capacity: int = 0
     feasibility_gate: Literal["off", "flattening_rank"] = "off"
     feasibility_activation_budget: int = 3
+    measure_phase_times: bool = False
 
     def __post_init__(self) -> None:
         if self.rank <= 0 or self.node_budget <= 0 or self.beam_width <= 0 or self.max_actions <= 0:
@@ -46,6 +47,8 @@ class DiscoveryConfig:
             raise ValueError("feasibility_gate must be 'off' or 'flattening_rank'")
         if self.feasibility_activation_budget < 0:
             raise ValueError("feasibility_activation_budget must be nonnegative")
+        if not isinstance(self.measure_phase_times, bool):
+            raise ValueError("measure_phase_times must be a boolean")
         if self.admission_policy == "provenance_quota":
             baseline = self.beam_width if self.baseline_capacity is None else self.baseline_capacity
             if baseline < 0 or self.alternative_capacity < 0 or baseline + self.alternative_capacity != self.beam_width:
@@ -149,7 +152,7 @@ def discover(
         pruned_paths: dict[Tensor, dict[str, tuple[tuple[RankOneAction, ...], str]]] = {}
         state_insertion_order: list[Tensor] = []
         provenance_by_state: dict[Tensor, set[str]] = {}
-        generated_by = Counter(); valid_by = Counter(); duplicate_by = Counter()
+        generated_by = Counter(); valid_by = Counter(); duplicate_by = Counter(); pruned_by = Counter()
         invalid_by = Counter(); provider_calls_before = getattr(provider, "calls", 0)
         expanded_this_depth = 0
         checked_this_depth = pruned_this_depth = check_ns_this_depth = 0
@@ -225,6 +228,7 @@ def discover(
                 if decision["prune"]:
                     feasibility_pruned += 1
                     pruned_this_depth += 1
+                    pruned_by[provenance] += 1
                     if child not in next_paths and child not in pruned_paths:
                         state_insertion_order.append(child)
                     bucket = pruned_paths.setdefault(child, {})
@@ -268,7 +272,9 @@ def discover(
         for name, (known_actions, states) in trajectory_states.items():
             if depth < len(known_actions):
                 trajectory_stage[name]["child_survived_deduplication"] = states[depth + 1] in next_paths
+        admission_started = time.perf_counter_ns()
         admitted, unused = _admit_ranked(config, ranked)
+        admission_ns = time.perf_counter_ns() - admission_started if config.measure_phase_times else 0
         counterfactual_ranked = list(ranked) + counterfactual_pruned_ranked
         counterfactual_ranked.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
         counterfactual_admitted, _ = _admit_ranked(config, counterfactual_ranked)
@@ -320,6 +326,7 @@ def discover(
                 "checked_children": checked_this_depth,
                 "flattening_lower_bound_histogram": dict(sorted(rank_histogram.items())),
                 "pruned_children": pruned_this_depth,
+                "pruned_by_provenance": dict(sorted(pruned_by.items())),
                 "surviving_checked_children": checked_this_depth - pruned_this_depth,
                 "pruned_fraction": pruned_this_depth / checked_this_depth if checked_this_depth else 0.0,
                 "check_seconds": check_ns_this_depth / 1e9,
@@ -327,6 +334,7 @@ def discover(
                 "admission_changed": admitted_ids != counterfactual_ids,
                 "survivors_admitted_only_after_pruning": len(admitted_ids - counterfactual_ids),
             },
+            "beam_admission_seconds": admission_ns / 1e9,
             "cumulative_provider_calls": getattr(provider, "calls", provider_calls_before + expanded_this_depth),
             "remaining_residual_nonzeros": dict(sorted(Counter(
                 sum(value != 0 for plane in item[0] for row in plane for value in row) for item in frontier
