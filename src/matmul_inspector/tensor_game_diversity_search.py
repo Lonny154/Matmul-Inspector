@@ -100,6 +100,7 @@ def discover(config: DiscoveryConfig, provider: CandidateProvider = bounded_128_
         if not frontier:
             break
     records = []
+    provider_name = getattr(provider, "name", "bounded_128")
     known = {
         canonical_actions(standard_2x2_decomposition()): "conventional",
         canonical_actions(strassen_2x2_decomposition()): "strassen",
@@ -109,7 +110,7 @@ def discover(config: DiscoveryConfig, provider: CandidateProvider = bounded_128_
         family = known_family or "independent_search"
         record = _record(f"search-{config.mode}-{config.seed}-{index}", family, actions, [])
         record.update({
-            "discovery_method": f"bounded_128_{config.mode}_beam_search",
+            "discovery_method": f"{provider_name}_{config.mode}_beam_search",
             "search_seed": config.seed,
             "search_budget": {"nodes": config.node_budget, "beam_width": config.beam_width, "max_actions": config.max_actions},
             "parent_provenance": ({"relationship": "limited-canonical match", "known_seed": known_family} if known_family else None),
