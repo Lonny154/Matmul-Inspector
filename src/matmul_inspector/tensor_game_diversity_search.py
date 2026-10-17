@@ -13,6 +13,7 @@ from typing import Callable, Literal, Sequence
 from .tensor_game import RankOneAction, Tensor, matrix_multiplication_tensor, standard_2x2_decomposition, strassen_2x2_decomposition, subtract_action, zero_tensor
 from .tensor_game_bounded_residual import action_from_payload, action_identity, bounded_residual_candidates_memory_efficient, squared_norm
 from .tensor_game_candidate_dataset import _record, canonical_actions, validate_decomposition
+from .tensor_game_rank_feasibility import flattening_rank_lower_bound
 
 CandidateProvider = Callable[[Tensor, int], Sequence[RankOneAction]]
 
@@ -29,6 +30,8 @@ class DiscoveryConfig:
     admission_policy: Literal["global", "provenance_quota"] = "global"
     baseline_capacity: int | None = None
     alternative_capacity: int = 0
+    feasibility_gate: Literal["off", "flattening_rank"] = "off"
+    feasibility_activation_budget: int = 3
 
     def __post_init__(self) -> None:
         if self.rank <= 0 or self.node_budget <= 0 or self.beam_width <= 0 or self.max_actions <= 0:
@@ -39,6 +42,10 @@ class DiscoveryConfig:
             raise ValueError("paths_per_state must be positive")
         if self.admission_policy not in {"global", "provenance_quota"}:
             raise ValueError("admission_policy must be 'global' or 'provenance_quota'")
+        if self.feasibility_gate not in {"off", "flattening_rank"}:
+            raise ValueError("feasibility_gate must be 'off' or 'flattening_rank'")
+        if self.feasibility_activation_budget < 0:
+            raise ValueError("feasibility_activation_budget must be nonnegative")
         if self.admission_policy == "provenance_quota":
             baseline = self.beam_width if self.baseline_capacity is None else self.baseline_capacity
             if baseline < 0 or self.alternative_capacity < 0 or baseline + self.alternative_capacity != self.beam_width:
@@ -55,6 +62,59 @@ def bounded_128_provider(residual: Tensor, limit: int) -> tuple[RankOneAction, .
     return tuple(action_from_payload(row["action"]) for row in rows)
 
 
+def feasibility_gate_decision(
+    residual: Tensor,
+    remaining_budget: int,
+    *,
+    gate: Literal["off", "flattening_rank"] = "off",
+    activation_budget: int = 3,
+) -> dict:
+    """Return an exact optional prune decision without scoring the residual."""
+    if remaining_budget < 0:
+        raise ValueError("remaining_budget must be nonnegative")
+    if activation_budget < 0:
+        raise ValueError("activation_budget must be nonnegative")
+    active = gate == "flattening_rank" and remaining_budget <= activation_budget
+    if gate not in {"off", "flattening_rank"}:
+        raise ValueError("gate must be 'off' or 'flattening_rank'")
+    if not active:
+        return {
+            "active": False,
+            "remaining_budget": remaining_budget,
+            "flattening_ranks": None,
+            "lower_bound": None,
+            "prune": False,
+        }
+    bound = flattening_rank_lower_bound(residual)
+    return {
+        "active": True,
+        "remaining_budget": remaining_budget,
+        "flattening_ranks": bound["flattening_ranks"],
+        "lower_bound": bound["lower_bound"],
+        "prune": bound["lower_bound"] > remaining_budget,
+    }
+
+
+def _admit_ranked(config: DiscoveryConfig, ranked):
+    if config.admission_policy == "global":
+        return ranked[: config.beam_width], 0
+    baseline_capacity = config.beam_width if config.baseline_capacity is None else config.baseline_capacity
+    baseline = [item for item in ranked if item[5] == "baseline"]
+    alternative = [item for item in ranked if item[5] == "alternative"]
+    admitted = baseline[:baseline_capacity] + alternative[:config.alternative_capacity]
+    admitted_ids = {(item[2], item[3]) for item in admitted}
+    remaining = [item for item in ranked if (item[2], item[3]) not in admitted_ids]
+    admitted += remaining[: config.beam_width - len(admitted)]
+    admitted.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
+    capacities = {"baseline": baseline_capacity, "alternative": config.alternative_capacity}
+    eligible_by = Counter(item[5] for item in ranked)
+    unused = sum(
+        max(0, capacities[name] - min(capacities[name], eligible_by[name]))
+        for name in capacities
+    )
+    return admitted, unused
+
+
 def discover(
     config: DiscoveryConfig,
     provider: CandidateProvider = bounded_128_provider,
@@ -67,7 +127,8 @@ def discover(
     zero = zero_tensor((4, 4, 4))
     rng = random.Random(config.seed)
     frontier: list[tuple[Tensor, tuple[RankOneAction, ...]]] = [(target, ())]
-    nodes_expanded = generated = duplicate_states = 0
+    nodes_expanded = generated = duplicate_states = provider_calls = 0
+    feasibility_checked = feasibility_pruned = feasibility_ns = 0
     solutions: dict[str, tuple[RankOneAction, ...]] = {}
     depth_reached = 0
     exhausted = False
@@ -85,16 +146,21 @@ def discover(
         # Each state owns one deterministic path under the normal configuration.
         # The provenance set records collisions without consuming another slot.
         next_paths: dict[Tensor, dict[str, tuple[tuple[RankOneAction, ...], str]]] = {}
+        pruned_paths: dict[Tensor, dict[str, tuple[tuple[RankOneAction, ...], str]]] = {}
+        state_insertion_order: list[Tensor] = []
         provenance_by_state: dict[Tensor, set[str]] = {}
         generated_by = Counter(); valid_by = Counter(); duplicate_by = Counter()
         invalid_by = Counter(); provider_calls_before = getattr(provider, "calls", 0)
         expanded_this_depth = 0
+        checked_this_depth = pruned_this_depth = check_ns_this_depth = 0
+        rank_histogram = Counter()
         trajectory_stage = {name: {
             "trajectory": name,
             "depth": depth + 1,
             "parent_state_present": any(residual == states[depth] for residual, _ in frontier) if depth < len(actions) else False,
             "candidate_generated": False,
             "child_valid": False,
+            "child_feasibility_pruned": False,
             "child_survived_deduplication": False,
             "child_admitted": False,
         } for name, (actions, states) in trajectory_states.items()}
@@ -104,6 +170,7 @@ def discover(
                 break
             nodes_expanded += 1
             expanded_this_depth += 1
+            provider_calls += 1
             if hasattr(provider, "set_context"):
                 provider.set_context(depth, config.rank - depth)
             if hasattr(provider, "propose_with_provenance"):
@@ -138,6 +205,42 @@ def discover(
                 if depth + 1 == config.rank:
                     continue
                 key = _prefix_id(candidate)
+                remaining_budget = config.rank - (depth + 1)
+                if remaining_budget < 0:
+                    raise AssertionError("post-action remaining budget cannot be negative")
+                gate_started = time.perf_counter_ns()
+                decision = feasibility_gate_decision(
+                    child,
+                    remaining_budget,
+                    gate=config.feasibility_gate,
+                    activation_budget=config.feasibility_activation_budget,
+                )
+                gate_elapsed = time.perf_counter_ns() - gate_started
+                if decision["active"]:
+                    feasibility_checked += 1
+                    checked_this_depth += 1
+                    feasibility_ns += gate_elapsed
+                    check_ns_this_depth += gate_elapsed
+                    rank_histogram[decision["lower_bound"]] += 1
+                if decision["prune"]:
+                    feasibility_pruned += 1
+                    pruned_this_depth += 1
+                    if child not in next_paths and child not in pruned_paths:
+                        state_insertion_order.append(child)
+                    bucket = pruned_paths.setdefault(child, {})
+                    if key not in bucket and len(bucket) < config.paths_per_state:
+                        bucket[key] = (candidate, provenance)
+                    for name, (known_actions, states) in trajectory_states.items():
+                        if (
+                            depth < len(known_actions)
+                            and residual == states[depth]
+                            and action_identity(action) == action_identity(known_actions[depth])
+                            and child == states[depth + 1]
+                        ):
+                            trajectory_stage[name]["child_feasibility_pruned"] = True
+                    continue
+                if child not in next_paths and child not in pruned_paths:
+                    state_insertion_order.append(child)
                 bucket = next_paths.setdefault(child, {})
                 provenance_by_state.setdefault(child, set()).add(provenance)
                 if key in bucket:
@@ -150,32 +253,31 @@ def discover(
                     duplicate_by[provenance] += 1
         depth_reached = depth + 1
         ranked = []
-        for residual, paths in next_paths.items():
+        counterfactual_pruned_ranked = []
+        for residual in state_insertion_order:
+            paths = next_paths.get(residual, pruned_paths.get(residual, {}))
             score = squared_norm(residual)
             for key, (path, provenance) in paths.items():
                 tie = rng.random() if config.mode == "diversity" else 0.0
-                ranked.append((score, tie, residual, key, path, provenance))
+                item = (score, tie, residual, key, path, provenance)
+                if residual in pruned_paths:
+                    counterfactual_pruned_ranked.append(item)
+                else:
+                    ranked.append(item)
         ranked.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
         for name, (known_actions, states) in trajectory_states.items():
             if depth < len(known_actions):
                 trajectory_stage[name]["child_survived_deduplication"] = states[depth + 1] in next_paths
-        if config.admission_policy == "global":
-            admitted = ranked[: config.beam_width]
-        else:
-            baseline_capacity = config.beam_width if config.baseline_capacity is None else config.baseline_capacity
-            baseline = [item for item in ranked if item[5] == "baseline"]
-            alternative = [item for item in ranked if item[5] == "alternative"]
-            admitted = baseline[:baseline_capacity] + alternative[:config.alternative_capacity]
-            admitted_ids = {(item[2], item[3]) for item in admitted}
-            remaining = [item for item in ranked if (item[2], item[3]) not in admitted_ids]
-            admitted += remaining[: config.beam_width - len(admitted)]
-            admitted.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
+        admitted, unused = _admit_ranked(config, ranked)
+        counterfactual_ranked = list(ranked) + counterfactual_pruned_ranked
+        counterfactual_ranked.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
+        counterfactual_admitted, _ = _admit_ranked(config, counterfactual_ranked)
+        pruned_residuals = set(pruned_paths)
+        infeasible_would_enter = sum(item[2] in pruned_residuals for item in counterfactual_admitted)
+        admitted_ids = {(item[2], item[3]) for item in admitted}
+        counterfactual_ids = {(item[2], item[3]) for item in counterfactual_admitted}
         admitted_by = Counter(item[5] for item in admitted)
         eligible_by = Counter(item[5] for item in ranked)
-        unused = 0
-        if config.admission_policy == "provenance_quota":
-            capacities = {"baseline": baseline_capacity, "alternative": config.alternative_capacity}
-            unused = sum(max(0, capacities[name] - min(capacities[name], eligible_by[name])) for name in capacities)
         frontier = [(item[2], item[4]) for item in admitted]
         admitted_states = {item[0] for item in frontier}
         for name, (known_actions, states) in trajectory_states.items():
@@ -190,6 +292,8 @@ def discover(
                     row["loss_stage"] = "child_invalid"
                 elif depth + 1 == config.rank and states[depth + 1] != zero:
                     row["loss_stage"] = "child_ineligible_at_depth_limit"
+                elif row["child_feasibility_pruned"]:
+                    row["loss_stage"] = "child_pruned_by_feasibility_gate"
                 elif not row["child_survived_deduplication"] and states[depth + 1] != zero:
                     row["loss_stage"] = "child_removed_as_duplicate"
                 elif not row["child_admitted"]:
@@ -210,6 +314,19 @@ def discover(
             "unused_quota_slots_before_fill": unused,
             "beam_occupancy": len(frontier),
             "nodes_expanded": expanded_this_depth,
+            "feasibility": {
+                "gate": config.feasibility_gate,
+                "remaining_budget": config.rank - (depth + 1),
+                "checked_children": checked_this_depth,
+                "flattening_lower_bound_histogram": dict(sorted(rank_histogram.items())),
+                "pruned_children": pruned_this_depth,
+                "surviving_checked_children": checked_this_depth - pruned_this_depth,
+                "pruned_fraction": pruned_this_depth / checked_this_depth if checked_this_depth else 0.0,
+                "check_seconds": check_ns_this_depth / 1e9,
+                "infeasible_that_would_enter_beam": infeasible_would_enter,
+                "admission_changed": admitted_ids != counterfactual_ids,
+                "survivors_admitted_only_after_pruning": len(admitted_ids - counterfactual_ids),
+            },
             "cumulative_provider_calls": getattr(provider, "calls", provider_calls_before + expanded_this_depth),
             "remaining_residual_nonzeros": dict(sorted(Counter(
                 sum(value != 0 for plane in item[0] for row in plane for value in row) for item in frontier
@@ -246,6 +363,7 @@ def discover(
         "success": bool(records),
         "solutions": records,
         "nodes_expanded": nodes_expanded,
+        "provider_calls": provider_calls,
         "candidate_edges_generated": generated,
         "duplicate_state_paths": duplicate_states,
         "depth_reached": depth_reached,
@@ -253,6 +371,13 @@ def discover(
         "termination_reason": termination_reason,
         "depth_diagnostics": depth_diagnostics,
         "known_trajectory_diagnostics": trajectory_rows,
+        "feasibility_gate_diagnostics": {
+            "gate": config.feasibility_gate,
+            "activation_budget": config.feasibility_activation_budget,
+            "checked_children": feasibility_checked,
+            "pruned_children": feasibility_pruned,
+            "check_seconds": feasibility_ns / 1e9,
+        },
         "wall_seconds": time.perf_counter() - started,
     }
 

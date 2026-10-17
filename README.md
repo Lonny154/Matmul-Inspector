@@ -239,6 +239,8 @@ The [residual-subspace and two-step lookahead study](docs/tensor_game_residual_l
 tests exact short-horizon and algebraic residual diagnostics offline.
 The [exact tensor-rank feasibility study](docs/tensor_game_rank_feasibility_study.md)
 tests rational flattening-rank lower bounds as offline impossibility checks.
+The [experimental feasibility-gate study](docs/tensor_game_feasibility_gate_study.md)
+measures opt-in late-depth exact pruning under matched CPU search limits.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
