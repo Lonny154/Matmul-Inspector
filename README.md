@@ -237,6 +237,8 @@ fixed-budget, sign-invariant pair-diversity quota and records its negative exact
 coverage result alongside matched rank-7 and rank-8 searches.
 The [residual-subspace and two-step lookahead study](docs/tensor_game_residual_lookahead_study.md)
 tests exact short-horizon and algebraic residual diagnostics offline.
+The [exact tensor-rank feasibility study](docs/tensor_game_rank_feasibility_study.md)
+tests rational flattening-rank lower bounds as offline impossibility checks.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
