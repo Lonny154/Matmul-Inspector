@@ -229,6 +229,9 @@ remaining interference in global beam scheduling.
 The [provenance-aware beam study](docs/tensor_game_provenance_beam_study.md)
 adds optional per-edge admission quotas and depth-level interference diagnostics
 without changing the default global beam policy.
+The [Strassen w-coverage study](docs/tensor_game_w_coverage_study.md) exhaustively
+separates pair, output-factor, complete-action, and admission cutoffs across all
+5,040 known term orderings without changing the solver.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
