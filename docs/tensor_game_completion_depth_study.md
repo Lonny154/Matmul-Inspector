@@ -71,6 +71,43 @@ not exist. Artifacts include configuration, provenance, candidate sources,
 per-candidate depth records, recombination records, aggregates, exact
 candidates, and SHA-256 file hashes.
 
+## Recorded controls and discovery results
+
+The retained runs were generated from implementation commit `0134853`.
+TG-Global-2 supplied 48 final seed/variant records. Two deterministic
+replays supplied five actual initial or strict-improvement incumbents.
+Deduplication left 23 canonical discovery candidates. The lowest-energy
+candidate had energy 26, residual nnz 5, L1 6, and maximum absolute entry 2.
+
+| Missing terms | Cores per candidate | Discovery complement probes | Discovery candidates with a verified completion | Budget-limited cores |
+|---:|---:|---:|---:|---:|
+| 2 | 21 | 483 | 0 / 23 | 0 |
+| 3 | 35 | 103,040 | 0 / 23 | 0 |
+| 4 | 35 | 230,000 | 0 / 23 | 782 / 805 |
+
+The 128-action pool produced 8,128 pair records and 8,020 unique pair sums.
+The pair table built in about 2 seconds and peak traced memory was about
+17.1 MB. The depth audit made 335,133 exact tensor subtractions and zero
+candidate reconstructions because it found no domain-valid complement. The
+recorded probe phase totaled about 83.5 seconds on this host. These are Python
+work measurements, not GPU throughput estimates.
+
+The discovery recombination pilot tested four parent pairs and scored bounded
+two-plus-two term unions. It selected 16 partial children for 2,048 exact
+three-term complement probes. No child completed exactly. Its best partial
+residual had nnz 4, L1 4, maximum entry 1, and energy 20; it remained inexact.
+
+The oracle control verified 21/21 two-term cores, 35/35 three-term cores, and
+35/35 four-term cores. Artificial oracle parents generated 300 partial
+children, ten verified completion hits, and one unique known Strassen
+decomposition. This checks mechanics only.
+
+Retained artifacts:
+
+- `artifacts/tensor-game/completion-depth-oracle-control-v1/`
+- `artifacts/tensor-game/completion-depth-discovery-v1/`
+- `artifacts/tensor-game/completion-depth-recombination-pilot-v1/`
+
 ## Interpretation and decision gate
 
 `CONTINUE_RANK7` requires non-oracle deeper completion structure or verified
@@ -94,3 +131,13 @@ produces no compelling non-oracle signal, the recommended next research track
 is exact rank-8 and rank-9 search with hardware-oriented objectives, followed
 by measurement of promising representations on the RTX 4060 Ti. Rank-8 and
 rank-9 search are outside TG-Global-3.
+
+The recorded decision is **INCONCLUSIVE**. Two- and three-term completion
+were fully checked for these candidates and this pool, with no signal.
+Four-term completion was budget-limited on 782 of 805 cores. The pool itself
+contains only two canonical known Strassen actions in prior coverage work,
+which raises a pool-coverage concern but does not settle the untested cores.
+The bounded recombination pilot also produced no exact candidate. This is not
+a positive case for expanding rank-7 global search under the same setup. The
+recommended next research track is Hardware-Aware Tensor Search as described
+above, while preserving the four-term uncertainty in the evidence record.
