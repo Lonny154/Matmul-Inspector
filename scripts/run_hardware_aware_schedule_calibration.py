@@ -153,6 +153,9 @@ def collect_candidates(source: dict) -> list[dict]:
 
 def rank_study(candidates: list[dict], profiles: list[dict]) -> dict:
     by_profile = {(row["matrix_size"], row["execution_mode"]): row for row in profiles}
+    missing = {(size, mode) for size in SIZES for mode in ("EAGER", "CUDA_GRAPH")} - set(by_profile)
+    if missing:
+        raise ValueError(f"missing exact-size calibration profiles: {sorted(missing)}")
     hardware, software = profiles[0]["hardware"], profiles[0]["software"]
     static_rows, eager_rows, graph_rows, comparisons = [], [], [], []
     for algorithm in ALGORITHMS:
@@ -400,6 +403,10 @@ def main() -> int:
             "MODE_SPECIFIC_SIGNAL" if core_mode_signal and post_selection_changes else
             "INCONCLUSIVE")
     readiness = "NOT_READY_FOR_CLOSED_LOOP_PROTOTYPE"
+    retained_confidence = {(profile["matrix_size"], profile["execution_mode"]): profile["confidence"]
+                           for profile in profiles}
+    confidence_changes = [row for row in assessment if row["confidence_after_validation"] !=
+                          retained_confidence[(row["matrix_size"], row["execution_mode"])]]
     readiness_checks = {
         "candidate_generation": "BOUNDED_RETAINED_CP_SAT_CORPUS",
         "legality_validation": "PASS_ALL_RETAINED_CANDIDATES",
@@ -431,7 +438,9 @@ def main() -> int:
                  "secondary_decision": "CALIBRATED_SEARCH_SIGNAL" if gate == "MODE_SPECIFIC_SIGNAL" and post_rank_changes else None,
                  "closed_loop_readiness": readiness,
                  "readiness_reason": "Only four of 39 schedules per size have validated lowering maps. "
-                                     "Graph evidence has one retained session and eager N=512 weakened in fresh validation.",
+                                     "Graph evidence has one retained session. Fresh validation changed confidence "
+                                     f"for {len(confidence_changes)} mode/size profiles.",
+                 "fresh_confidence_changes": confidence_changes,
                  "readiness_checks": readiness_checks,
                  "validation_assessment": assessment}
     write_json(args.output / "aggregate_summary.json", aggregate)

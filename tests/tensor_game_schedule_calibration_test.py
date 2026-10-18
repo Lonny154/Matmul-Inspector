@@ -122,6 +122,11 @@ def test_static_and_calibrated_can_disagree(retained):
     assert row["candidate_count"] == 17 and row["calibrated_lowering_count"] == 2
 
 
+def test_missing_calibration_is_an_explicit_error(retained):
+    with pytest.raises(ValueError, match="missing exact-size calibration"):
+        rank_study(retained[2], retained[1][:-1])
+
+
 def test_leave_one_session_out_direction_and_failed_validation(retained):
     from scripts.run_hardware_aware_schedule_calibration import HA4, read_json
     pairs = read_json(HA4 / "timing_summary.json")["complete_pairs"]
