@@ -363,6 +363,9 @@ commands.
 - [Constraint-based execution schedule search](docs/hardware_aware_schedule_search.md)
   — searches fixed-order launch groups, materialization, and bounded
   recomputation under an abstract capacity using optional CPU-only CP-SAT.
+- [Selected GPU schedule study](docs/hardware_aware_schedule_gpu_study.md) —
+  tests a small static-frontier subset with RTX 4060 Ti Triton lowerings,
+  correctness gates, CUDA-event timing, and compiler evidence.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
