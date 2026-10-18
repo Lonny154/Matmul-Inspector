@@ -354,6 +354,9 @@ commands.
 - [Hardware-aware rank-8 tensor study](docs/hardware_aware_tensor_search.md) —
   generates exact CPU-only basis-equivalent candidates and a static Pareto
   frontier. It does not benchmark or predict GPU latency.
+- [Direct exact rank-8/9 structural search](docs/hardware_aware_rank89_constraint_search.md)
+  — uses an optional bounded CP-SAT solver to study exact finite action pools
+  and operand reuse without GPU execution.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
