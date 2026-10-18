@@ -351,6 +351,9 @@ commands.
 - [Tensor Game hardware-cost study](docs/tensor_game_hardware_cost_study.md) —
   adds optional static algebraic descriptors and deterministic Pareto analysis
   without changing the default bounded search ranking.
+- [Hardware-aware rank-8 tensor study](docs/hardware_aware_tensor_search.md) —
+  generates exact CPU-only basis-equivalent candidates and a static Pareto
+  frontier. It does not benchmark or predict GPU latency.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
