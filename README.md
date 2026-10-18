@@ -357,6 +357,9 @@ commands.
 - [Direct exact rank-8/9 structural search](docs/hardware_aware_rank89_constraint_search.md)
   — uses an optional bounded CP-SAT solver to study exact finite action pools
   and operand reuse without GPU execution.
+- [Hardware-aware execution schedule model](docs/hardware_aware_schedule_model.md)
+  — builds exact block DAGs and compares abstract CPU-only memory, fusion, and
+  recomputation schedules without predicting GPU latency.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
