@@ -112,5 +112,102 @@ not invalidate this schedule-model test.
 
 ## Retained results and decision
 
-To be added after the retained run from the implementation commit. A smoke
-run or short validation pass is not sufficient for the decision gate.
+The retained run used implementation commit `c469232` on an NVIDIA GeForce
+RTX 4060 Ti (SM 8.9, 16 GiB), driver 616.92, Python 3.12.13, PyTorch
+2.11.0+cu128, CUDA runtime 12.8, and Triton 3.6.0. It recorded 30,000 raw
+CUDA-event samples: 15 rounds × 100 operations × five implementations × four
+sizes. The retained CSV had only its line endings normalized to LF after the
+run. No timing values changed. All 80 candidate-versus-PyTorch checks and 20
+direct pair checks passed. The largest absolute error across those checks was
+0.125 at N=1024.
+The two rank-8 outputs were bitwise equal for every seeded case.
+
+The table shows complete-operation latency in milliseconds. Each entry is the
+median of 15 round medians; parentheses give the coefficient of variation
+across those round medians. All four Triton paths use preallocated output and
+product buffers. PyTorch matmul returns an allocated result, so its anchor is
+not an allocator-matched kernel-only comparison.
+
+| N | cuBLAS/PyTorch | Conventional Triton | Strassen Triton | Rank-8 stored | Rank-8 recomputed |
+|---:|---:|---:|---:|---:|---:|
+| 128 | 0.0333 (11.4%) | 0.1514 (5.2%) | 0.1367 (8.4%) | 0.1557 (9.9%) | 0.1479 (8.1%) |
+| 256 | 0.0547 (24.9%) | 0.2171 (42.6%) | 0.1960 (38.1%) | 0.2300 (42.4%) | 0.2106 (43.2%) |
+| 512 | 0.0558 (22.1%) | 0.2356 (43.0%) | 0.2277 (44.8%) | 0.2757 (42.8%) | 0.2342 (39.4%) |
+| 1024 | 0.1218 (11.9%) | 0.5643 (11.9%) | 0.5332 (8.9%) | 0.6386 (14.3%) | 0.5757 (9.4%) |
+
+The matched ratio is **stored/recomputed**, so greater than one favors
+recomputation. Its round-level median is 1.101 at 128, 1.097 at 256, 1.100 at
+512, and 1.082 at 1024. The deterministic round-bootstrap 95% intervals are
+1.056–1.132, 1.047–1.207, 1.040–1.164, and 0.991–1.104, respectively. The
+first three exclude parity in this one session; 1024 does not. Individual
+rounds still reverse the direction, and round CV reaches about 40–45% at
+256/512. Clocks and power also varied in the retained round snapshots.
+These intervals describe within-session round variability, not uncertainty
+over other devices or sessions. A second-session replication is still needed
+before treating the size dependence as stable.
+
+The conventional FP16/preallocated control is in the same broad sub-millisecond
+range as earlier project GPU studies. It is not directly comparable to their
+FP32 or allocating paths. Strassen is correct and has a lower median than
+conventional Triton in this run, despite twice the modeled temporary HBM at
+N=128 (262,144 versus 131,072 B). Given the 256/512 dispersion and prior
+timing diagnostics, this is not evidence that its larger modeled footprint is
+beneficial or that Strassen has a stable hardware advantage. cuBLAS is faster
+than every Triton path here; that does not invalidate the model test.
+
+## Compiler, launch, and profiler comparison
+
+Actual complete-operation launches are constant over size: conventional 9,
+Strassen 8, rank-8 stored 10, and rank-8 recomputed 9. The PyTorch anchor has
+one launch at 128/256/512 and two at 1024; the latter includes a device memset.
+The static model says 8, 7, 8, and 8 logical launch groups, respectively. A
+logical group is not a physical launch, and the modeled rank-8 pair has the
+same group count despite the one-launch GPU difference. The extra preparation
+kernel is part of the measured stored operation. All profiled Triton kernel
+names matched the expected source sequence.
+
+The representative first shared-form GEMM at N=1024 has different TTIR,
+TTGIR, PTX, cubin, and SASS hashes across the pair. The stored variant uses
+40 registers/thread and 8,192 B static shared memory. The recomputed variant
+also uses 40 registers/thread but 10,240 B static shared memory. The stored
+path additionally has a 13-register preparation kernel. In its selected
+first-GEMM SASS, the stored variant has 4 static `FADD` and 6 `LDGSTS`
+mnemonics; the recomputed variant has 12 and 9. This supports a real machine
+code difference, not a compiler-collapsed source change. These are static
+mnemonic counts for one specialization, not dynamic operations or DRAM bytes.
+The cubin hashes are retained but binary cubins are not committed.
+
+Nsight Compute 2026.2.1.0 selectively captured the preparation kernel and
+two shared-form GEMMs at N=512 in two separate-process runs per variant. The
+stored subset had 839,296 and 875,392 reported DRAM-read bytes; recomputed
+had 803,840 and 822,272. In contrast, L2-sector counts were 164,129 and
+165,228 for stored versus 215,699 and 216,284 for recomputed. Thus the
+recomputed subset showed slightly fewer reported DRAM reads but materially
+more L2 transactions. The profile excludes six unchanged generic GEMMs and
+reconstruction. These are first-execution captures in separate processes, with
+no independent profiler warmup. Replay and cache state can affect counters. Reported DRAM
+writes were zero or near zero, so they do not reliably quantify the removed
+form store. The profile cannot establish that DRAM reduction caused the
+CUDA-event latency gap. Exact counters, metric names, and capture limitations
+are in `profiler_summary.json`.
+
+The static rank-8 pair trades 393,216 for 368,640 modeled temporary HBM
+bytes at N=128, with +4,096 abstract operations and +16,384 source-read
+bytes. Its latency direction agrees with the static traffic direction at the
+first three sizes. The absolute byte figures are not measured traffic. The
+actual lowering also removes a launch and changes tiled reads and shared
+memory, so the schedule model is only partially descriptive. Static ON_CHIP
+live bytes are full-block abstract lifetimes (32,768 B for these N=128
+points), not Triton shared-memory allocations; they should not be equated
+with 8–10 KiB compiler metadata. Only four implementable schedules were
+timed, and three use different algebraic decompositions. A rank correlation
+across them would imply more independent schedule evidence than exists, so it
+is intentionally omitted.
+
+**Primary decision: `SCHEDULE_SIGNAL_CONFIRMED`, with an implementation-limit
+qualification.** The matched tradeoff changes compiled machine code and
+shows a favorable paired timing signal at 128/256/512 in this session. The
+static temporary-traffic direction agrees there, but extra launch removal
+and L2 behavior prevent a traffic-causality claim. The lower-capacity frontier
+point remains unimplemented, and 1024 plus cross-session repeatability remain
+inconclusive.

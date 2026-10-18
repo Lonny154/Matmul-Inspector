@@ -88,7 +88,7 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
     columns = ("matrix_size", "round", "iteration", "order_position", "candidate", "algorithm",
                "schedule_hash", "elapsed_ms")
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer = csv.DictWriter(handle, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
