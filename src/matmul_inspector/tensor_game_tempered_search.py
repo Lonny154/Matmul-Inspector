@@ -67,6 +67,7 @@ class TemperedSearchConfig:
     repair_maximum_seconds: float = 5.0
     wall_clock_seconds: float | None = None
     history_interval: int = 1
+    retain_improvements_limit: int = 0
 
     def validate(self, pool_size: int) -> None:
         if self.rank <= 0 or pool_size <= 0:
@@ -82,6 +83,8 @@ class TemperedSearchConfig:
         if min(self.rounds, self.local_steps_per_round, self.exchange_interval,
                self.repair_interval, self.history_interval) <= 0:
             raise ValueError("round and interval settings must be positive")
+        if self.retain_improvements_limit < 0:
+            raise ValueError("retain_improvements_limit must be nonnegative")
         if self.energy_mode not in ("l1", "nnz_l1") or self.mismatch_weight < 0:
             raise ValueError("invalid energy configuration")
         if self.repair_maximum_pool_size <= 0 or self.repair_maximum_pair_records <= 0:
@@ -271,6 +274,8 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
                                 config.mismatch_weight) for state in states]
     best_index = min(range(len(states)), key=lambda i: (metrics[i].energy, states[i]))
     best_state, best_metrics = states[best_index], metrics[best_index]
+    retained = ([{"state": best_state, "metrics": asdict(best_metrics), "round": 0,
+                  "proposal_index": 0}] if config.retain_improvements_limit else [])
     started = time.perf_counter()
     time_to_best = 0.0
     best_round = best_proposal_index = 0
@@ -310,7 +315,11 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
                     counters.worsening_accepts += proposed_metrics.energy > old_energy
                     visited.add(proposed)
                     if (proposed_metrics.energy, proposed) < (best_metrics.energy, best_state):
+                        strict_improvement = proposed_metrics.energy < best_metrics.energy
                         best_state, best_metrics = proposed, proposed_metrics
+                        if strict_improvement and len(retained) < config.retain_improvements_limit:
+                            retained.append({"state": proposed, "metrics": asdict(proposed_metrics),
+                                             "round": round_index, "proposal_index": counters.local_proposals})
                         time_to_best = time.perf_counter() - started
                         best_round, best_proposal_index = round_index, counters.local_proposals
         if config.exchange_enabled and round_index % config.exchange_interval == 0:
@@ -331,6 +340,7 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
             counters.repair_candidates_constructed += repair["status"] in ("EXACT_VERIFIED", "RECONSTRUCTION_FAILED")
             counters.repair_budget_exceeded += repair["status"] == "BUDGET_EXCEEDED"
             if repair["status"] == "EXACT_VERIFIED":
+                strict_improvement = best_metrics.energy > 0
                 repaired = repaired or repair["state"] != best_state
                 if repair["state"] != best_state:
                     time_to_best = time.perf_counter() - started
@@ -339,6 +349,9 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
                 visited.add(best_state)
                 best_metrics = residual_metrics(target, tuple(actions[i] for i in best_state),
                                                 config.energy_mode, config.mismatch_weight)
+                if strict_improvement and len(retained) < config.retain_improvements_limit:
+                    retained.append({"state": best_state, "metrics": asdict(best_metrics),
+                                     "round": round_index, "proposal_index": counters.local_proposals})
                 counters.repair_successes += 1
         rounds_completed = round_index
         if round_index % config.history_interval == 0 or best_metrics.energy == 0:
@@ -362,4 +375,5 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
         "repair_table_status": repair_table.status if repair_table else "DISABLED",
         "unique_canonical_states_visited": len(visited), "history": history,
         "pool_hash": pool_identity(actions), "config": asdict(config),
+        "retained_improvements": retained,
     }
