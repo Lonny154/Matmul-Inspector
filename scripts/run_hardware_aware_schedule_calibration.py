@@ -185,8 +185,10 @@ def rank_study(candidates: list[dict], profiles: list[dict]) -> dict:
                 "static_best_mapped": best(mapped_static, "static_rank"),
                 "eager_best_mapped": best(eager, "calibrated_rank"),
                 "graph_best_mapped": best(graph, "calibrated_rank"),
-                "eager_confidence": by_profile[(size, "EAGER")]["confidence"],
-                "graph_confidence": by_profile[(size, "CUDA_GRAPH")]["confidence"],
+                "eager_confidence": (by_profile[(size, "EAGER")]["confidence"]
+                                     if algorithm == "project-rank8" else "NOT_APPLICABLE"),
+                "graph_confidence": (by_profile[(size, "CUDA_GRAPH")]["confidence"]
+                                     if algorithm == "project-rank8" else "NOT_APPLICABLE"),
                 "rank_diagnostics": [{"schedule_hash": row["schedule_hash"],
                                       "lowering_name": row["lowering_name"],
                                       "static_rank_all": rank_by[row["schedule_hash"]],

@@ -120,6 +120,8 @@ def test_static_and_calibrated_can_disagree(retained):
     assert row["static_best_mapped"] == row["eager_best_mapped"]
     assert row["graph_best_mapped"] != row["static_best_mapped"]
     assert row["candidate_count"] == 17 and row["calibrated_lowering_count"] == 2
+    reference = next(x for x in ranking["comparisons"] if x["algorithm"] == "strassen" and x["matrix_size"] == 256)
+    assert reference["eager_confidence"] == reference["graph_confidence"] == "NOT_APPLICABLE"
 
 
 def test_missing_calibration_is_an_explicit_error(retained):
