@@ -1,0 +1,11 @@
+{
+  "reference_artifact": "artifacts/tensor-game/hardware-aware-schedule-gpu-v1/compiler",
+  "current_artifact": "artifacts/tensor-game/hardware-aware-schedule-mechanism-v1/compiler",
+  "comparison_size": 1024,
+  "comparisons": [
+    {"reference_label": "rank8_stored_materialize_shared_u_1024", "current_label": "rank8_stored_materialization_1024", "ttir_equal": true, "ttgir_equal": true, "ptx_equal": true, "sass_equal": true, "cubin_sha256_equal": false},
+    {"reference_label": "rank8_stored_shared_form_gemm_1024", "current_label": "rank8_stored_consumer_0_1024", "ttir_equal": true, "ttgir_equal": true, "ptx_equal": true, "sass_equal": true, "cubin_sha256_equal": false},
+    {"reference_label": "rank8_recomputed_shared_form_gemm_1024", "current_label": "rank8_recomputed_consumer_0_1024", "ttir_equal": true, "ttgir_equal": true, "ptx_equal": true, "sass_equal": true, "cubin_sha256_equal": false}
+  ],
+  "interpretation": "The saved IR, PTX, and disassembled SASS text are byte-identical across studies for the corresponding kernels. The cubin file hashes differ. This does not establish a machine-instruction change; binary metadata or packaging may differ, but the cause of the hash difference was not isolated."
+}
