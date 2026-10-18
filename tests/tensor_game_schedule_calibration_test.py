@@ -9,7 +9,7 @@ import pytest
 
 from matmul_inspector.tensor_game_schedule_calibration import (
     calibrated_rank, eager_confidence, leave_one_session_out, pair_direction,
-    stable_hash, static_rank, validate_profile, validation_assessment,
+    stable_hash, static_rank, validate_profile, validated_profile, validation_assessment,
     verify_profile_sources,
 )
 from scripts.run_hardware_aware_schedule_calibration import (
@@ -139,3 +139,17 @@ def test_one_session_confidence_is_not_two_session_confidence(retained):
     rows = [{"ratio_bootstrap_95pct": row["ratio_bootstrap_95pct"]} for row in (a, b)]
     confidence, direction = eager_confidence(*rows)
     assert (confidence, direction) == ("MODERATE", "RECOMPUTED")
+
+
+def test_fresh_parity_downgrades_rank_without_changing_retained_profile(retained):
+    profile = next(p for p in retained[1] if p["matrix_size"] == 512 and p["execution_mode"] == "EAGER")
+    assessed = validation_assessment(profile, {"ratio_bootstrap_95pct": [0.99, 1.11]})
+    updated = validated_profile(profile, assessed, "a" * 64)
+    assert profile["confidence"] == "MODERATE" and profile["preference"] == "RECOMPUTED"
+    assert updated["confidence"] == "WEAK" and updated["preference"] == "PARITY"
+    assert updated["retained_profile_id"] == profile["profile_id"]
+    pair = [c for c in retained[2] if c["algorithm"] == "project-rank8" and c["matrix_size"] == 512
+            and c["lowering_name"] in ("rank8_stored", "rank8_recomputed")]
+    ranked = calibrated_rank(pair, updated, hardware=updated["hardware"], software=updated["software"])
+    assert {row["calibrated_rank"] for row in ranked} == {1}
+    assert all(row["fresh_validation_sha256"] == "a" * 64 for row in ranked)

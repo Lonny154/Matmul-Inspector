@@ -7,6 +7,7 @@ Schedules without a validated lowering map remain uncalibrated.
 from __future__ import annotations
 
 from collections import Counter
+from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
@@ -230,6 +231,8 @@ def calibrated_rank(candidates: Iterable[dict], profile: dict, *, hardware: dict
                      "profile_id": profile["profile_id"], "execution_mode": mode,
                      "source_artifact": profile["source_artifact"],
                      "source_hashes": profile["source_hashes"], "session_ids": profile["session_ids"],
+                     "fresh_validation_sha256": profile.get("fresh_validation_sha256"),
+                     "retained_profile_id": profile.get("retained_profile_id", profile["profile_id"]),
                      "compiler_resources": profile["compiler_resources"],
                      "confidence": profile["confidence"], "preference": preferred})
     return sorted(rows, key=lambda row: (row["calibrated_rank"] is None,
@@ -270,6 +273,19 @@ def validation_assessment(profile: dict, fresh_pair: dict | None) -> dict:
                 "confidence_after_validation": "WEAK"}
     return {"status": "DIRECTION_AGREES", "observed": observed,
             "confidence_after_validation": profile["confidence"]}
+
+
+def validated_profile(profile: dict, assessment: dict, fresh_validation_sha256: str) -> dict:
+    """Derive, rather than rewrite, a retained profile after fresh validation."""
+    updated = deepcopy(profile)
+    updated["retained_profile_id"] = profile["profile_id"]
+    updated["fresh_validation_sha256"] = fresh_validation_sha256
+    updated["confidence"] = assessment["confidence_after_validation"]
+    if updated["confidence"] in ("WEAK", "PARITY", "UNSTABLE"):
+        updated["preference"] = "PARITY"
+    updated["notes"] = [*updated["notes"], f"Fresh validation: {assessment['status']}."]
+    updated["profile_id"] = stable_hash({key: value for key, value in updated.items() if key != "profile_id"})
+    return updated
 
 
 def pareto_hashes(candidates: list[dict]) -> list[str]:

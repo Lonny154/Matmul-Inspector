@@ -100,7 +100,7 @@ PYTHONPATH=src:. /home/daniel/IsaacLab/.venv/bin/python \
 
 PYTHONPATH=src:. /home/daniel/IsaacLab/.venv/bin/python \
   scripts/run_hardware_aware_schedule_calibration.py \
-  --output artifacts/tensor-game/hardware-aware-schedule-calibration-v1
+  --output artifacts/tensor-game/hardware-aware-schedule-calibration-v2
 ```
 
 The full command starts one fresh GPU subprocess. At each retained size it

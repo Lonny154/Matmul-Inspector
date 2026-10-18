@@ -15,7 +15,8 @@ import sys
 
 from matmul_inspector.tensor_game_schedule_calibration import (
     MODES, build_profiles, calibrated_rank, leave_one_session_out, pareto_hashes,
-    schedule_features, static_rank, validation_assessment, verify_profile_sources,
+    schedule_features, static_rank, validated_profile, validation_assessment,
+    verify_profile_sources,
 )
 from matmul_inspector.tensor_game_schedule_gpu_study import (
     _schedule, load_selected_points, verify_artifact_hashes,
@@ -367,37 +368,71 @@ def main() -> int:
                        profile, (fresh_eager if profile["execution_mode"] == "EAGER" else fresh_graph).get(
                            profile["matrix_size"]))} for profile in profiles]
     write_json(args.output / "validation_assessment.json", assessment)
+    assessment_by = {(row["matrix_size"], row["execution_mode"]): row for row in assessment}
+    fresh_hash = sha(args.output / "gpu_validation.json")
+    validated_profiles = [validated_profile(profile,
+                          assessment_by[(profile["matrix_size"], profile["execution_mode"])], fresh_hash)
+                          for profile in profiles]
+    write_json(args.output / "validated_profiles.json", validated_profiles)
+    post_ranking = rank_study(candidates, validated_profiles)
+    write_json(args.output / "post_validation_eager_rankings.json", post_ranking["eager"])
+    write_json(args.output / "post_validation_graph_rankings.json", post_ranking["graph"])
+    write_json(args.output / "post_validation_ranking_comparison.json", post_ranking["comparisons"])
     comparisons = ranking["comparisons"]
     pair_groups = [row for row in comparisons if row["algorithm"] == "project-rank8"]
+    post_pair_groups = [row for row in post_ranking["comparisons"] if row["algorithm"] == "project-rank8"]
     selection_changes = sum(row["eager_best_mapped"] != row["graph_best_mapped"] for row in pair_groups)
-    rank_changes = sum(item["static_rank_mapped"] != item["eager_rank_mapped"]
-                       for row in pair_groups for item in row["rank8_pair"].values())
-    rank_changes += sum(item["static_rank_mapped"] != item["graph_rank_mapped"]
-                        for row in pair_groups for item in row["rank8_pair"].values())
-    full_validation = all(row["status"] == "DIRECTION_AGREES" for row in assessment)
-    any_contradiction = any(row["status"] in ("CONTRADICTED", "NOT_REPRODUCED") for row in assessment)
+    post_selection_changes = sum(row["eager_best_mapped"] != row["graph_best_mapped"] for row in post_pair_groups)
+    def count_rank_changes(rows: list[dict]) -> int:
+        return sum(item["static_rank_mapped"] != item["eager_rank_mapped"]
+                   for row in rows for item in row["rank8_pair"].values()) + sum(
+                       item["static_rank_mapped"] != item["graph_rank_mapped"]
+                       for row in rows for item in row["rank8_pair"].values())
+    rank_changes = count_rank_changes(pair_groups)
+    post_rank_changes = count_rank_changes(post_pair_groups)
+    any_contradiction = any(row["status"] == "CONTRADICTED" for row in assessment)
+    core_mode_signal = (all(assessment_by[(size, "EAGER")]["status"] == "DIRECTION_AGREES"
+                            for size in (128, 256))
+                        and assessment_by[(256, "CUDA_GRAPH")]["status"] == "DIRECTION_AGREES"
+                        and all(assessment_by[(size, "CUDA_GRAPH")]["status"] == "DIRECTION_AGREES"
+                                for size in (512, 1024)))
     gate = ("CALIBRATION_UNSTABLE" if any_contradiction else
-            "MODE_SPECIFIC_SIGNAL" if full_validation and selection_changes else
+            "MODE_SPECIFIC_SIGNAL" if core_mode_signal and post_selection_changes else
             "INCONCLUSIVE")
-    readiness = ("READY_FOR_CLOSED_LOOP_PROTOTYPE" if full_validation and selection_changes else
-                 "NOT_READY_FOR_CLOSED_LOOP_PROTOTYPE")
+    readiness = "NOT_READY_FOR_CLOSED_LOOP_PROTOTYPE"
+    readiness_checks = {
+        "candidate_generation": "BOUNDED_RETAINED_CP_SAT_CORPUS",
+        "legality_validation": "PASS_ALL_RETAINED_CANDIDATES",
+        "static_characterization": "PASS",
+        "lowering": "PARTIAL_FOUR_VALIDATED_TEMPLATES",
+        "correctness_gating": "PASS" if fresh.get("correctness") and all(
+            row["passed"] for row in fresh["correctness"]) else "INCOMPLETE",
+        "gpu_benchmarking": "BOUNDED_PAIR_ONLY" if fresh.get("eager_pairs") else "INCOMPLETE",
+        "compiler_profiler_evidence": "RETAINED_HA3_HA4_ONLY",
+        "measurement_calibration": "MODE_SPECIFIC_PAIR_ONLY",
+        "failure_recording": "PASS_VALIDATION_DOWNGRADE",
+        "schedule_reselection": "PARTIAL_MAPPED_PAIR_ONLY",
+    }
     aggregate = {"candidate_count": len(candidates),
                  "candidate_count_by_algorithm": {algorithm: len([row for row in candidates
                                                 if row["algorithm"] == algorithm and row["matrix_size"] == 128])
                                                   for algorithm in ALGORITHMS},
                  "mapped_candidate_count": sum(row["lowering_name"] is not None for row in candidates),
-                 "rank8_rank_changes": rank_changes, "rank8_eager_graph_selection_changes": selection_changes,
+                 "rank8_rank_changes": rank_changes,
+                 "rank8_post_validation_rank_changes": post_rank_changes,
+                 "rank8_eager_graph_selection_changes": selection_changes,
+                 "rank8_post_validation_eager_graph_selection_changes": post_selection_changes,
                  "rank8_static_eager_agreement_count": sum(row["static_best_mapped"] == row["eager_best_mapped"]
                                                            for row in pair_groups),
                  "rank8_static_graph_agreement_count": sum(row["static_best_mapped"] == row["graph_best_mapped"]
                                                            for row in pair_groups),
                  "rank8_eager_graph_agreement_count": 4 - selection_changes,
-                 "decision": gate, "secondary_decision": "CALIBRATED_SEARCH_SIGNAL" if full_validation and rank_changes else None,
+                 "decision": gate,
+                 "secondary_decision": "CALIBRATED_SEARCH_SIGNAL" if gate == "MODE_SPECIFIC_SIGNAL" and post_rank_changes else None,
                  "closed_loop_readiness": readiness,
-                 "readiness_reason": ("Known lowerings, correctness gates, and mode-specific calibration are available; "
-                                      "unmapped schedules remain out of the executable loop."
-                                      if readiness == "READY_FOR_CLOSED_LOOP_PROTOTYPE" else
-                                      "Fresh validation or lowering coverage is insufficient for an automated reselection loop."),
+                 "readiness_reason": "Only four of 39 schedules per size have validated lowering maps. "
+                                     "Graph evidence has one retained session and eager N=512 weakened in fresh validation.",
+                 "readiness_checks": readiness_checks,
                  "validation_assessment": assessment}
     write_json(args.output / "aggregate_summary.json", aggregate)
     (args.output / "study_notes.md").write_text(
