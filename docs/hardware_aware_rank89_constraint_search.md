@@ -99,6 +99,12 @@ decomposition at either tested rank can reduce distinct input forms below the
 conventional anchor's eight. Rank 9's larger raw reuse count can arise solely
 from its extra product; it is not an improvement in distinct forms.
 
+| Exact reference | Rank | Distinct u/v | Total reuse | Max u/v multiplicity | Pre / post additions | Scalings | Support |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Conventional | 8 | 4 / 4 | 8 | 2 / 2 | 0 / 4 | 0 | 24 |
+| Known Strassen | 7 | 7 / 7 | 0 | 1 / 1 | 10 / 8 | 0 | 36 |
+| Synthetic split | 9 | 4 / 4 | 10 | 3 / 3 | 0 / 6 | 0 | 28 |
+
 ## Reproduction
 
 Default control smoke:
@@ -146,4 +152,61 @@ compiler/profile evidence. That work is not part of this milestone.
 
 ## Retained results and decision
 
-Findings from the committed implementation will be added with the evidence.
+The six retained CPU-only runs used implementation commit `2916313`, OR-Tools
+9.15.6755, one worker, seed `20261018`, and a five-second limit per solve.
+All were far inside that limit. Their exact solution counts are separate by
+rank and pool; `INFEASIBLE` after enumerating a solution means no *additional*
+solution in that finite pool.
+
+| Run | Pool | Objective | Overall result | Exact unique models | Solve time |
+|---|---:|---|---|---:|---:|
+| Rank-8 control | 15 | Feasibility | Exact conventional | 1 | 0.0034 s |
+| Rank-9 control | 16 | Feasibility | Exact synthetic split | 1 | 0.0036 s |
+| Structured rank 8 | 512 | Feasibility | Exact anchor, then finite-pool exhaustion | 1 | 0.046 s |
+| Structured rank 9 | 512 | Minimum distinct forms | Proven optimum 8, bounded five models | 5 | 0.154 s |
+| Frozen rank 8 | 96 | Minimum distinct forms | Proven optimum 8, then finite-pool exhaustion | 3 | 0.014 s |
+| Frozen rank 9 | 96 | Feasibility | Proven finite-pool infeasible | 0 | 0.0022 s |
+
+Across the retained runs there are three unique exact rank-8 canonical
+decompositions and six unique exact rank-9 decompositions. The control pools
+recover their intended models. Removing a required action from the isolated
+rank-8 control pool is proven infeasible in the focused test.
+
+The two non-anchor frozen rank-8 hashes are `5e4118dd1125…` and
+`1b8c69355bf5…`. Both are `NEW_TO_PROJECT_CATALOG`: neither is among the 123
+retained HA-Tensor-1 hashes. They have four distinct `u` and four distinct `v`
+forms, the same minimum eight distinct input forms as conventional. Both trade
+one preparation addition, six reconstruction additions, and support 28 for
+the anchor's zero, four, and 24. They are structurally distinct canonical
+records, not demonstrated to be outside the full change-of-basis orbit or to
+be mathematically new. A separate non-optimized frozen-pool feasibility probe
+also found a rank-8 model with nine distinct forms and worse static costs; it
+was not part of the retained optimized result.
+
+The five structured rank-9 hashes are distinct from the explicit synthetic
+control hash and from the rank-8 catalog. They share one structural-signature
+class. Each has four distinct `u` and four distinct `v` forms, three-product
+maximum multiplicity, ten total reuse counts, zero preparation additions, six
+reconstruction additions, and support 28. An exact two-output-term merge of
+each model reconstructs the conventional rank-8 anchor. They are therefore
+known algebraic splits despite their `NEW_TO_PROJECT_CATALOG` hash label. Rank
+9's apparent two extra reuse counts arise from its ninth multiplication. It
+does not reduce the number of distinct input forms.
+
+The structured rank-8 model used 512 action variables and 65 initial
+constraints. Its complete enumeration found only the anchor. Structured
+rank 9 used 512 action variables, eight form auxiliaries, and 73 initial
+constraints. Frozen rank 8 used 96 action variables, 28 form auxiliaries, and
+93 initial constraints. The retained model summaries contain final counts,
+CP-SAT status sequences, conflicts, branches, and exact elapsed times. All
+saved solutions and their SHA-256 manifests passed an independent post-run
+check. The evidence is in `artifacts/tensor-game/hardware-aware-rank89-v1/`.
+
+The decision is **NO_STRUCTURAL_SIGNAL** for operand-form reuse under these
+bounded pools. Exact alternatives exist, but none lowers distinct input forms;
+the target's flattening ranks show that the conventional anchor already meets
+the lower bound. The rank-9 alternatives are simple known splits and add a
+product. The two project-new rank-8 records have higher static costs. No GPU
+candidate is recommended from this result alone. Other structural targets or
+pool families would require a fresh rationale; finite-pool results cannot
+settle their existence or hardware behavior.
