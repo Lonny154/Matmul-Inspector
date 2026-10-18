@@ -369,6 +369,9 @@ commands.
 - [Recompute-vs-store mechanism study](docs/hardware_aware_schedule_mechanism_study.md)
   — isolates the selected rank-8 schedule's preparation, consumer, launch,
   graph-replay, and memory-hierarchy effects on the RTX 4060 Ti.
+- [Measurement-calibrated schedule search](docs/hardware_aware_schedule_calibration.md)
+  — ranks the bounded legal schedule corpus with separate eager and CUDA Graph
+  evidence. Only validated GPU-lowering mappings receive calibrated ranks.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
