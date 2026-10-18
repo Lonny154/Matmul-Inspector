@@ -109,6 +109,42 @@ correctness, compare conventional Triton and cuBLAS, use interleaved timing,
 retain relevant PTX/SASS or compiler evidence, and compare measured latency
 against static descriptors. HA-Tensor-2 is not implemented here.
 
-## Results
+## Retained results and decision
 
-Retained study findings will be added with the evidence artifact.
+The retained full run used implementation commit `cf53252`, seed `20261018`,
+512 attempts including the anchor, entry bound one, and an accepted limit of
+512. All 512 attempts reconstructed the exact tensor. No practical-limit
+rejection occurred. Canonicalization removed 389 duplicate generation paths,
+leaving 123 unique rank-8 decompositions and 60 structural signatures. This
+is structural variation within one known algorithm, not 123 discoveries.
+
+| Static descriptor | Full-set minimum | Median | Maximum | Frontier |
+|---|---:|---:|---:|---:|
+| Preparation additions | 0 | 10 | 10 | 0 |
+| Reconstruction additions | 4 | 14 | 14 | 4 |
+| Coefficient scalings | 0 | 0 | 0 | 0 |
+| Total coefficient support | 24 | 54 | 54 | 24 |
+| Coefficient L1 | 24 | 54 | 54 | 24 |
+| Maximum absolute coefficient | 1 | 1 | 1 | 1 |
+
+The literal conventional anchor has canonical hash
+`307440126be71fcb9ea285397dc42ef84f9a0615da9e636f95aa12dbd70336b3`.
+It uses eight products, zero preparation additions, four reconstruction
+additions, zero scalings, and 24 nonzero unit coefficients. Under the four
+declared cost objectives, it dominates every other sampled canonical
+representation. The frontier has one candidate, one signature, and one cost
+point. The representative file therefore contains just the anchor. The target
+of 10–30 representatives cannot be met without adding dominated points or
+changing the objective; neither is done silently.
+
+The decision is **LOW_DIVERSITY** for this basis-equivalent, bounded rank-8
+population under the present static scalar descriptors. Sixty signatures show
+algebraic variation, but not a cost-diverse Pareto frontier. This does not rule
+out hardware-relevant differences invisible to these descriptors or exact
+rank-8 decompositions outside the sampled change-of-basis family. It does not
+justify claiming a faster representation. A separate GPU study would need a
+new, explicitly motivated representative policy or candidate family.
+
+Raw records and SHA-256 hashes are in
+`artifacts/tensor-game/hardware-aware-rank8-v1/`. A 32-attempt smoke run also
+passed exact validation; the gate labels such a small run `INCONCLUSIVE`.
