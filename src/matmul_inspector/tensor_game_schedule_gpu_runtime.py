@@ -127,9 +127,18 @@ def execute_selected(lowering, left, right, workspace, mode: str, capture: dict 
             if capture is not None and index == 0:
                 capture["shared_form_gemm"] = compiled
         else:
-            fused_input_gemm(left, right, action.u, action.v, output=product)
-    return fused_reconstruction(workspace["products"], lowering.actions,
-                                left.shape[0], output=workspace["output"])
+            common_capture = {} if capture is not None else None
+            fused_input_gemm(left, right, action.u, action.v, output=product,
+                             capture=common_capture)
+            if capture is not None:
+                capture[f"common_gemm_{index}"] = common_capture["compiled"]
+    reconstruction_capture = {} if capture is not None else None
+    output = fused_reconstruction(workspace["products"], lowering.actions,
+                                  left.shape[0], output=workspace["output"],
+                                  capture=reconstruction_capture)
+    if capture is not None:
+        capture["reconstruction"] = reconstruction_capture["compiled"]
+    return output
 
 
 def expected_kernel_names(rank: int, mode: str) -> list[str]:

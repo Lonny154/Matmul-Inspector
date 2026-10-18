@@ -366,6 +366,9 @@ commands.
 - [Selected GPU schedule study](docs/hardware_aware_schedule_gpu_study.md) —
   tests a small static-frontier subset with RTX 4060 Ti Triton lowerings,
   correctness gates, CUDA-event timing, and compiler evidence.
+- [Recompute-vs-store mechanism study](docs/hardware_aware_schedule_mechanism_study.md)
+  — isolates the selected rank-8 schedule's preparation, consumer, launch,
+  graph-replay, and memory-hierarchy effects on the RTX 4060 Ti.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.

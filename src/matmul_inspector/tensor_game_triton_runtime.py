@@ -149,14 +149,14 @@ def fp32_gemm(left, right, precision: str = "ieee"):
     return output
 
 
-def fused_input_gemm(left, right, u, v, precision: str = "ieee", output=None):
+def fused_input_gemm(left, right, u, v, precision: str = "ieee", output=None, capture=None):
     """Form one pair of 2x2 block combinations inside the GEMM load path."""
     precision = validate_dot_precision(precision)
     half = left.shape[0] // 2
     if output is None:
         output = torch.empty((half, half), device=left.device, dtype=torch.float32)
     grid = (triton.cdiv(half, 32), triton.cdiv(half, 32))
-    _fused_input_gemm_kernel[grid](
+    compiled = _fused_input_gemm_kernel[grid](
         left, right, output, half,
         left.stride(0), left.stride(1), right.stride(0), right.stride(1),
         output.stride(0), output.stride(1),
@@ -164,6 +164,8 @@ def fused_input_gemm(left, right, u, v, precision: str = "ieee", output=None):
         block_m=32, block_n=32, block_k=16, input_precision=precision,
         num_warps=4, num_stages=3,
     )
+    if capture is not None:
+        capture["compiled"] = compiled
     return output
 
 
@@ -175,7 +177,7 @@ def _combination(blocks, coefficients):
     return result
 
 
-def fused_reconstruction(products, actions, output_size, output=None):
+def fused_reconstruction(products, actions, output_size, output=None, capture=None):
     """Reconstruct all four output blocks in one Triton kernel launch."""
     half = output_size // 2
     if output is None:
@@ -184,10 +186,12 @@ def fused_reconstruction(products, actions, output_size, output=None):
     coefficients = [int(value) for action in actions for value in action.w]
     coefficients += [0] * (32 - len(coefficients))
     grid = (4, triton.cdiv(half, 32), triton.cdiv(half, 32))
-    _fused_reconstruction_kernel[grid](
+    compiled = _fused_reconstruction_kernel[grid](
         *padded, output, half, len(products), *coefficients, block=32,
         num_warps=4, num_stages=3,
     )
+    if capture is not None:
+        capture["compiled"] = compiled
     return output
 
 
