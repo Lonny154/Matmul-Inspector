@@ -54,6 +54,34 @@ does not inject Strassen actions. Artifacts contain the command, Git state,
 pool hash, initial-state hashes, per-run counters, paired seed differences,
 repairability records, and file hashes.
 
+## Recorded pilot result
+
+The retained 12-seed pilot used seeds 20261018–20261029 and the frozen
+`algebraic_slice_projection_128` pool. Every variant used 192 local proposals
+in total. Independent variants made 191 exact local residual evaluations each;
+exchanged variants made 188 each because a few proposals repeated the current
+state. The common pair table was ready for all repair and audit calls.
+
+| Variant | Exact / 12 | Median best nnz | Median best L1 | Median best energy | Repairable best / 12 |
+|---|---:|---:|---:|---:|---:|
+| Independent, no repair | 0 | 10 | 10 | 50 | 0 |
+| Tempered, no repair | 0 | 9.5 | 9.5 | 47.5 | 0 |
+| Independent, repair | 0 | 10 | 10 | 50 | 0 |
+| Tempered, repair | 0 | 9.5 | 9.5 | 47.5 | 0 |
+
+Pairing by seed and initial-state hashes gives exchange 3 lower, 6 equal, and
+3 higher best energies against the independent control. This is the same with
+and without repair. Repair changed no best energy in either exchange setting.
+The median paired energy difference is zero for all four required comparisons.
+No discovery candidate was exact or two-term repairable. The oracle control
+reconstructed known Strassen exactly and verified 21 of 21 removable cores.
+
+Retained artifacts are under `artifacts/tensor-game/tempered-study-pilot-v1/`
+and `artifacts/tensor-game/tempered-study-oracle-control-v1/`. Both were
+generated from code commit `34bc8ab`. Small TG-Global-1 oracle and discovery
+smokes were also regenerated from that commit under
+`artifacts/tensor-game/tempered-search-*-smoke-v1/`.
+
 ## Interpretation and limits
 
 A near-zero residual is not an exact decomposition. Exact oracle recovery
