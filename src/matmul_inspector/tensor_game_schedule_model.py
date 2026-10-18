@@ -312,7 +312,7 @@ def _resolve_schedule(dag: ExecutionDag, schedule: Schedule) -> tuple[Validation
         issues.append(ValidationIssue("DAG_MISMATCH", "schedule targets a different DAG"))
     if schedule.schedule_hash != _digest(_schedule_payload(schedule)):
         issues.append(ValidationIssue("SCHEDULE_HASH", "schedule content hash mismatch"))
-    if schedule.policy not in POLICIES:
+    if schedule.policy not in POLICIES and schedule.policy != "SOLVER_SEARCH":
         issues.append(ValidationIssue("UNKNOWN_POLICY", "unknown schedule policy"))
     allowed = set(schedule.recompute_allowed)
     for node_id in allowed:
@@ -412,6 +412,8 @@ def evaluate_schedule(dag: ExecutionDag, schedule: Schedule) -> dict:
     def update_peaks() -> None:
         metrics["peak_temp_hbm_bytes"] = max(metrics["peak_temp_hbm_bytes"], live_size(live_hbm))
         metrics["peak_on_chip_live_bytes"] = max(metrics["peak_on_chip_live_bytes"], live_size(live_on_chip))
+        metrics["peak_abstract_local_bytes"] = max(
+            metrics["peak_abstract_local_bytes"], live_size(live_on_chip | live_ephemeral))
         metrics["peak_simultaneously_live_intermediates"] = max(
             metrics["peak_simultaneously_live_intermediates"],
             len(live_hbm | live_on_chip | live_ephemeral))
@@ -504,6 +506,7 @@ def evaluate_schedule(dag: ExecutionDag, schedule: Schedule) -> dict:
                  "recomputation_arithmetic_operations", "hbm_read_bytes", "hbm_write_bytes",
                  "temporary_hbm_bytes_written", "temporary_hbm_bytes_read", "temporary_hbm_traffic_bytes",
                  "final_output_bytes", "peak_temp_hbm_bytes", "peak_on_chip_live_bytes",
+                 "peak_abstract_local_bytes",
                  "largest_single_on_chip_value_set_bytes", "peak_simultaneously_live_intermediates",
                  "number_of_materialized_intermediates", "number_of_recomputed_intermediates",
                  "recomputed_hbm_write_bytes_avoided", "recomputed_hbm_reload_bytes_avoided",
