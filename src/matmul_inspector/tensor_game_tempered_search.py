@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import hashlib
+from itertools import combinations
 import json
 import math
 import random
@@ -50,6 +51,8 @@ class TemperedSearchConfig:
     rank: int = 7
     temperatures: tuple[float, ...] = (0.5, 1.0, 2.0, 4.0)
     replicas: int | None = None
+    exchange_enabled: bool = True
+    stop_on_exact: bool = True
     rounds: int = 100
     local_steps_per_round: int = 4
     exchange_interval: int = 1
@@ -94,13 +97,18 @@ class TemperedSearchConfig:
 @dataclass
 class SearchCounters:
     local_proposals: int = 0
+    local_residual_evaluations: int = 0
     local_accepts: int = 0
     improving_accepts: int = 0
+    equal_energy_accepts: int = 0
     worsening_accepts: int = 0
     exchange_attempts: int = 0
     exchange_accepts: int = 0
     repair_attempts: int = 0
+    repair_pair_lookups: int = 0
+    repair_candidates_constructed: int = 0
     repair_successes: int = 0
+    repair_budget_exceeded: int = 0
 
 
 def metropolis_accept(current: int, proposed: int, temperature: float, rng: random.Random) -> bool:
@@ -175,13 +183,74 @@ def pool_identity(actions: Sequence[RankOneAction]) -> str:
     return hashlib.sha256(json.dumps([action_identity(action) for action in actions], separators=(",", ":")).encode()).hexdigest()
 
 
+def state_identity(state: Sequence[int], actions: Sequence[RankOneAction]) -> str:
+    """Stable identity of the canonical action multiset, independent of pool order."""
+    ids = sorted(action_identity(actions[index]) for index in state)
+    return hashlib.sha256(json.dumps(ids, separators=(",", ":")).encode()).hexdigest()
+
+
+def initial_states_for_seed(pool_size: int, config: TemperedSearchConfig) -> tuple[tuple[int, ...], ...]:
+    """Draw paired initial states without using the local proposal RNG streams."""
+    config.validate(pool_size)
+    master = random.Random(config.seed)
+    return tuple(canonical_state(master.choices(range(pool_size), k=config.rank)
+                   if config.allow_repeated_actions else master.sample(range(pool_size), config.rank))
+                 for _ in config.temperatures)
+
+
+def audit_two_term_repairability(target: Tensor, state: Sequence[int], actions: Sequence[RankOneAction],
+                                 table: PairRepairTable, allow_repeated_actions: bool,
+                                 *, oracle_assisted: bool = False, maximum_details: int = 10) -> dict:
+    """Audit every removable pair and verify all exact completions independently."""
+    if maximum_details < 0:
+        raise ValueError("maximum_details must be nonnegative")
+    shape = tensor_shape(target)
+    records = []
+    raw = rejected = verified = constructed = lookups = cores = 0
+    for positions in combinations(range(len(state)), 2):
+        if table.status != "READY":
+            break
+        frozen = tuple(value for index, value in enumerate(state) if index not in positions)
+        required = subtract_tensors(target, sum_actions(tuple(actions[i] for i in frozen), shape))
+        lookups += 1
+        core_verified = 0
+        for exact_sum, left, right in table.table.get(partial_sum_identity(required), ()):
+            if exact_sum != required:
+                continue
+            raw += 1
+            candidate = canonical_state((*frozen, left, right))
+            if not allow_repeated_actions and len(set(candidate)) != len(candidate):
+                rejected += 1
+                continue
+            constructed += 1
+            if sum_actions(tuple(actions[i] for i in candidate), shape) == target:
+                verified += 1
+                core_verified += 1
+                if len(records) < maximum_details:
+                    records.append({"removed_positions": positions, "completion_action_ids":
+                                    [action_identity(actions[i]) for i in (left, right)],
+                                    "completed_state_hash": state_identity(candidate, actions),
+                                    "exact_reconstruction": True})
+        cores += core_verified > 0
+    return {"schema": "tensor_game_repairability_audit.v1",
+            "candidate_hash": state_identity(state, actions), "term_pairs_audited": lookups,
+            "total_term_pairs": len(state) * (len(state) - 1) // 2,
+            "valid_completion_cores": cores, "raw_pair_complements": raw,
+            "domain_rejections": rejected, "candidates_constructed": constructed,
+            "independently_verified": verified, "repairable": cores > 0,
+            "oracle_assisted": oracle_assisted, "lookup_status": table.status,
+            "details": records}
+
+
 def validate_pool_mode(pool_name: str, oracle_permitted: bool) -> None:
     """Prevent an oracle-only pool from entering a discovery-mode run."""
     if pool_name == "strassen_oracle" and not oracle_permitted:
         raise ValueError("the Strassen oracle pool is not permitted in discovery mode")
 
 
-def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], config: TemperedSearchConfig) -> dict:
+def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], config: TemperedSearchConfig,
+                              initial_states: Sequence[Sequence[int]] | None = None,
+                              pair_table: PairRepairTable | None = None) -> dict:
     """Run deterministic bounded parallel tempering over complete decompositions."""
     actions = tuple(canonicalize_action(action) for action in pool)
     if len(set(actions)) != len(actions):
@@ -189,21 +258,30 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
     config.validate(len(actions))
     master = random.Random(config.seed)
     rngs = tuple(random.Random(master.getrandbits(64)) for _ in config.temperatures)
-    states = [canonical_state(rng.choices(range(len(actions)), k=config.rank) if config.allow_repeated_actions
-                              else rng.sample(range(len(actions)), config.rank)) for rng in rngs]
+    exchange_rng = random.Random(master.getrandbits(64))
+    repair_rng = random.Random(master.getrandbits(64))
+    states = list(initial_states_for_seed(len(actions), config) if initial_states is None
+                  else (canonical_state(state) for state in initial_states))
+    if len(states) != len(config.temperatures) or any(len(state) != config.rank or
+            any(index < 0 or index >= len(actions) for index in state) or
+            (not config.allow_repeated_actions and len(set(state)) != len(state)) for state in states):
+        raise ValueError("initial states must match replicas, rank, pool, and domain")
+    initial_hashes = [state_identity(state, actions) for state in states]
     metrics = [residual_metrics(target, tuple(actions[i] for i in state), config.energy_mode,
                                 config.mismatch_weight) for state in states]
     best_index = min(range(len(states)), key=lambda i: (metrics[i].energy, states[i]))
     best_state, best_metrics = states[best_index], metrics[best_index]
+    started = time.perf_counter()
+    time_to_best = 0.0
+    best_round = best_proposal_index = 0
     counters = SearchCounters()
     visited = set(states)
     history = []
     repaired = False
-    repair_table = (build_pair_repair_table(actions, allow_repeated_actions=config.allow_repeated_actions,
+    repair_table = (pair_table if pair_table is not None else build_pair_repair_table(actions, allow_repeated_actions=config.allow_repeated_actions,
                     maximum_pool_size=config.repair_maximum_pool_size,
                     maximum_pair_records=config.repair_maximum_pair_records,
-                    maximum_seconds=config.repair_maximum_seconds) if config.repair_enabled else None)
-    started = time.perf_counter()
+                    maximum_seconds=config.repair_maximum_seconds)) if config.repair_enabled else None
     stop_reason = "maximum_rounds"
     rounds_completed = 0
     for round_index in range(1, config.rounds + 1):
@@ -222,39 +300,50 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
                     continue
                 proposed_metrics = residual_metrics(target, tuple(actions[i] for i in proposed),
                                                     config.energy_mode, config.mismatch_weight)
+                counters.local_residual_evaluations += 1
                 old_energy = metrics[replica].energy
                 if metropolis_accept(old_energy, proposed_metrics.energy, temperature, rng):
                     states[replica], metrics[replica] = proposed, proposed_metrics
                     counters.local_accepts += 1
                     counters.improving_accepts += proposed_metrics.energy < old_energy
+                    counters.equal_energy_accepts += proposed_metrics.energy == old_energy
                     counters.worsening_accepts += proposed_metrics.energy > old_energy
                     visited.add(proposed)
                     if (proposed_metrics.energy, proposed) < (best_metrics.energy, best_state):
                         best_state, best_metrics = proposed, proposed_metrics
-        if round_index % config.exchange_interval == 0:
+                        time_to_best = time.perf_counter() - started
+                        best_round, best_proposal_index = round_index, counters.local_proposals
+        if config.exchange_enabled and round_index % config.exchange_interval == 0:
             parity = (round_index // config.exchange_interval - 1) % 2
             for replica in range(parity, len(states) - 1, 2):
                 counters.exchange_attempts += 1
                 if exchange_accept(metrics[replica].energy, metrics[replica + 1].energy,
-                                   config.temperatures[replica], config.temperatures[replica + 1], rngs[replica]):
+                                   config.temperatures[replica], config.temperatures[replica + 1], exchange_rng):
                     states[replica], states[replica + 1] = states[replica + 1], states[replica]
                     metrics[replica], metrics[replica + 1] = metrics[replica + 1], metrics[replica]
                     counters.exchange_accepts += 1
         if config.repair_enabled and round_index % config.repair_interval == 0:
             counters.repair_attempts += 1
-            positions = tuple(sorted(rngs[0].sample(range(config.rank), 2)))
+            positions = tuple(sorted(repair_rng.sample(range(config.rank), 2)))
+            counters.repair_pair_lookups += int(repair_table.status == "READY")
             repair = exact_two_term_repair(target, best_state, positions, actions, repair_table,
                                            config.allow_repeated_actions)  # type: ignore[arg-type]
+            counters.repair_candidates_constructed += repair["status"] in ("EXACT_VERIFIED", "RECONSTRUCTION_FAILED")
+            counters.repair_budget_exceeded += repair["status"] == "BUDGET_EXCEEDED"
             if repair["status"] == "EXACT_VERIFIED":
                 repaired = repaired or repair["state"] != best_state
+                if repair["state"] != best_state:
+                    time_to_best = time.perf_counter() - started
+                    best_round, best_proposal_index = round_index, counters.local_proposals
                 best_state = repair["state"]
+                visited.add(best_state)
                 best_metrics = residual_metrics(target, tuple(actions[i] for i in best_state),
                                                 config.energy_mode, config.mismatch_weight)
                 counters.repair_successes += 1
         rounds_completed = round_index
         if round_index % config.history_interval == 0 or best_metrics.energy == 0:
             history.append({"round": round_index, "best": asdict(best_metrics)})
-        if best_metrics.energy == 0:
+        if best_metrics.energy == 0 and config.stop_on_exact:
             stop_reason = "exact_candidate"; break
     selected = tuple(actions[i] for i in best_state)
     independently_exact = sum_actions(selected, tensor_shape(target)) == target
@@ -265,6 +354,12 @@ def parallel_tempering_search(target: Tensor, pool: Sequence[RankOneAction], con
         "best_state": best_state, "best_action_ids": [action_identity(action) for action in selected],
         "best_metrics": asdict(best_metrics), "exact_reconstruction": independently_exact,
         "repair_modified_best": repaired, "counters": asdict(counters),
+        "initial_state_hashes": initial_hashes,
+        "best_candidate_hash": state_identity(best_state, actions),
+        "time_to_best_seconds": time_to_best, "best_round": best_round,
+        "best_proposal_index": best_proposal_index,
+        "wall_clock_seconds": time.perf_counter() - started,
+        "repair_table_status": repair_table.status if repair_table else "DISABLED",
         "unique_canonical_states_visited": len(visited), "history": history,
         "pool_hash": pool_identity(actions), "config": asdict(config),
     }

@@ -253,6 +253,8 @@ frozen algebraic pair manifest.
 The [TG-Global-1 design](docs/tensor_game_tempered_search_design.md) documents a
 separate CPU-only parallel-tempering prototype over complete rank-7 candidates
 with bounded exact two-term repair and strict oracle/discovery separation.
+The [TG-Global-2 study](docs/tensor_game_tempered_search_study.md) compares
+matched independent and exchanged replicas with and without exact repair.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
