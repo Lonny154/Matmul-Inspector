@@ -403,6 +403,9 @@ commands.
 - [IR-wide calibration and reselection](docs/ha_schedule_10_calibration_reselection.md)
   — provides bounded CPU replay and optional GPU evidence capture for
   mode-specific two-batch schedule selection.
+- [Bounded Schedule Agent Prototype](docs/schedule_agent_prototype.md)
+  — validates bounded proposals, runs two controlled batches, and retains
+  correctness, timing, feedback, and replay evidence.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
