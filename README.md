@@ -335,6 +335,17 @@ with the run, and loaded only in the worker process.
 See the [experiment runner guide](docs/experiment_runner.md) for configuration,
 result fields, failure behavior, and the callable Python interface.
 
+For a one-command comparison with a self-contained, hash-verified evidence
+bundle, run:
+
+```sh
+matmul-inspector-python experiment compare \
+  --spec examples/mi_workflow_1_fc1.json \
+  --output results/my-fc1-comparison
+```
+
+See the [MI-Workflow-1 getting-started guide](docs/mi_workflow_1.md).
+
 Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
 fresh matched baselines. From a source checkout, the checked-in example is:
 
