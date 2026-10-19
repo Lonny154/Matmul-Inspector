@@ -1,0 +1,52 @@
+{
+  "benchmark": {
+    "iterations": 100,
+    "mode": "preallocated",
+    "rounds": 8,
+    "warmups": 30
+  },
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "kernels": {
+    "A": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      }
+    },
+    "B": {
+      "implementation": "triton_source",
+      "parameters": {
+        "block_k": 64,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "source": {
+        "entry_point": "matmul_into",
+        "interface_version": "matmul_into_v1",
+        "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_dogfood_2_fc1.py",
+        "path": "sources/B.py",
+        "sha256": "c72b1bab91a071d32f33b002bb88a9c22a041a1309138c0b9eb53bf2574c61ec"
+      }
+    }
+  },
+  "schema_version": 2,
+  "seed": 0,
+  "timeout_seconds": 180,
+  "workload": {
+    "dtype": "float16",
+    "k": 768,
+    "m": 512,
+    "n": 3072
+  }
+}
