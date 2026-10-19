@@ -293,6 +293,10 @@ The [hardware-aware schedule lowering study](docs/hardware_aware_schedule_loweri
 adds a CPU-queryable family manifest, one exact materialized GPU template,
 correctness and launch-topology gates, and an independent CUDA Graph replication.
 Its validated exact coverage remains limited; it is not a speedup claim.
+The [mixed-group lowering study](docs/hardware_aware_mixed_group_lowering.md)
+adds one reusable fused GEMM/reconstruction template. It raises validated exact
+coverage but leaves most legal schedules unsupported or numerically incorrect
+at larger Strassen sizes. It is a coverage result, not an optimization claim.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
@@ -376,6 +380,12 @@ commands.
 - [Measurement-calibrated schedule search](docs/hardware_aware_schedule_calibration.md)
   — ranks the bounded legal schedule corpus with separate eager and CUDA Graph
   evidence. Only validated GPU-lowering mappings receive calibrated ranks.
+- [Bounded schedule-family lowering](docs/hardware_aware_schedule_lowering.md)
+  — classifies the retained corpus into exact materialized, approximate legacy,
+  and unsupported mappings with correctness and launch-topology gates.
+- [Mixed GEMM/reconstruction lowering](docs/hardware_aware_mixed_group_lowering.md)
+  — tests one exact fused family across the same corpus and records the
+  remaining semantic and numerical limits.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
