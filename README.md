@@ -346,6 +346,16 @@ matmul-inspector-python experiment compare \
 
 See the [MI-Workflow-1 getting-started guide](docs/mi_workflow_1.md).
 
+For a direct paired comparison of two registered Triton FC1 configurations:
+
+```sh
+matmul-inspector-python experiment pair \
+  --spec examples/mi_workflow_2_fc1_pair.json \
+  --output results/my-fc1-pair
+```
+
+See the [MI-Workflow-2 paired comparison guide](docs/mi_workflow_2.md).
+
 Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
 fresh matched baselines. From a source checkout, the checked-in example is:
 

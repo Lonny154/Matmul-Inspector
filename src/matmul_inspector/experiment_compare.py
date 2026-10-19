@@ -172,7 +172,11 @@ def _compiler_capture(spec: Mapping[str, Any], output: Path) -> dict[str, Any]:
         result["status"] = "CAPTURED"
         result["kernel_name"] = compiled.name
         result["metadata"] = {name: getattr(metadata, name, None)
-                              for name in ("num_warps", "num_stages", "shared", "global_scratch_size")}
+                              for name in ("num_warps", "num_stages", "shared", "global_scratch_size",
+                                           "n_regs", "n_spills")}
+        for name in ("n_regs", "n_spills"):
+            if result["metadata"][name] is None:
+                result["metadata"][name] = getattr(compiled, name, None)
         assembly = compiled.asm
         if isinstance(assembly.get("ptx"), str):
             (output / "candidate.ptx").write_text(assembly["ptx"], encoding="utf-8")
