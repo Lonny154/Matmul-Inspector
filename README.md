@@ -289,6 +289,10 @@ the repaired TG-4Y release gates and the rollout of `bounded_128` as the public
 default. Explicit `exhaustive` selection remains available as a fallback.
 The [release-preparation summary](docs/tensor_game_release_preparation.md)
 collects usage, evidence, limitations, and the remaining publication checklist.
+The [hardware-aware schedule lowering study](docs/hardware_aware_schedule_lowering.md)
+adds a CPU-queryable family manifest, one exact materialized GPU template,
+correctness and launch-topology gates, and an independent CUDA Graph replication.
+Its validated exact coverage remains limited; it is not a speedup claim.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:

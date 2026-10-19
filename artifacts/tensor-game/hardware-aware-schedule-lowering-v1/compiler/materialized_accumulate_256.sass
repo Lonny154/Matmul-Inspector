@@ -1,0 +1,50 @@
+.headerflags	@"EF_CUDA_TEXMODE_UNIFIED EF_CUDA_64BIT_ADDRESS EF_CUDA_SM89 EF_CUDA_VIRTUAL_SM(EF_CUDA_SM89)"
+	.elftype	@"ET_EXEC"
+
+
+//--------------------- .text._accumulate_kernel  --------------------------
+	.section	.text._accumulate_kernel,"ax",@progbits
+	.sectioninfo	@"SHI_REGISTERS=10"
+	.align	128
+        .global         _accumulate_kernel
+        .type           _accumulate_kernel,@function
+        .size           _accumulate_kernel,(.L_x_3 - _accumulate_kernel)
+        .other          _accumulate_kernel,@"STO_CUDA_ENTRY STV_DEFAULT"
+_accumulate_kernel:
+.text._accumulate_kernel:
+        /*0000*/                   IMAD.MOV.U32 R1, RZ, RZ, c[0x0][0x28] ;
+        /*0010*/                   S2R R0, SR_TID.X ;
+        /*0020*/                   MOV R7, 0x4 ;
+        /*0030*/                   ULDC.64 UR4, c[0x0][0x118] ;
+        /*0040*/                   BSSY B0, `(.L_x_0) ;
+        /*0050*/                   S2R R3, SR_CTAID.X ;
+        /*0060*/                   IMAD.SHL.U32 R0, R0, 0x2, RZ ;
+        /*0070*/                   LOP3.LUT R0, R0, 0xfe, RZ, 0xc0, !PT ;
+        /*0080*/                   LEA R0, R3, R0, 0x8 ;
+        /*0090*/                   CS2R R2, SRZ ;
+        /*00a0*/                   ISETP.GE.AND P0, PT, R0.reuse, 0x4000, PT ;
+        /*00b0*/                   IMAD.WIDE R4, R0, R7, c[0x0][0x170] ;
+        /*00c0*/               @P0 BRA `(.L_x_1) ;
+        /*00d0*/                   IMAD.WIDE R2, R0, R7, c[0x0][0x160] ;
+        /*00e0*/                   LDG.E.64 R2, [R2.64] ;
+.L_x_1:
+        /*00f0*/                   BSYNC B0 ;
+.L_x_0:
+        /*0100*/               @P0 EXIT ;
+        /*0110*/                   STG.E.64 [R4.64], R2 ;
+        /*0120*/                   EXIT ;
+.L_x_2:
+        /*0130*/                   BRA `(.L_x_2);
+        /*0140*/                   NOP;
+        /*0150*/                   NOP;
+        /*0160*/                   NOP;
+        /*0170*/                   NOP;
+        /*0180*/                   NOP;
+        /*0190*/                   NOP;
+        /*01a0*/                   NOP;
+        /*01b0*/                   NOP;
+        /*01c0*/                   NOP;
+        /*01d0*/                   NOP;
+        /*01e0*/                   NOP;
+        /*01f0*/                   NOP;
+.L_x_3:
