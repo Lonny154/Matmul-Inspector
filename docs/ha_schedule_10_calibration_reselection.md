@@ -2,14 +2,17 @@
 
 ## Decision
 
-**B — mechanically demonstrated only.** A deterministic two-batch replay changes
-Batch 2 when mode-specific pair evidence is supplied. The replay uses fixed
-synthetic timings. CUDA was unavailable in this workspace, so no new IR-path
-hardware calibration or empirical reselection was demonstrated. The retained
-HA-9 five-sample execution smoke is not comparative ranking evidence. The
-bounded Schedule Agent Prototype is **not ready**. The smallest next step is to
-run the existing bounded GPU command on a CUDA host, retain raw timings and
-correctness gates, then compare updated and frozen selections.
+**A — empirically demonstrated for the bounded eager Batch 2 experiment.**
+Fresh RTX 4060 Ti measurements from the eight N=256 Batch 1 configurations
+changed the four-config eager Batch 2 selection relative to the frozen
+control. Separate CUDA Graph measurements also changed its mode-specific
+selection, but the graph-only fourth choice was a counterfactual and was not
+run in Batch 2. All twelve executed configurations passed fresh correctness,
+workspace, and launch-topology gates. A saved-observation replay reproduced
+both selections exactly. This establishes result-driven *selection*, not a
+faster measured outcome. The bounded Schedule Agent Prototype is ready as a
+small deterministic workflow with the existing gates and budget; it is not
+an autonomous agent or a general performance optimizer.
 
 ## Hypothesis and control
 
@@ -52,10 +55,11 @@ counterfactual if its four choices differ.
 
 Full hashes, IR hashes, lowering plan hashes, and descriptors are in the
 [Batch 1 manifest](../artifacts/ha-schedule-10/cpu-v1/batch1_selection.json).
-The selected 8 plus the 4 frozen Batch 2 schedules passed fresh CPU legality,
-IR validity, and exact structural lowerability checks. Their retained HA-9
-GPU correctness statuses are `PASS`. Fresh CUDA correctness and benchmark
-results are pending. No failed Strassen record received a latency ranking.
+The earlier CPU bundle checked the selected eight and the four frozen Batch 2
+schedules for legality, IR validity, and exact structural lowerability. The
+new GPU run checked the eight plus four eager-updated Batch 2 choices again.
+All have retained HA-9 `PASS` status and fresh GPU correctness passes. No
+failed large-size Strassen record received a latency ranking.
 
 ## Calibration and replay rule
 
@@ -95,9 +99,103 @@ schedule is faster. The CPU replay also covers missing evidence, ties,
 contradictory evidence, tampered observation IDs, failed-candidate exclusion,
 mode isolation, quotas, and deterministic reruns.
 
-## Hardware method when CUDA is available
+## Fresh GPU result: October 19, 2026
 
-The optional `--gpu` path reuses the HA-9 IR runtime and the existing
+The run used the repository's `.venv` on an NVIDIA GeForce RTX 4060 Ti
+(16,380 MiB, driver 616.92). Its saved observation provenance records
+Python 3.13.11, PyTorch 2.11.0+cu128, Triton 3.6.0, CUDA runtime 12.8,
+compute capability, source hashes, and the fixed benchmark configuration.
+The actual commit was `4def6e3` on
+`feat/ha-schedule-10-calibration-reselection`. The eight Batch 1 hashes and
+the frozen four-hash Batch 2 control were verified against the retained
+CPU manifest and written to a separate
+[preflight control](../artifacts/ha-schedule-10/gpu-preflight-control-v1.json)
+before GPU execution. The GPU run then used a new output directory.
+
+Every executed candidate passed three fresh eager numerical checks at seeds
+11, 23, and 37, with unchanged `rtol=0.005` and `atol=0.05`. Each also
+passed a CUDA Graph output check, logical workspace audit, and profiler
+launch-topology comparison. That is 36 seeded eager checks, 12 graph checks,
+and 12 topology checks, with no failures. The run retained 600 raw CUDA-event
+samples: 400 in Batch 1 and 200 in the four executed eager-selected Batch 2
+configurations. Each candidate/mode has five rounds of five samples.
+
+Batch 1 median device-event times below are medians of five round medians.
+The CV is computed across those round medians. Times are complete scheduled
+executions with preallocated workspaces, not host-visible operation latency.
+
+| Family | Hash prefix | Eager median ms (CV) | Graph median ms (CV) |
+|---|---|---:|---:|
+| Frozen rank-8 | `1406976b` | 1.554752 (0.009) | 0.151680 (0.111) |
+| Frozen rank-8 | `749d19cf` | 1.793504 (0.036) | 0.214912 (0.074) |
+| Frozen rank-8 | `552e97f0` | 1.587936 (0.021) | 0.161248 (0.113) |
+| Frozen rank-8 | `fcd175d5` | 1.595680 (0.018) | 0.153440 (0.109) |
+| Conventional | `3e5b6637` | 1.266880 (0.019) | 0.093056 (0.177) |
+| Conventional | `47181a39` | 1.478112 (0.041) | 0.137600 (0.053) |
+| Strassen | `11ae1fc3` | 1.373888 (0.181) | 0.209152 (0.101) |
+| Strassen | `154a036a` | 1.359200 (0.156) | 0.158368 (0.103) |
+
+Sixteen within-family pair observations were constructed from matched round
+medians. Twelve met the rule that all five round differences have the same
+sign. Four were `INDETERMINATE` and contributed no vote. For example, the
+rank-8 `1406976b` versus `749d19cf` pair favored the former in all five
+eager rounds (median 1.554752 versus 1.793504 ms; left-minus-right round
+range −0.330880 to −0.161824 ms) and all five graph rounds (0.151680 versus
+0.214912 ms; range −0.073280 to −0.035968 ms). The rank-8 `552e97f0`
+versus `fcd175d5` comparison was indeterminate in both modes. The Strassen
+eager CVs were 0.156–0.181, so their narrow median difference is not treated
+as a reliable speed ranking. The all-same-sign screen is descriptive, not a
+95% confidence interval; five rounds and one session cannot establish a
+general winner.
+
+| Mode | Frozen Batch 2 | Updated Batch 2 from real Batch 1 evidence |
+|---|---|---|
+| Eager | `140404eb`, `296f8a36`, `2ddd8dd3`, `3174902e` | `61e6aef2`, `3174902e`, `566c98e3`, `64ebbdfb` |
+| CUDA Graph | `140404eb`, `296f8a36`, `2ddd8dd3`, `3174902e` | `61e6aef2`, `ab0cd7a4`, `3174902e`, `64ebbdfb` |
+
+The eager update replaces three of four frozen choices. The graph update
+also replaces three, but `ab0cd7a4` is graph-only and was **not** freshly
+validated or timed in Batch 2. Its older HA-9 correctness status remains
+`PASS`. The physical Batch 2 budget was the four eager choices; those four
+were checked and timed in both modes. Their median device-event times were:
+
+| Eager-selected Batch 2 hash | Eager median ms (CV) | Graph median ms (CV) |
+|---|---:|---:|
+| `61e6aef2` | 1.564032 (0.439) | 0.148608 (0.044) |
+| `3174902e` | 1.549344 (0.040) | 0.135104 (0.051) |
+| `566c98e3` | 1.594880 (0.023) | 0.152160 (0.054) |
+| `64ebbdfb` | 1.535648 (0.046) | 0.148640 (0.047) |
+
+`61e6aef2` had one unusually low eager round median of 0.293664 ms while
+its other eager rounds were near 1.5–1.7 ms. That yields CV 0.439. We
+retain the outlier and do **not** claim a Batch 2 latency winner or a better
+outcome than the frozen control. The frozen Batch 2 candidates were a
+selection control, not measured in this new GPU batch.
+
+The observed selection change is traceable to measured rank-8 pair votes
+on distinguishing schedule descriptors such as `hbm_products=False`,
+`gemm_recon=True`, and recomputation/group topology. These are correlated
+descriptors, not isolated hardware mechanisms. An offline ablation using
+only rank-8 observations reproduces the full updated selections; removing
+rank-8 observations produces different choices. Four rank-8 candidates
+generated six pairs per mode, while the other families generated one each,
+so pair-count asymmetry contributes to their larger ordinal support. No
+cross-family latency preference is inferred.
+
+The saved real observations replayed exactly: both updated and frozen
+selection files match the GPU run byte-for-byte after parsing, and every
+observation was recomputed from the retained raw round medians. Removing
+each of the five rounds in turn still changes both selections relative to
+the frozen control. The eager four-candidate *set* is identical in all five
+such replays. The graph set is identical in four of five; one fold replaces
+its fourth choice. This supports a reproducible feedback effect while
+limiting claims about the exact graph ranking. The
+[validation audit](../artifacts/ha-schedule-10/gpu-validation-audit-v1.json)
+retains these checks and ablations.
+
+## GPU method and limits
+
+The `--gpu` path reuses the HA-9 IR runtime and the existing
 interleaved CUDA-event benchmark helper. Every selected candidate is checked
 again for legality, IR validity, and exact plan identity. The GPU path then
 audits workspace buffers, checks FP16 output against PyTorch at seeds 11, 23,
@@ -115,20 +213,32 @@ The GPU topology record also keeps per-launch cubin hashes and a logical
 workspace audit. These hashes identify compiled binaries but do not measure
 their resource use or dynamic instruction counts.
 
-This GPU path was **not run** here: `torch.cuda.is_available()` returned
-`False`, and `nvidia-smi` reported that GPU access was blocked. Its timing
-and graph-capture behavior therefore still need CUDA-host validation.
+The work first had a CPU-only checkpoint because CUDA access was blocked in
+that earlier session. CUDA later became available in this VS Code Codex
+session, so the bounded GPU study above was run. Eager and graph samples
+come from one session on one device. The graph-only updated choice was not
+part of the physical four-configuration Batch 2 budget. No new PTX/SASS
+analysis, host timing, allocation timing, or measured DRAM traffic is claimed.
 
 ## Reproduce and artifacts
 
 From the repository root:
 
 ```bash
-PYTHONPATH=src:. python scripts/run_ha_schedule_10.py --output /tmp/ha10-cpu
-PYTHONPATH=src:. python scripts/run_ha_schedule_10.py \
+PYTHONPATH=src:. .venv/bin/python scripts/run_ha_schedule_10.py --output /tmp/ha10-cpu
+PYTHONPATH=src:. .venv/bin/python scripts/run_ha_schedule_10.py \
   --observations artifacts/ha-schedule-10/synthetic-observations-v1.json \
   --output /tmp/ha10-synthetic
-PYTHONPATH=src:. python scripts/run_ha_schedule_10.py --gpu --output /tmp/ha10-gpu
+PYTHONPATH=src:. .venv/bin/python scripts/run_ha_schedule_10.py --gpu --output /tmp/ha10-gpu
+PYTHONPATH=src:. .venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+source = Path('artifacts/ha-schedule-10/gpu-v1/calibration_after.json')
+Path('/tmp/ha10-real-observations.json').write_text(
+    json.dumps(json.loads(source.read_text())['observations']) + '\n')
+PY
+PYTHONPATH=src:. .venv/bin/python scripts/run_ha_schedule_10.py \
+  --observations /tmp/ha10-real-observations.json --output /tmp/ha10-real-replay
 PYTHONPATH=src:. python -m pytest -q tests/tensor_game_schedule_reselection_test.py
 ```
 
@@ -140,23 +250,35 @@ hashes. Its decision is `D_HARDWARE_CALIBRATION_PENDING`. The
 [synthetic replay bundle](../artifacts/ha-schedule-10/synthetic-replay-v1)
 contains the same universe and configuration plus the separately labeled
 [fixture](../artifacts/ha-schedule-10/synthetic-observations-v1.json).
-Its decision is `B_MECHANICALLY_DEMONSTRATED_ONLY`. Neither bundle contains
-new GPU measurements. Output directories are never overwritten.
+Its decision is `B_MECHANICALLY_DEMONSTRATED_ONLY`. Neither CPU bundle
+contains GPU measurements. The [real GPU bundle](../artifacts/ha-schedule-10/gpu-v1)
+retains correctness, topology and cubin hashes, 600 raw event samples,
+round summaries, observations, frozen and updated selections, and a verified
+file-hash manifest. The separately exported
+[real observations](../artifacts/ha-schedule-10/gpu-observations-v1.json)
+fed the [offline replay](../artifacts/ha-schedule-10/gpu-replay-v1).
+That replay has a `B` label because it did not execute GPU work itself; its
+selection files match the `A` GPU run. Output directories are never
+overwritten. The preflight control and validation audit are separate small
+JSON files; the audit records their hashes and source-bundle manifest hashes.
 
-The checkout was `feat/hardware-aware-general-lowering-ir` at `5793012`.
-An attempted dedicated branch could not be created because `.git` is
-read-only in this workspace. Unrelated existing modifications and untracked
-files were left untouched. No commit, push, or PR was made.
+The earlier CPU checkpoint was created from
+`feat/hardware-aware-general-lowering-ir` at `5793012`. The GPU run used
+`feat/ha-schedule-10-calibration-reselection` at `4def6e3`. Unrelated
+existing modifications and untracked files were left untouched. This GPU
+study made no commit, push, or PR.
 
 ## Next step and deferred roadmap
 
-Run the fixed GPU batch on an accessible CUDA host. Require the fresh
-correctness and topology gates, inspect raw timing dispersion, and compare
-the real updated Batch 2 against the frozen control. If real evidence
-changes selection reproducibly, a bounded Schedule Agent Prototype can use
-the current deterministic two-batch components. If not, retain the null
-result and adjust only the smallest supported part of the calibration or
-candidate diversity rule before building an agent.
+The empirical reselection prerequisite is met for a bounded eager workflow.
+The next milestone can build a small deterministic Schedule Agent Prototype
+using the current legality, IR, correctness, benchmark, and evidence-replay
+components. Keep the 8 plus 4 budget, exact mode separation, hard gates,
+raw evidence, and frozen-control ablation. Treat graph-only choices as
+counterfactual until fresh graph-specific Batch 2 validation is budgeted.
+Do not promote a candidate on a single latency result; the eager Batch 2
+outlier and one-session limits call for a separate stability check before
+any performance recommendation.
 
 After the agent foundation, **HA-Compiler-1 — Alternate Open Compiler
 Backend** may investigate a narrow optional MLIR/LLVM-NVPTX lowering for
