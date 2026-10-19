@@ -297,6 +297,10 @@ The [mixed-group lowering study](docs/hardware_aware_mixed_group_lowering.md)
 adds one reusable fused GEMM/reconstruction template. It raises validated exact
 coverage but leaves most legal schedules unsupported or numerically incorrect
 at larger Strassen sizes. It is a coverage result, not an optimization claim.
+The [HBM lifetime lowering study](docs/hardware_aware_hbm_lifetime_lowering.md)
+adds typed, intentional HBM form/product/partial lifetimes and deterministic
+buffer and output-state audits. It reaches 82/156 exact-passing mappings while
+retaining the large-Strassen numerical failures and the uncalibrated new paths.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
@@ -386,6 +390,9 @@ commands.
 - [Mixed GEMM/reconstruction lowering](docs/hardware_aware_mixed_group_lowering.md)
   — tests one exact fused family across the same corpus and records the
   remaining semantic and numerical limits.
+- [HBM-backed schedule lifetime lowering](docs/hardware_aware_hbm_lifetime_lowering.md)
+  — records intentional cross-group values, partial-output transitions,
+  selected-schedule coverage, and the remaining backend architecture gap.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
