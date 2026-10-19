@@ -1,0 +1,26 @@
+{
+  "atol": 0.01,
+  "candidate_accumulation": "FP32 Triton tl.dot accumulator with FP16 output",
+  "candidate_nonfinite_count": 0,
+  "candidate_shape": [
+    512,
+    3072
+  ],
+  "dtype_match": true,
+  "max_absolute_error": 0.0,
+  "mean_absolute_error": 0.0,
+  "passed": true,
+  "preallocated_output_overwrite_verified": {
+    "baseline": null,
+    "candidate": null
+  },
+  "reference": "pytorch_matmul (cuBLAS)",
+  "reference_accumulation": "PyTorch/cuBLAS implementation-selected FP16 GEMM accumulation",
+  "reference_nonfinite_count": 0,
+  "reference_shape": [
+    512,
+    3072
+  ],
+  "rtol": 0.01,
+  "shape_match": true
+}
