@@ -301,6 +301,10 @@ The [HBM lifetime lowering study](docs/hardware_aware_hbm_lifetime_lowering.md)
 adds typed, intentional HBM form/product/partial lifetimes and deterministic
 buffer and output-state audits. It reaches 82/156 exact-passing mappings while
 retaining the large-Strassen numerical failures and the uncalibrated new paths.
+The [general schedule lowering IR study](docs/hardware_aware_general_lowering_ir.md)
+adds a bounded schedule-semantics IR and group primitive registry. It reaches
+132/156 correctness-passing exact mappings on the retained corpus while
+keeping legacy paths as controls and large-Strassen failures separate.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
@@ -393,6 +397,9 @@ commands.
 - [HBM-backed schedule lifetime lowering](docs/hardware_aware_hbm_lifetime_lowering.md)
   — records intentional cross-group values, partial-output transitions,
   selected-schedule coverage, and the remaining backend architecture gap.
+- [General schedule lowering IR](docs/hardware_aware_general_lowering_ir.md)
+  — translates retained legal schedules into a validated bounded IR and
+  composes group primitives without per-schedule kernel source edits.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
