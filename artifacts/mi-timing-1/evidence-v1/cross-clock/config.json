@@ -1,0 +1,45 @@
+{
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "host_read_overhead_definition": "perf_counter span bracketing each CLOCK_MONOTONIC_RAW read; clock absolute timestamps are never compared",
+  "implementation": "packaged preallocated Triton FC1 kernel",
+  "input_seed": 0,
+  "interpretation": "No previous fitted correction is applied. Agreement does not prove absolute accuracy.",
+  "iterations_per_block": 5000,
+  "measured_blocks": 12,
+  "purpose": "standalone CUDA-event versus two-host-clock cross-check",
+  "session_budget_impact": "none",
+  "stream": "one dedicated explicit torch.cuda.Stream for events and workload",
+  "timestamp_read_order": [
+    "torch.cuda.synchronize()",
+    "perf_start_ns = time.perf_counter_ns()",
+    "raw_start_ns = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)",
+    "perf_after_raw_start_ns = time.perf_counter_ns()",
+    "start_event.record(explicit_stream)",
+    "submit 5000 operations on explicit_stream",
+    "end_event.record(explicit_stream)",
+    "end_event.synchronize()",
+    "perf_end_ns = time.perf_counter_ns()",
+    "raw_end_ns = time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)",
+    "perf_after_raw_end_ns = time.perf_counter_ns()",
+    "start_event.elapsed_time(end_event)"
+  ],
+  "timing_warmup_blocks": 3,
+  "triton_parameters": {
+    "block_k": 32,
+    "block_m": 64,
+    "block_n": 128,
+    "group_size_m": 1,
+    "num_stages": 3,
+    "num_warps": 4
+  },
+  "workload": {
+    "dtype": "float16",
+    "k": 768,
+    "m": 512,
+    "n": 3072
+  },
+  "workload_warmup_operations": 100
+}

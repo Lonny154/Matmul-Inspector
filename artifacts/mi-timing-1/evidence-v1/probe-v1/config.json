@@ -1,0 +1,37 @@
+{
+  "graph_capture_operations": 100,
+  "modes": {
+    "eager_1": [
+      1,
+      1
+    ],
+    "eager_100": [
+      100,
+      100
+    ],
+    "graph_100": [
+      100,
+      1
+    ]
+  },
+  "normalization": "all raw durations are total ms per block; divide by operation_count only after inspection",
+  "rounds": 8,
+  "slots": "identical A/A null control with AB/BA order",
+  "timing_order": [
+    "device synchronize",
+    "perf start",
+    "RAW start",
+    "event start on explicit stream",
+    "submit operations on same stream",
+    "event end on explicit stream",
+    "perf submission end",
+    "end event synchronize",
+    "RAW end",
+    "perf end"
+  ],
+  "warmup_calls_per_workload": 30,
+  "workloads": [
+    "add",
+    "fc1"
+  ]
+}
