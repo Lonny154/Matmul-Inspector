@@ -10,12 +10,13 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import subprocess
 import sys
 import time
 
 from matmul_inspector.tensor_game_schedule_agent import (
-    LIMITS, FallbackPlanner, OpenAIPlanner, ProposalError, ReplayPlanner,
+    LIMITS, FallbackPlanner, OpenAIPlanner, PlannerBudgetExceeded, ProposalError, ReplayPlanner,
     fallback_proposal, feedback_summary, selections, validate_proposal,
 )
 from matmul_inspector.tensor_game_schedule_reselection import (
@@ -34,6 +35,17 @@ def digest(path: Path) -> str:
 
 def read_rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line]
+
+
+def contains_secret(value, secret: str) -> bool:
+    if isinstance(value, str):
+        return secret in value
+    if isinstance(value, dict):
+        return any(contains_secret(key, secret) or contains_secret(item, secret)
+                   for key, item in value.items())
+    if isinstance(value, (list, tuple)):
+        return any(contains_secret(item, secret) for item in value)
+    return False
 
 
 class Bundle:
@@ -115,11 +127,24 @@ def get_proposal(planner, batch: int, feedback: dict, bundle: Bundle,
     try:
         raw = planner.propose(batch, feedback)
         source = planner.source
+        if isinstance(planner, OpenAIPlanner):
+            # Provider output and metadata are untrusted artifact inputs.
+            credential = os.environ["OPENAI_API_KEY"]
+            if contains_secret({"proposal": raw, "metadata": planner.last_metadata,
+                                "model": planner.model}, credential):
+                raise ProposalError("live proposal contained a credential")
     except Exception as error:
         if isinstance(planner, ReplayPlanner):
             raise
+        live = isinstance(planner, OpenAIPlanner)
+        terminal = isinstance(error, PlannerBudgetExceeded)
         bundle.write(f"batch{batch}_provider_error.json", {"kind": type(error).__name__,
-                     "message": str(error)[:500], "fallback_used": True})
+                     "message": type(error).__name__ if live else str(error)[:500],
+                     "fallback_used": not terminal,
+                     "api_calls": planner.calls if live else None,
+                     "total_tokens": planner.total_tokens if live else None})
+        if terminal:
+            raise
         raw = fallback_proposal(batch)
         source = "DETERMINISTIC_FALLBACK_AFTER_PROVIDER_ERROR"
     bundle.write(f"batch{batch}_proposal.json", {"source": source, "proposal": raw,
@@ -133,6 +158,115 @@ def get_proposal(planner, batch: int, feedback: dict, bundle: Bundle,
         raise
     bundle.write(f"batch{batch}_validation.json", {"valid": True, "reason": "approved allowlist and hard limits"})
     return proposal, source
+
+
+def verified_batch2_feedback(path: Path, candidates: list[dict], batch1: list[dict]) -> dict:
+    """Read one complete, hashed Batch 1 checkpoint for a proposal-only preflight."""
+    manifest = verify_artifact_hashes(path)
+    if set(manifest) != {file.name for file in path.iterdir() if file.is_file()} - {
+            "hash_manifest.json"}:
+        raise ProposalError("Batch 2 preflight evidence manifest omits or adds files")
+    if (read_rows(path / "candidate_universe.jsonl") != candidates or
+            json.loads((path / "batch1_selection.json").read_text()) != batch1 or
+            json.loads((path / "benchmark_config.json").read_text()) !=
+            json.loads(json.dumps(CONFIG)) or
+            json.loads((path / "batch1_validation.json").read_text()).get("valid") is not True):
+        raise ProposalError("Batch 2 preflight evidence does not match the frozen control")
+    gates = read_rows(path / "batch1_cpu_gates.jsonl")
+    checks = read_rows(path / "batch1_gpu_correctness.jsonl")
+    topology = read_rows(path / "batch1_gpu_topology.jsonl")
+    raw = read_rows(path / "batch1_raw_device_timing.jsonl")
+    summaries = read_rows(path / "batch1_timing_summary.jsonl")
+    observations = read_rows(path / "batch1_observations.jsonl")
+    expected = {row["schedule_hash"] for row in batch1}
+    if (len(gates) != LIMITS.batch1 or not all(row["status"] == "PASS" for row in gates) or
+            len(checks) != 4 * LIMITS.batch1 or not all(row["passed"] for row in checks) or
+            len(topology) != LIMITS.batch1 or not all(row["topology_agrees"] for row in topology) or
+            {row["schedule_hash"] for row in topology} != expected or
+            len(raw) != 50 * LIMITS.batch1 or len(summaries) != 2 * LIMITS.batch1 or
+            len(observations) != 2 * LIMITS.batch1):
+        raise ProposalError("Batch 2 preflight requires complete passing Batch 1 evidence")
+    derived = feedback_summary(batch1, checks, summaries, observations, candidates)
+    feedback = json.loads((path / "batch1_feedback.json").read_text())
+    # Older retained bundles can omit later interpretation keys. Check every
+    # saved value against the derived record without inventing missing evidence.
+    if (not isinstance(feedback, dict) or set(feedback) != set(derived) or
+            any(feedback.get(key) != derived[key] for key in (
+            "measurements", "eligible_batch2_hashes", "remaining_candidate_budget")) or
+            not isinstance(feedback.get("interpretation"), dict) or
+            any(key not in derived["interpretation"] or
+                derived["interpretation"][key] != value for key, value in
+                feedback["interpretation"].items())):
+        raise ProposalError("Batch 2 preflight feedback differs from saved Batch 1 evidence")
+    return feedback
+
+
+def run_proposal_preflight(model: str, *, batch2_bundle: Path | None = None) -> dict:
+    """Validate one live proposal without creating a bundle or using a GPU."""
+    batch = 2 if batch2_bundle is not None else 1
+    secret = os.environ.get("OPENAI_API_KEY", "")
+    safe_model = "<redacted>" if secret and secret in model else model
+    result = {"status": "PROVIDER_ERROR", "validation_passed": False,
+              "model": safe_model, "comparison_hashes": [], "token_usage": None,
+              "api_calls": 0}
+    if batch == 2:
+        result["batch"] = 2
+        result["candidate_hashes"] = []
+    planner = None
+    try:
+        candidates, _ = load_retained_corpus(REPO)
+        batch1 = select_batch1(candidates, size=LIMITS.matrix_size)
+        if len(batch1) != LIMITS.batch1:
+            raise ProposalError("frozen Batch 1 candidate count differs from the budget")
+        feedback = (verified_batch2_feedback(batch2_bundle, candidates, batch1)
+                    if batch2_bundle is not None else
+                    {"frozen_batch1_hashes": [row["schedule_hash"] for row in batch1],
+                     "remaining_candidate_budget": LIMITS.max_gpu_candidates})
+        planner = OpenAIPlanner(model, first_batch=batch)
+        raw = planner.propose(batch, feedback)
+    except Exception as error:
+        result["error_kind"] = type(error).__name__
+        if planner is not None:
+            result["api_calls"] = planner.calls
+            result["token_usage"] = preflight_token_usage(planner)
+        return result
+
+    result["api_calls"] = planner.calls
+    result["token_usage"] = preflight_token_usage(planner)
+    credential_echoed = bool(secret and contains_secret(
+        {"proposal": raw, "metadata": planner.last_metadata, "model": model}, secret))
+    if not credential_echoed and isinstance(raw, dict):
+        requested = raw.get("comparison_preferences")
+        if isinstance(requested, list):
+            result["comparison_hashes"] = [value for value in requested
+                if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)]
+            result["invalid_comparison_entries"] = len(requested) - len(result["comparison_hashes"])
+        if batch == 2 and isinstance(raw.get("candidate_hashes"), list):
+            result["candidate_hashes"] = [value for value in raw["candidate_hashes"]
+                if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)]
+    try:
+        validate_proposal(raw, batch=batch, candidates=candidates, batch1=batch1)
+    except Exception as error:
+        result["status"] = "INVALID_PROPOSAL"
+        # Validation errors can contain an untrusted hash. Report only the rule.
+        rule = str(error).split(": ", 1)[0]
+        result["validation_error"] = "validation failed" if secret and secret in rule else rule
+        return result
+    if credential_echoed:
+        result["status"] = "INVALID_PROPOSAL"
+        result["validation_error"] = "credential appeared in provider output"
+        return result
+    result["status"] = "VALID_PROPOSAL"
+    result["validation_passed"] = True
+    return result
+
+
+def preflight_token_usage(planner: OpenAIPlanner) -> dict | None:
+    usage = planner.last_metadata.get("usage")
+    keys = ("input_tokens", "output_tokens", "total_tokens")
+    if isinstance(usage, dict) and all(type(usage.get(key)) is int for key in keys):
+        return {key: usage[key] for key in keys}
+    return None
 
 
 def run(args) -> dict:
@@ -166,10 +300,18 @@ def run(args) -> dict:
         frozen = {mode: selections(candidates, batch1, [], fallback_proposal(2))["frozen"][mode]
                   for mode in MODES}
         bundle.write("batch2_frozen_control.json", frozen)
+        replay_bundle = getattr(args, "replay_bundle", None)
+        if args.provider == "openai" and not args.gpu:
+            raise ValueError("live provider requires --gpu; use --proposals for offline replay")
         if args.provider == "openai":
             planner = OpenAIPlanner(args.model)
         elif args.proposals:
             planner = ReplayPlanner(json.loads(args.proposals.read_text()))
+        elif replay_bundle is not None:
+            verify_artifact_hashes(replay_bundle)
+            planner = ReplayPlanner([
+                json.loads((replay_bundle / f"batch{batch}_proposal.json").read_text())["proposal"]
+                for batch in (1, 2)])
         else:
             planner = FallbackPlanner()
         proposal1, source1 = get_proposal(planner, 1,
@@ -180,7 +322,6 @@ def run(args) -> dict:
         if args.gpu:
             first = execute_gpu_batch(bundle, "batch1", batch1, deadline)
         else:
-            replay_bundle = getattr(args, "replay_bundle", None)
             if args.replay_ha10 is None and replay_bundle is None:
                 raise ValueError("CPU replay requires --replay-ha10 or --replay-bundle")
             if replay_bundle is not None:
@@ -258,14 +399,17 @@ def run(args) -> dict:
         bundle.write("resource_usage.json", {"batches": 2, "gpu_candidates": 12 if args.gpu else 0,
             "profiler_invocations": len(first["topology"] + second["topology"]) if args.gpu else 0,
             "timing_samples": len(first["raw"] + second["raw"]) if args.gpu else 0,
-            "planner_calls": 2, "elapsed_seconds": time.monotonic() - started,
+            "planner_calls": 2, "provider_api_calls": planner.calls if isinstance(planner, OpenAIPlanner) else 0,
+            "provider_total_tokens": planner.total_tokens if isinstance(planner, OpenAIPlanner) else 0,
+            "elapsed_seconds": time.monotonic() - started,
             "artifact_bytes": sum(p.stat().st_size for p in bundle.path.iterdir() if p.is_file()),
             "batch1_proposal_source": source1, "batch2_proposal_source": source2})
     except Exception as error:
-        explanation = f"{type(error).__name__}: {error}"[:2000]
+        explanation = (f"{type(error).__name__}: {error}"[:2000]
+                       if not isinstance(locals().get("planner"), OpenAIPlanner) else type(error).__name__)
         if isinstance(error, (ProposalError, ValueError)):
             status, classification = "FAILED_VALIDATION", "D"
-        elif isinstance(error, TimeoutError) or "budget" in str(error).lower():
+        elif isinstance(error, (TimeoutError, PlannerBudgetExceeded)) or "budget" in str(error).lower():
             status, classification = "BUDGET_EXHAUSTED", "D"
         else:
             status, classification = "BLOCKED", "D"
@@ -283,8 +427,11 @@ def run(args) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--gpu", action="store_true")
+    parser.add_argument("--proposal-preflight", action="store_true")
+    parser.add_argument("--batch2-evidence", type=Path,
+                        help="hashed Batch 1 bundle for a one-call Batch 2 proposal preflight")
     parser.add_argument("--replay-ha10", type=Path)
     parser.add_argument("--replay-bundle", type=Path)
     parser.add_argument("--proposals", type=Path)
@@ -293,11 +440,27 @@ def main() -> None:
     parser.add_argument("--worker-batch", choices=("batch1", "batch2"), help=argparse.SUPPRESS)
     parser.add_argument("--hashes", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.proposal_preflight:
+        if (args.provider != "openai" or not args.model or args.gpu or args.replay_ha10 or
+                args.replay_bundle or args.proposals or args.worker_batch or args.hashes or args.output):
+            parser.error("--proposal-preflight requires --provider openai and --model only")
+        result = (run_proposal_preflight(args.model, batch2_bundle=args.batch2_evidence)
+                  if args.batch2_evidence else run_proposal_preflight(args.model))
+        print(json.dumps(result, sort_keys=True))
+        if not result["validation_passed"]:
+            sys.exit(1)
+        return
+    if args.output is None:
+        parser.error("--output is required unless --proposal-preflight is used")
+    if args.batch2_evidence:
+        parser.error("--batch2-evidence requires --proposal-preflight")
     if args.worker_batch:
         run_gpu_worker(args.output, args.hashes, args.worker_batch)
         return
     if args.proposals and args.provider != "fallback":
         parser.error("--proposals and --provider openai are mutually exclusive")
+    if args.provider == "openai" and not args.gpu:
+        parser.error("--provider openai requires --gpu; use --proposals for offline replay")
     if sum((bool(args.gpu), bool(args.replay_ha10), bool(args.replay_bundle))) != 1:
         parser.error("choose exactly one of --gpu, --replay-ha10, or --replay-bundle")
     result = run(args)

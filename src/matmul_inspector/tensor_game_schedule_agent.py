@@ -9,6 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import os
+import re
+import signal
+import time
 from typing import Protocol
 from urllib.request import Request, urlopen
 
@@ -38,6 +41,10 @@ class Limits:
     max_artifact_bytes: int = 2_000_000
     max_planner_calls: int = 2
     planner_timeout_seconds: int = 15
+    max_planner_request_bytes: int = 32_000
+    max_planner_response_bytes: int = 16_000
+    max_planner_output_tokens_per_call: int = 650
+    max_planner_total_tokens: int = 66_000
 
 
 LIMITS = Limits()
@@ -54,6 +61,10 @@ class Planner(Protocol):
 
 class ProposalError(ValueError):
     pass
+
+
+class PlannerBudgetExceeded(RuntimeError):
+    """A live planning limit was reached; the controller must stop."""
 
 
 def fallback_proposal(batch: int) -> dict:
@@ -85,44 +96,158 @@ class ReplayPlanner:
         return self.proposals[batch - 1]
 
 
+_SCHEDULE_HASH = re.compile(r"[0-9a-f]{64}\Z")
+
+
+def live_hash_allowlists(batch: int, feedback: dict, limits: Limits = LIMITS) -> tuple[list[str], list[str]]:
+    """Derive schema choices from the controller's frozen and eligible records."""
+    if batch == 1:
+        comparison = feedback.get("frozen_batch1_hashes")
+        scope = []
+        if not isinstance(comparison, list) or len(comparison) != limits.batch1:
+            raise ProposalError("live Batch 1 requires the frozen schedule hashes")
+    elif batch == 2:
+        scope = feedback.get("eligible_batch2_hashes")
+        measured = feedback.get("measurements", {}).get("candidates", [])
+        if not isinstance(scope, list) or len(scope) < limits.batch2 or not isinstance(measured, list):
+            raise ProposalError("live Batch 2 requires eligible schedule hashes")
+        comparison = [row.get("schedule_hash") for row in measured if isinstance(row, dict)] + scope
+        if len(measured) != limits.batch1 or len(comparison) != len(measured) + len(scope):
+            raise ProposalError("live Batch 2 requires measured Batch 1 hashes")
+    else:
+        raise ProposalError("live proposal batch is outside the fixed experiment")
+    for hashes in (scope, comparison):
+        if (any(not isinstance(value, str) or _SCHEDULE_HASH.fullmatch(value) is None
+                for value in hashes) or len(set(hashes)) != len(hashes)):
+            raise ProposalError("live proposal hash allowlist is invalid")
+    return sorted(scope), sorted(comparison)
+
+
 class OpenAIPlanner:
     """Optional Responses API adapter; no SDK or credential is needed for replay."""
 
     source = "LIVE_OPENAI_RESPONSES"
 
-    def __init__(self, model: str):
+    def __init__(self, model: str, limits: Limits = LIMITS, *, first_batch: int = 1):
         if not model or not os.environ.get("OPENAI_API_KEY"):
             raise ProposalError("model and OPENAI_API_KEY are required for live planning")
+        if first_batch not in (1, 2):
+            raise ProposalError("live proposal batch is outside the fixed experiment")
         self.model = model
+        self.limits = limits
+        self.first_batch = first_batch
+        self.calls = 0
+        self.total_tokens = 0
         self.last_metadata: dict = {}
 
     def propose(self, batch: int, feedback: dict) -> dict:
+        if self.calls >= self.limits.max_planner_calls:
+            raise PlannerBudgetExceeded("planner API-call budget exhausted")
+        if batch != self.first_batch + self.calls or batch > self.limits.max_batches:
+            raise ProposalError("live proposals must follow the two-batch order")
+        scope_hashes, comparison_hashes = live_hash_allowlists(batch, feedback, self.limits)
+        fixed_configurations = self.limits.batch1 if batch == 1 else self.limits.batch2
         # The response format reduces malformed output; validate_proposal is authoritative.
+        # A supported pattern bounds all three free-text fields to 400 characters
+        # and requires non-whitespace content. The validator remains authoritative.
+        short_text = {"type": "string", "pattern": r"^\S[\s\S]{0,399}$",
+                      "description": "Start with a non-whitespace character; at most 400 characters"}
         string = {"type": "string"}
+        eligible_hash = {"type": "string", "enum": scope_hashes}
+        # Reuse the enum across both length branches to stay under the fixed
+        # request-size budget. Definitions and references are supported here.
+        scope_item = {"$ref": "#/$defs/eligible_hash"}
+        batch2_scope = {"anyOf": [
+            {"type": "array", "items": scope_item, "maxItems": 0},
+            {"type": "array", "items": scope_item,
+             "minItems": self.limits.batch2, "maxItems": 16}]}
         schema = {"type": "object", "additionalProperties": False,
                   "required": sorted(FIELDS), "properties": {
-                      "proposal_id": string, "hypothesis": string, "experiment_family": string,
-                      "descriptors": {"type": "array", "items": string},
-                      "execution_mode": string,
-                      "candidate_hashes": {"type": "array", "items": string},
-                      "comparison_preferences": {"type": "array", "items": string},
-                      "requested_configurations": {"type": "integer"}, "reason": string}}
-        prompt = {"batch": batch, "limits": LIMITS.__dict__, "feedback": feedback,
-                  "instruction": "Propose one bounded schedule experiment. Use only listed candidate hashes. "
-                                 "Batch 1 candidate_hashes must be empty. Never invent measurements.",
+                      "proposal_id": short_text, "hypothesis": short_text,
+                      "experiment_family": {"type": "string", "enum": FAMILIES},
+                      "descriptors": {"type": "array", "items":
+                          {"type": "string", "enum": DESCRIPTORS},
+                          "maxItems": len(DESCRIPTORS)},
+                      "execution_mode": {"type": "string", "enum": MODES},
+                      "candidate_hashes": (batch2_scope if batch == 2 else
+                          {"type": "array", "items": string, "maxItems": 0,
+                           "description": "Empty because Batch 1 is frozen"}),
+                      "comparison_preferences": {"type": "array", "items":
+                          {"type": "string", "enum": comparison_hashes}, "maxItems": 4,
+                          "description": "Schedule hashes to compare, never metric or descriptor names"},
+                      "requested_configurations": {"type": "integer",
+                          "enum": [fixed_configurations],
+                          "description": "Fixed by the controller; not a model-selected budget"},
+                      "reason": short_text}}
+        if batch == 2:
+            schema["$defs"] = {"eligible_hash": eligible_hash}
+        # The Batch 2 eligible list is already present in the schema enum.
+        # Keep the full controller feedback artifact while avoiding a duplicate prompt list.
+        prompt_feedback = ({key: value for key, value in feedback.items()
+                            if key != "eligible_batch2_hashes"} if batch == 2 else feedback)
+        prompt = {"batch": batch, "limits": self.limits.__dict__, "feedback": prompt_feedback,
+                  "instruction": "Propose one bounded schedule experiment. candidate_hashes and "
+                                 "comparison_preferences contain only full schedule hashes allowed by "
+                                 "their schema enums. comparison_preferences names schedules, not "
+                                 "metrics such as runtime or memory_usage; use [] if none. Batch 1 "
+                                 "candidate_hashes must be empty. requested_configurations is "
+                                 "fixed by the controller at the schema's only allowed value. "
+                                 "For Batch 2 candidate_hashes, choose [] or at least four "
+                                 "distinct eligible hashes. Keep proposal_id, hypothesis, and "
+                                 "reason within 400 characters with no leading whitespace. "
+                                 "Do not repeat descriptors or hash choices. Never invent measurements.",
                   "allowed_families": FAMILIES, "allowed_descriptors": DESCRIPTORS,
                   "allowed_modes": MODES}
-        body = {"model": self.model, "input": [{"role": "user", "content": json.dumps(prompt)}],
-                "max_output_tokens": 650,
+        body = {"model": self.model, "input": [{"role": "user", "content":
+                json.dumps(prompt, sort_keys=True, separators=(",", ":"))}],
+                "max_output_tokens": self.limits.max_planner_output_tokens_per_call,
+                "store": False,
                 "text": {"format": {"type": "json_schema", "name": "schedule_proposal",
                                     "strict": True, "schema": schema}}}
-        request = Request("https://api.openai.com/v1/responses", data=json.dumps(body).encode(),
+        payload = json.dumps(body, separators=(",", ":")).encode()
+        if len(payload) > self.limits.max_planner_request_bytes:
+            raise PlannerBudgetExceeded("planner request-size budget exhausted")
+        # Reserve the full request-byte and output-token allowances before a call.
+        # Actual server-side token counts are checked from the returned usage.
+        reserved = (self.limits.max_planner_request_bytes +
+                    self.limits.max_planner_output_tokens_per_call)
+        if self.total_tokens + reserved > self.limits.max_planner_total_tokens:
+            raise PlannerBudgetExceeded("planner token budget exhausted")
+        request = Request("https://api.openai.com/v1/responses", data=payload,
                           headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
                                    "Content-Type": "application/json"}, method="POST")
-        with urlopen(request, timeout=LIMITS.planner_timeout_seconds) as response:
-            data = json.load(response)
+        if signal.getsignal(signal.SIGALRM) != signal.SIG_DFL:
+            raise ProposalError("live planner requires an unused process alarm")
+        self.calls += 1  # Failed or timed-out requests still spend an API-call attempt.
+        started = time.monotonic()
+        def deadline_reached(signum, frame):
+            raise TimeoutError("planner response deadline exceeded")
+        previous_handler = signal.signal(signal.SIGALRM, deadline_reached)
+        try:
+            signal.setitimer(signal.ITIMER_REAL, self.limits.planner_timeout_seconds)
+            with urlopen(request, timeout=self.limits.planner_timeout_seconds) as response:
+                raw = response.read(self.limits.max_planner_response_bytes + 1)
+            if len(raw) > self.limits.max_planner_response_bytes:
+                raise PlannerBudgetExceeded("planner response-size budget exhausted")
+            data = json.loads(raw)
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous_handler)
+        if time.monotonic() - started > self.limits.planner_timeout_seconds:
+            raise TimeoutError("planner response deadline exceeded")
+        usage = data.get("usage")
+        if not isinstance(usage, dict) or any(type(usage.get(key)) is not int or usage[key] < 0
+                for key in ("input_tokens", "output_tokens", "total_tokens")) or (
+                usage["input_tokens"] + usage["output_tokens"] != usage["total_tokens"]):
+            raise PlannerBudgetExceeded("provider did not report valid token usage")
+        self.total_tokens += usage["total_tokens"]
         self.last_metadata = {"response_id": data.get("id"), "status": data.get("status"),
-                              "usage": data.get("usage")}
+                              "usage": usage, "cumulative_tokens": self.total_tokens,
+                              "api_calls": self.calls}
+        if (usage["output_tokens"] > self.limits.max_planner_output_tokens_per_call or
+                usage["input_tokens"] > self.limits.max_planner_request_bytes or
+                self.total_tokens > self.limits.max_planner_total_tokens):
+            raise PlannerBudgetExceeded("planner token budget exhausted")
         if data.get("status") != "completed":
             raise ProposalError(f"provider returned status {data.get('status')}")
         parts = [part["text"] for item in data.get("output", [])
