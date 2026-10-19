@@ -1,0 +1,52 @@
+{
+  "benchmark": {
+    "iterations": 100,
+    "mode": "preallocated",
+    "rounds": 8,
+    "warmups": 30
+  },
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "kernels": {
+    "A": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      }
+    },
+    "B": {
+      "implementation": "triton_source",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "source": {
+        "entry_point": "matmul_into",
+        "interface_version": "matmul_into_v1",
+        "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_workflow_3_fc1.py",
+        "path": "sources/B.py",
+        "sha256": "9f6b6ecab30fcc7c75e683685896cc2e2d3b56ea6c5ac71408017da2b935aa73"
+      }
+    }
+  },
+  "schema_version": 2,
+  "seed": 0,
+  "timeout_seconds": 180,
+  "workload": {
+    "dtype": "float16",
+    "k": 768,
+    "m": 512,
+    "n": 3072
+  }
+}

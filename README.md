@@ -356,6 +356,18 @@ matmul-inspector-python experiment pair \
 
 See the [MI-Workflow-2 paired comparison guide](docs/mi_workflow_2.md).
 
+To compare a trusted standalone Triton kernel with a registered FC1 kernel,
+use the v2 example and opt in to running the local Python source:
+
+```sh
+matmul-inspector-python experiment pair \
+  --spec examples/mi_workflow_3_local_pair.json \
+  --allow-trusted-local-source \
+  --output results/my-local-fc1-pair
+```
+
+See the [MI-Workflow-3 trusted local kernel guide](docs/mi_workflow_3.md).
+
 Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
 fresh matched baselines. From a source checkout, the checked-in example is:
 
