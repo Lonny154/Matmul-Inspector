@@ -1,0 +1,45 @@
+{
+  "schema_version": 3,
+  "workload": {
+    "m": 512,
+    "n": 3072,
+    "k": 768,
+    "dtype": "float16"
+  },
+  "seed": 0,
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "benchmark": {
+    "mode": "preallocated",
+    "warmups": 30,
+    "iterations": 100,
+    "rounds": 8
+  },
+  "timeout_seconds": 180,
+  "kernels": {
+    "A": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_m": 64,
+        "block_n": 128,
+        "block_k": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "group_size_m": 1
+      }
+    },
+    "B": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_m": 64,
+        "block_n": 128,
+        "block_k": 32,
+        "num_warps": 4,
+        "num_stages": 2,
+        "group_size_m": 1
+      }
+    }
+  }
+}

@@ -37,14 +37,14 @@ def _digest(path: Path) -> str:
 
 
 def validate_spec(raw: Mapping[str, Any], *, retained_root: Path | None = None) -> dict[str, Any]:
-    """Validate v1 registered or v2 trusted-source pairs without importing source."""
+    """Validate versioned registered or trusted-source pairs without importing source."""
     if not isinstance(raw, dict) or set(raw) != {
             "schema_version", "workload", "seed", "correctness", "benchmark",
             "timeout_seconds", "kernels"}:
         raise ValueError("pair spec must contain exactly the versioned fields")
     version = raw["schema_version"]
-    if type(version) is not int or version not in (1, 2):
-        raise ValueError("schema_version must be 1 or 2")
+    if type(version) is not int or version not in (1, 2, 3):
+        raise ValueError("schema_version must be 1, 2, or 3")
     kernels = raw["kernels"]
     if not isinstance(kernels, dict) or set(kernels) != set(LABELS):
         raise ValueError("kernels must identify exactly A and B")
@@ -80,10 +80,10 @@ def validate_spec(raw: Mapping[str, Any], *, retained_root: Path | None = None) 
                   "baseline": {"implementation": "pytorch_matmul"}}
         experiment_compare.validate_spec(bounds)
         if checked["benchmark"]["mode"] != "preallocated":
-            raise ValueError("v2 trusted-source pairs require preallocated mode")
+            raise ValueError("v2/v3 pairs require preallocated mode")
         if retained_root is not None and candidate["implementation"] == experiment.SOURCE_IMPLEMENTATION:
             checked["candidate"]["source"]["path"] = f"sources/{label}.py"
-        normalized[label] = {"schema_version": 2, **checked}
+        normalized[label] = {"schema_version": version, **checked}
     if normalized["A"]["candidate"] == normalized["B"]["candidate"]:
         raise ValueError("A and B must be distinct configurations")
     common = {key: value for key, value in normalized["A"].items()
@@ -95,6 +95,64 @@ def pair_order(round_index: int) -> list[str]:
     if type(round_index) is not int or round_index < 1:
         raise ValueError("round_index must be positive")
     return ["A", "B"] if round_index % 2 else ["B", "A"]
+
+
+def raw_clock():
+    """Return the optional Linux RAW reader; never substitute another clock."""
+    if sys.platform.startswith("linux") and hasattr(time, "CLOCK_MONOTONIC_RAW"):
+        return lambda: time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW)
+    return None
+
+
+def _preflight_summary(samples: Sequence[Mapping[str, float]]) -> dict[str, Any]:
+    if len(samples) != 5 or any(
+            type(sample.get(field)) not in (int, float) or not math.isfinite(sample[field])
+            for sample in samples for field in (
+                "perf_counter_ms", "monotonic_raw_ms", "raw_minus_perf_ms",
+                "raw_over_perf", "read_span_bound_ms")):
+        raise ValueError("invalid host clock preflight samples")
+    if any(sample["perf_counter_ms"] <= 0 or sample["monotonic_raw_ms"] <= 0 or
+           sample["read_span_bound_ms"] < 0 or not math.isclose(
+               sample["raw_minus_perf_ms"], sample["monotonic_raw_ms"] - sample["perf_counter_ms"],
+               abs_tol=1e-9) or not math.isclose(
+               sample["raw_over_perf"], sample["monotonic_raw_ms"] / sample["perf_counter_ms"],
+               abs_tol=1e-12) for sample in samples):
+        raise ValueError("inconsistent host clock preflight samples")
+    differences = [sample["raw_minus_perf_ms"] for sample in samples]
+    span = max(sample["read_span_bound_ms"] for sample in samples)
+    observed = (all(value > span for value in differences) or
+                all(value < -span for value in differences))
+    return {"status": "RATE_DIFFERENCE_OBSERVED" if observed else "NO_RESOLVED_DIFFERENCE",
+            "samples": list(samples), "median_raw_over_perf": statistics.median(
+                sample["raw_over_perf"] for sample in samples),
+            "median_raw_minus_perf_ms": statistics.median(differences),
+            "read_span_bound_ms": span,
+            "rule": "all five differences have one sign and exceed the largest paired read span"}
+
+
+def host_clock_preflight(*, reader=None, sleep=time.sleep) -> dict[str, Any]:
+    """Compare five matched 20 ms host windows, retaining read-order uncertainty."""
+    reader = raw_clock() if reader is None else reader
+    if reader is None:
+        return {"status": "UNAVAILABLE", "reason": "CLOCK_MONOTONIC_RAW is unavailable",
+                "samples": []}
+    samples = []
+    for _ in range(5):
+        perf_start = time.perf_counter_ns()
+        raw_start = reader()
+        perf_after_start = time.perf_counter_ns()
+        sleep(0.02)
+        perf_before_end = time.perf_counter_ns()
+        raw_end = reader()
+        perf_end = time.perf_counter_ns()
+        perf_ms = (perf_end - perf_start) / 1e6
+        raw_ms = (raw_end - raw_start) / 1e6
+        samples.append({"perf_counter_ms": perf_ms, "monotonic_raw_ms": raw_ms,
+                        "raw_minus_perf_ms": raw_ms - perf_ms,
+                        "raw_over_perf": raw_ms / perf_ms,
+                        "read_span_bound_ms": ((perf_after_start - perf_start) +
+                                               (perf_end - perf_before_end)) / 1e6})
+    return _preflight_summary(samples)
 
 
 def _has_local(spec: Mapping[str, Any]) -> bool:
@@ -276,18 +334,29 @@ class PairBackend:
         bench = spec["benchmark"]
         log("benchmark: separate warmups, unranked timer controls, and balanced paired rounds")
         try:
+            clock_reader = raw_clock() if spec["schema_version"] == 3 else None
+            clock_check = host_clock_preflight(reader=clock_reader) if spec["schema_version"] == 3 else None
             for label in LABELS:
                 for _ in range(bench["warmups"]):
                     functions[label]()
                 torch.cuda.synchronize()
             measure = experiment.CudaTritonBackend._measure
-            controls = {label: measure(torch, functions[label], bench["iterations"])
+            measure_options = {"raw_clock": clock_reader} if spec["schema_version"] == 3 else {}
+            controls = {label: measure(torch, functions[label], bench["iterations"], **measure_options)
                         for label in LABELS}
+            aa_rounds = []
             rounds = []
             for index in range(1, bench["rounds"] + 1):
+                if spec["schema_version"] == 3:
+                    aa_order = ["X", "Y"] if index % 2 else ["Y", "X"]
+                    aa_rounds.append({"round": index, "order": aa_order,
+                                      "measurements": {slot: measure(
+                                          torch, functions["A"], bench["iterations"], **measure_options)
+                                          for slot in aa_order}})
                 order = pair_order(index)
                 rounds.append({"round": index, "order": order,
-                               "measurements": {label: measure(torch, functions[label], bench["iterations"])
+                               "measurements": {label: measure(torch, functions[label], bench["iterations"],
+                                                                **measure_options)
                                                 for label in order}})
         except Exception as error:
             raise experiment.StageFailure("benchmark", f"paired measurement failed: {error}") from error
@@ -298,8 +367,14 @@ class PairBackend:
             "wrapper_work": ("triton_gemm validates inputs, allocates output, builds grid and launches on every call"
                              if mode == "allocating" else
                              "registered and trusted wrappers launch into separate preallocated outputs"),
-            "timing_boundaries": "CUDA events bracket submissions; synchronized host wall brackets event completion",
-            "unranked_timing_controls": controls, "rounds": rounds}}
+            "timing_boundaries": ("perf start, RAW start, start event, N calls, end event, "
+                                  "end-event synchronization, RAW end, perf end; both host clocks "
+                                  "enclose event completion" if spec["schema_version"] == 3 else
+                                  "CUDA events bracket submissions; synchronized host wall brackets event completion"),
+            "unranked_timing_controls": controls, "rounds": rounds,
+            **({"host_clock_preflight": clock_check, "aa_rounds": aa_rounds,
+                "aa_kernel": "A", "aa_iterations_per_measurement": bench["iterations"]}
+               if spec["schema_version"] == 3 else {})}}
 
 
 def run_worker(spec: Mapping[str, Any], *, runtime_spec: Mapping[str, Any] | None = None) -> dict[str, Any]:
@@ -446,6 +521,136 @@ def summarize(correctness: Mapping[str, Any], rows: Sequence[Mapping[str, Any]],
     return result
 
 
+def summarize_clock_aware(correctness: Mapping[str, Any], rows: Sequence[Mapping[str, Any]],
+                          failure: Mapping[str, Any] | None,
+                          benchmark: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Version 3: retain legacy statistics; decide using measured clock and A/A controls."""
+    controls = (benchmark or {}).get("unranked_timing_controls")
+    result = summarize(correctness, rows, failure, controls)
+    result["decision_schema_version"] = 3
+    if result["decision"] in ("FAILED", "REJECTED_INCORRECT"):
+        return result
+    result.update(decision="INCONCLUSIVE", ranking_supported=False, speedup_A_over_B=None)
+    warnings = []
+    preflight = (benchmark or {}).get("host_clock_preflight")
+    aa_rounds = (benchmark or {}).get("aa_rounds")
+    if ("cuda_event_ms" not in result or not isinstance(preflight, dict) or
+            not isinstance(aa_rounds, list) or not isinstance(controls, dict) or
+            set(controls) != set(LABELS)):
+        result.update(reason="version 3 timing controls are incomplete", warnings=["MISSING_DIAGNOSTICS"])
+        return result
+    status = preflight.get("status")
+    try:
+        if status == "UNAVAILABLE":
+            if preflight != {"status": "UNAVAILABLE",
+                            "reason": "CLOCK_MONOTONIC_RAW is unavailable", "samples": []}:
+                raise ValueError("invalid unavailable preflight")
+        elif preflight != _preflight_summary(preflight["samples"]):
+            raise ValueError("preflight summary differs from samples")
+    except (KeyError, TypeError, ValueError):
+        result.update(reason="host clock preflight does not replay", warnings=["INVALID_CLOCK_PREFLIGHT"])
+        return result
+    if status == "RATE_DIFFERENCE_OBSERVED":
+        warnings.append("HOST_CLOCK_RATE_DIFFERENCE")
+    elif status == "UNAVAILABLE":
+        warnings.append("MONOTONIC_RAW_UNAVAILABLE")
+    elif status != "NO_RESOLVED_DIFFERENCE":
+        warnings.append("INVALID_CLOCK_PREFLIGHT")
+    if result.get("timing_boundary_discrepancy"):
+        warnings.append("CUDA_EVENT_EXCEEDS_PERF_COUNTER_WALL")
+    raw_fields = ("monotonic_raw_ms_per_block", "cuda_event_minus_monotonic_raw_ms_per_block")
+    all_measurements = list(rows) + list(controls.values() if isinstance(controls, dict) else [])
+    aa_differences = []
+    try:
+        if len(aa_rounds) != result["rounds"] or (benchmark or {}).get("aa_kernel") != "A":
+            raise ValueError("A/A round count or identity differs")
+        if (benchmark or {}).get("aa_iterations_per_measurement") != rows[0]["iterations"]:
+            raise ValueError("A/A operation count differs")
+        for index, round_row in enumerate(aa_rounds, 1):
+            order = ["X", "Y"] if index % 2 else ["Y", "X"]
+            if round_row["round"] != index or round_row["order"] != order:
+                raise ValueError("A/A order differs")
+            measures = round_row["measurements"]
+            if set(measures) != {"X", "Y"}:
+                raise ValueError("A/A slot missing")
+            all_measurements.extend(measures.values())
+            aa_differences.append((measures["X"]["cuda_event_elapsed_ms_per_block"] -
+                                   measures["Y"]["cuda_event_elapsed_ms_per_block"]) /
+                                  rows[0]["iterations"])
+        for sample in all_measurements:
+            if any(type(sample.get(field)) not in (int, float) or
+                   not math.isfinite(sample[field]) or sample[field] <= 0
+                   for field in ("cuda_event_elapsed_ms_per_block", "host_wall_ms_per_block")):
+                raise ValueError("invalid clock measurement")
+            if status != "UNAVAILABLE" and any(type(sample.get(field)) not in (int, float)
+                    or not math.isfinite(sample[field]) for field in raw_fields):
+                raise ValueError("RAW measurement missing")
+            event = sample["cuda_event_elapsed_ms_per_block"]
+            perf = sample["host_wall_ms_per_block"]
+            if not math.isclose(sample["cuda_event_elapsed_ms_per_operation"] * rows[0]["iterations"],
+                                event, abs_tol=1e-8) or not math.isclose(
+                    sample["cuda_event_minus_host_wall_ms_per_block"], event - perf, abs_tol=1e-8):
+                raise ValueError("event or perf normalization differs")
+            if status != "UNAVAILABLE" and (sample["monotonic_raw_ms_per_block"] <= 0 or
+                    not math.isclose(sample[raw_fields[1]],
+                                     event - sample[raw_fields[0]], abs_tol=1e-8)):
+                raise ValueError("RAW difference differs")
+    except (KeyError, IndexError, TypeError, ValueError, ZeroDivisionError):
+        result.update(reason="version 3 timing controls are malformed", warnings=warnings + ["INVALID_DIAGNOSTICS"])
+        return result
+    result["aa_control"] = {"rounds": len(aa_rounds), "kernel": "A",
+                            "paired_X_minus_Y_ms": aa_differences,
+                            "paired_difference_ms": _stats(aa_differences, signed=True),
+                            "max_absolute_difference_ms": max(abs(value) for value in aa_differences)}
+    result["host_clock_preflight"] = preflight
+    result["monotonic_raw_ms"] = ({label: _stats([
+        row["monotonic_raw_ms_per_block"] / row["iterations"]
+        for row in rows if row["kernel"] == label]) for label in LABELS}
+        if status != "UNAVAILABLE" else None)
+    result["raw_boundary_discrepancy"] = (any(sample[raw_fields[1]] > 0 for sample in all_measurements)
+                                           if status != "UNAVAILABLE" else None)
+    if result["raw_boundary_discrepancy"]:
+        warnings.append("CUDA_EVENT_EXCEEDS_MONOTONIC_RAW_WALL")
+    result["warnings"] = warnings
+    if status == "UNAVAILABLE":
+        result["reason"] = "RAW clock unavailable; clock-aware boundary cannot be assessed"
+        return result
+    if status not in ("RATE_DIFFERENCE_OBSERVED", "NO_RESOLVED_DIFFERENCE"):
+        result["reason"] = "host clock preflight invalid"
+        return result
+    if result["raw_boundary_discrepancy"] or (status == "NO_RESOLVED_DIFFERENCE" and
+                                               result.get("timing_boundary_discrepancy")):
+        result["reason"] = "event time exceeds a host interval without a resolved clock-rate explanation"
+        return result
+    values = {label: [row["cuda_event_elapsed_ms_per_operation"] for row in rows
+                      if row["kernel"] == label] for label in LABELS}
+    host_delta = result["paired_host_A_minus_B_ms"]
+    raw_by_round = {index: {row["kernel"]: row for row in rows if row["round"] == index}
+                    for index in range(1, result["rounds"] + 1)}
+    raw_delta = [(pair["A"]["monotonic_raw_ms_per_block"] -
+                  pair["B"]["monotonic_raw_ms_per_block"]) / pair["A"]["iterations"]
+                 for pair in raw_by_round.values()]
+    result["paired_raw_A_minus_B_ms"] = raw_delta
+    aa_floor = result["aa_control"]["max_absolute_difference_ms"]
+    ab_delta = result["paired_A_minus_B_ms"]
+    result["ab_exceeds_aa_variability"] = all(abs(value) > aa_floor for value in ab_delta)
+    if not result["ab_exceeds_aa_variability"]:
+        result["reason"] = "an A/B paired gap does not exceed the largest observed A/A gap"
+        result["warnings"].append("AB_WITHIN_AA_VARIABILITY")
+        return result
+    if max(values["A"]) < min(values["B"]) and all(x < 0 for x in host_delta + raw_delta):
+        winner = "A"
+    elif max(values["B"]) < min(values["A"]) and all(x > 0 for x in host_delta + raw_delta):
+        winner = "B"
+    else:
+        result["reason"] = "event ranges overlap or paired host directions disagree"
+        return result
+    result.update(decision=f"{winner}_FASTER", ranking_supported=True,
+                  speedup_A_over_B=statistics.median(values["B"]) / statistics.median(values["A"]),
+                  reason="event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A")
+    return result
+
+
 def capture_compiler(spec: Mapping[str, Any], output: Path,
                      raw: Mapping[str, Any] | None = None) -> dict[str, Any]:
     captures = {}
@@ -552,6 +757,47 @@ def render_report(spec: Mapping[str, Any], correctness: Mapping[str, Any],
                              f"round range {boundary['round_event_minus_wall_range'][0]:+.6f} to "
                              f"{boundary['round_event_minus_wall_range'][1]:+.6f} ms/block.")
             lines.append("")
+    if spec["schema_version"] == 3:
+        lines += ["## Clock-aware diagnostics (v3)", "",
+                  "The event interval brackets the configured calls on one CUDA stream. The perf and RAW "
+                  "host intervals enclose end-event synchronization. Perf is sampled just outside RAW, "
+                  "so the host windows differ by timestamp-read overhead. No clock is rescaled or treated "
+                  "as a universal absolute reference.", ""]
+        preflight = decision.get("host_clock_preflight") or {}
+        lines.append(f"- Host-clock preflight: {preflight.get('status', 'UNAVAILABLE')}; "
+                     f"median RAW/perf rate ratio {preflight.get('median_raw_over_perf', 'UNAVAILABLE')}; "
+                     f"five 20 ms windows when RAW is available.")
+        if "aa_control" in decision:
+            aa = decision["aa_control"]
+            lines.append(f"- Same-kernel A/A: {aa['rounds']} balanced rounds; event X−Y "
+                         f"median {aa['paired_difference_ms']['median_ms']:+.6f} ms/op; "
+                         f"maximum absolute paired gap {aa['max_absolute_difference_ms']:.6f} ms/op.")
+        if "cuda_event_ms" in decision:
+            for label in LABELS:
+                event = decision["cuda_event_ms"][label]["median_ms"]
+                perf = decision["host_wall_ms"][label]["median_ms"]
+                raw = ((decision.get("monotonic_raw_ms") or {}).get(label) or {}).get("median_ms")
+                lines.append(f"- {label} median ms/op: CUDA event {event:.6f}; "
+                             f"perf_counter wall {perf:.6f}; "
+                             f"MONOTONIC_RAW {f'{raw:.6f}' if raw is not None else 'UNAVAILABLE'}.")
+            lines.append(f"- RAW enclosing-boundary discrepancy: {decision.get('raw_boundary_discrepancy')}; "
+                         f"A/B exceeds observed A/A gap: {decision.get('ab_exceeds_aa_variability')}.")
+            if decision.get("paired_raw_A_minus_B_ms") is not None and "aa_control" in decision:
+                lines += ["", "| Round | Event A−B | perf A−B | RAW A−B | A/A event X−Y |",
+                          "|---:|---:|---:|---:|---:|"]
+                for index, (event, perf, raw, aa) in enumerate(zip(
+                        decision["paired_A_minus_B_ms"], decision["paired_host_A_minus_B_ms"],
+                        decision["paired_raw_A_minus_B_ms"],
+                        decision["aa_control"]["paired_X_minus_Y_ms"]), 1):
+                    lines.append(f"| {index} | {event:+.6f} | {perf:+.6f} | "
+                                 f"{raw:+.6f} | {aa:+.6f} |")
+                lines += ["", "All table differences are ms per operation; raw block totals and "
+                          "operation counts are retained in `raw_result.json`.", ""]
+        lines.append(f"- Warnings: {', '.join(decision.get('warnings', [])) or 'none'}.")
+        lines += ["- A/A is a local variability control, not a confidence interval. A supported ranking "
+                  "requires correctness, complete controls, event range separation, both host paired "
+                  "directions, and each A/B gap beyond the largest A/A gap. A RAW rate difference can "
+                  "explain a perf boundary reversal but cannot prove RAW absolute accuracy.", ""]
     for label in LABELS:
         capture = compiler[label]
         metadata = capture.get("metadata", {})
@@ -579,7 +825,7 @@ def render_report(spec: Mapping[str, Any], correctness: Mapping[str, Any],
     device = environment.get("device") or {}
     versions = environment.get("versions") or {}
     versions_text = (json.dumps(versions, sort_keys=True)
-                     if spec["schema_version"] == 2 else str(versions))
+                     if spec["schema_version"] in (2, 3) else str(versions))
     command = provenance.get("command") or []
     lines += [f"GPU: {device.get('name', 'UNAVAILABLE')}; driver: {provenance.get('driver_version')}.",
               f"Software: {versions_text}.",
@@ -615,7 +861,7 @@ def verify_bundle(output: Path) -> dict[str, Any]:
     if not REQUIRED <= actual:
         raise ValueError("required bundle file missing")
     saved_spec = json.loads((output / "experiment.json").read_text())
-    spec = validate_spec(saved_spec, retained_root=output if saved_spec.get("schema_version") == 2 else None)
+    spec = validate_spec(saved_spec, retained_root=output if saved_spec.get("schema_version") in (2, 3) else None)
     raw = json.loads((output / "raw_result.json").read_text())
     correctness = json.loads((output / "correctness.json").read_text())
     rows = [json.loads(line) for line in (output / "timings.jsonl").read_text().splitlines() if line]
@@ -630,7 +876,9 @@ def verify_bundle(output: Path) -> dict[str, Any]:
                 raw["benchmark"].get("mode") != spec["benchmark"]["mode"] or
                 len(raw["benchmark"].get("rounds", [])) != spec["benchmark"]["rounds"])) or
             timing_rows(raw) != rows or
-            summarize(correctness, rows, raw.get("failure"), controls) != decision or
+            (summarize_clock_aware(correctness, rows, raw.get("failure"), raw.get("benchmark"))
+             if spec["schema_version"] == 3 else
+             summarize(correctness, rows, raw.get("failure"), controls)) != decision or
             render_report(spec, correctness, decision, compiler, provenance) != (output / "report.md").read_text() or
             provenance.get("candidate_source_sha256") != _digest(output / "candidate_source.py") or
             provenance.get("environment") != raw.get("environment") or
@@ -639,6 +887,10 @@ def verify_bundle(output: Path) -> dict[str, Any]:
                 or (compiler[label].get("sass") == "CAPTURED") != (f"{label}.sass" in actual)
                 for label in LABELS)):
         raise ValueError("bundle does not reproduce from the raw result")
+    if (spec["schema_version"] == 3 and raw.get("status") == "success" and
+            set(decision.get("warnings", [])) & {
+                "MISSING_DIAGNOSTICS", "INVALID_CLOCK_PREFLIGHT", "INVALID_DIAGNOSTICS"}):
+        raise ValueError("successful v3 bundle has invalid timing diagnostics")
     if _has_local(spec):
         if provenance.get("trusted_local_source_opt_in") is not True:
             raise ValueError("trusted source opt-in provenance missing")
@@ -730,8 +982,10 @@ def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | 
     rows = timing_rows(raw)
     (output / "timings.jsonl").write_text(
         "".join(json.dumps(row, sort_keys=True, allow_nan=False) + "\n" for row in rows), encoding="utf-8")
-    decision = summarize(correctness, rows, raw.get("failure"),
-                         raw.get("benchmark", {}).get("unranked_timing_controls"))
+    decision = (summarize_clock_aware(correctness, rows, raw.get("failure"), raw.get("benchmark"))
+                if validated["schema_version"] == 3 else
+                summarize(correctness, rows, raw.get("failure"),
+                          raw.get("benchmark", {}).get("unranked_timing_controls")))
     compiler = compiler_capture(public_spec, output, raw) if raw.get("status") == "success" and has_local else (
         compiler_capture(public_spec, output) if raw.get("status") == "success" else {
         "A": {"ptx": "UNAVAILABLE", "sass": "UNAVAILABLE"},
@@ -765,7 +1019,10 @@ def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | 
                                if public_spec["kernels"][label]["implementation"] == experiment.SOURCE_IMPLEMENTATION
                                else _digest(output / "candidate_source.py"))}
             for label in LABELS} if has_local else None,
-        "measurement": "separate compile and warmup; alternating A/B blocks with CUDA-event and host clocks"}
+        "measurement": ("separate compile and warmup; A/A then alternating A/B blocks; "
+                        "CUDA-event, perf_counter, optional MONOTONIC_RAW clocks"
+                        if validated["schema_version"] == 3 else
+                        "separate compile and warmup; alternating A/B blocks with CUDA-event and host clocks")}
     _write_json(output / "provenance.json", provenance)
     (output / "report.md").write_text(
         render_report(validated, correctness, decision, compiler, provenance), encoding="utf-8")
