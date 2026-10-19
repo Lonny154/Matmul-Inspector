@@ -408,6 +408,8 @@ commands.
   correctness, timing, feedback, and replay evidence.
 - [Schedule-Agent-Live-1 integration](docs/schedule_agent_live_1.md)
   — documents the optional bounded live provider and credential-free CPU replay.
+- [Schedule-Agent-Live-2 decision ablation](docs/schedule_agent_live_2.md)
+  — retains six model-only proposals with and without GPU evidence; no valid matched pair resulted.
 - [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
   — validates conventional and Strassen decompositions through one experimental
   FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.

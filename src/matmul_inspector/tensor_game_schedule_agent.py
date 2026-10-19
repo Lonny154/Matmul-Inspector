@@ -139,6 +139,7 @@ class OpenAIPlanner:
         self.calls = 0
         self.total_tokens = 0
         self.last_metadata: dict = {}
+        self.last_request_body: dict | None = None
 
     def propose(self, batch: int, feedback: dict) -> dict:
         if self.calls >= self.limits.max_planner_calls:
@@ -204,6 +205,8 @@ class OpenAIPlanner:
                 "store": False,
                 "text": {"format": {"type": "json_schema", "name": "schedule_proposal",
                                     "strict": True, "schema": schema}}}
+        # Credential-free request provenance for bounded, offline decision replay.
+        self.last_request_body = body
         payload = json.dumps(body, separators=(",", ":")).encode()
         if len(payload) > self.limits.max_planner_request_bytes:
             raise PlannerBudgetExceeded("planner request-size budget exhausted")
@@ -242,6 +245,9 @@ class OpenAIPlanner:
             raise PlannerBudgetExceeded("provider did not report valid token usage")
         self.total_tokens += usage["total_tokens"]
         self.last_metadata = {"response_id": data.get("id"), "status": data.get("status"),
+                              "response_model": data.get("model"),
+                              "created_at": data.get("created_at"),
+                              "service_tier": data.get("service_tier"),
                               "usage": usage, "cumulative_tokens": self.total_tokens,
                               "api_calls": self.calls}
         if (usage["output_tokens"] > self.limits.max_planner_output_tokens_per_call or
