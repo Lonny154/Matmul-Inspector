@@ -36,6 +36,8 @@ K, N = 4096, 2048
 EXPECTED_SOURCE_SHA256 = "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9"
 OPERATIONS, ROUNDS, WARMUPS = prior.OPERATIONS, prior.ROUNDS, prior.WARMUPS
 PAIR_NAMES = {"AB": ("A", "B"), "AC": ("A", "C"), "BC": ("B", "C")}
+HISTORICAL_POLICY = "historical_fp16_cublas"
+EXPLICIT_POLICY = "fp32_rounded_fp16"
 
 
 def shape_geometry(m: int) -> dict:
@@ -78,7 +80,20 @@ def _pair_benchmark(raw: dict, key: str) -> dict:
 
 
 def summarize(raw: dict) -> dict:
-    if (raw.get("schema_version") != 1 or raw.get("mode") != "cuda_graph" or
+    version = raw.get("schema_version")
+    if version == 2:
+        settings = raw.get("precision_settings", {})
+        if (raw.get("reference_policy") != EXPLICIT_POLICY or
+                raw.get("correctness", {}).get("reference") != "fp32_matmul_fp16_inputs_rounded_fp16" or
+                raw.get("correctness", {}).get("cublas_precision") !=
+                "fp16_reduced_precision_reduction_disabled" or
+                settings.get("active_fp16_reduced_precision_reduction") is not False or
+                settings.get("active_allow_tf32") is not False or
+                settings.get("active_float32_matmul_precision") != "highest"):
+            raise ValueError("invalid explicit reference policy")
+    elif version != 1:
+        raise ValueError("unsupported shape-study schema")
+    if (raw.get("mode") != "cuda_graph" or
             raw.get("m") not in SHAPES or raw.get("k") != K or raw.get("n") != N or
             raw.get("session") not in (1, 2) or
             raw.get("operations_per_replay") != OPERATIONS or
@@ -92,8 +107,10 @@ def summarize(raw: dict) -> dict:
             any(case.get("checks", {}).get(label, {}).get("passed") is not True
                 for case in correctness["seeds"] for label in ("A", "B", "C"))):
         raise ValueError("incomplete numerical gate")
-    result = {"schema_version": 1, "m": raw["m"], "session": raw["session"],
+    result = {"schema_version": version, "m": raw["m"], "session": raw["session"],
               "geometry": raw["geometry"], "pairs": {}, "graph_setup_ms": raw["graph_setup_ms"]}
+    if version == 2:
+        result["reference_policy"] = EXPLICIT_POLICY
     expected = experiment_pair.expected_diagnostic_sequence(ROUNDS, OPERATIONS, "before")
     for key, (left, right) in PAIR_NAMES.items():
         pair = raw["pairs"][key]
@@ -165,7 +182,8 @@ def verify(output: Path) -> dict:
             "files": len(saved)}
 
 
-def run(output: Path, m: int, session: int) -> dict:
+def _run(output: Path, m: int, session: int, reference_policy: str,
+         original_settings: dict | None) -> dict:
     if output.exists():
         raise ValueError("output already exists")
     geometry = shape_geometry(m)
@@ -280,7 +298,8 @@ def run(output: Path, m: int, session: int) -> dict:
         left, right = inputs(seed)
         a.copy_(left)
         b.copy_(right)
-        reference = torch.matmul(a, b)
+        reference = (torch.matmul(a.float(), b.float()).half()
+                     if reference_policy == EXPLICIT_POLICY else torch.matmul(a, b))
         for out in outputs.values():
             out.fill_(float("nan"))
         scratch.fill_(float("nan"))
@@ -290,7 +309,20 @@ def run(output: Path, m: int, session: int) -> dict:
         torch.cuda.synchronize()
         checks = {label: experiment_pair.check_output(torch, reference, outputs[label],
                                                        base_spec["correctness"]) for label in eager}
-        cases.append({"seed": seed, "checks": checks})
+        case = {"seed": seed, "checks": checks}
+        if reference_policy == EXPLICIT_POLICY:
+            case["cublas_no_reduced_error"] = checks["C"]
+            # Record the historical production-library result as a diagnostic.
+            # It never participates in the explicit numerical gate.
+            torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = (
+                original_settings["fp16_reduced_precision_reduction"])
+            try:
+                default_cublas = torch.matmul(a, b)
+            finally:
+                torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
+            case["ambient_cublas_error"] = experiment_pair.check_output(
+                torch, reference, default_cublas, base_spec["correctness"])
+        cases.append(case)
         if not all(row["passed"] for row in checks.values()):
             prior.write_json(output / "correctness_failure.json",
                              {"m": m, "seed": seed, "checks": checks,
@@ -333,7 +365,8 @@ def run(output: Path, m: int, session: int) -> dict:
     props = torch.cuda.get_device_properties(0)
     git_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
                               capture_output=True, text=True).stdout.strip()
-    raw = {"schema_version": 1, "mode": "cuda_graph", "m": m, "k": K, "n": N,
+    raw = {"schema_version": 2 if reference_policy == EXPLICIT_POLICY else 1,
+           "mode": "cuda_graph", "m": m, "k": K, "n": N,
            "session": session, "created_at_utc": datetime.now(timezone.utc).isoformat(),
            "git_head": git_head, "source_sha256": prior.digest(SOURCE),
            "base_spec_sha256": prior.digest(SPEC),
@@ -354,13 +387,50 @@ def run(output: Path, m: int, session: int) -> dict:
                            "python": sys.version.split()[0], "torch": torch.__version__,
                            "triton": triton.__version__, "cuda_runtime": torch.version.cuda},
            "compiler": compiler,
-           "correctness": {"passed": True, "reference": "pytorch_matmul (cuBLAS)",
+           "correctness": {"passed": True,
+                           "reference": ("fp32_matmul_fp16_inputs_rounded_fp16"
+                                         if reference_policy == EXPLICIT_POLICY else "pytorch_matmul (cuBLAS)"),
                            "tolerances": base_spec["correctness"], "seeds": cases},
            "host_clock_preflight": clock_preflight, "pairs": pairs}
+    if reference_policy == EXPLICIT_POLICY:
+        raw["reference_policy"] = EXPLICIT_POLICY
+        raw["correctness"]["cublas_precision"] = "fp16_reduced_precision_reduction_disabled"
+        raw["precision_settings"] = {
+            "original_fp16_reduced_precision_reduction": original_settings["fp16_reduced_precision_reduction"],
+            "active_fp16_reduced_precision_reduction": False,
+            "original_allow_tf32": original_settings["allow_tf32"],
+            "active_allow_tf32": False,
+            "original_float32_matmul_precision": original_settings["float32_matmul_precision"],
+            "active_float32_matmul_precision": "highest",
+            "restoration_scoped_to_process": True}
     prior.write_json(output / "raw.json", raw)
     prior.write_json(output / "summary.json", summarize(raw))
     prior.manifest(output)
     return verify(output)
+
+
+def run(output: Path, m: int, session: int,
+        reference_policy: str = HISTORICAL_POLICY) -> dict:
+    """Run one session; the explicit numerical policy is scoped and opt-in."""
+    if reference_policy not in (HISTORICAL_POLICY, EXPLICIT_POLICY):
+        raise ValueError("unknown reference policy")
+    if reference_policy == HISTORICAL_POLICY:
+        return _run(output, m, session, reference_policy, None)
+    import torch
+    original = {"fp16_reduced_precision_reduction": bool(
+                    torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction),
+                "allow_tf32": bool(torch.backends.cuda.matmul.allow_tf32),
+                "float32_matmul_precision": torch.get_float32_matmul_precision()}
+    try:
+        torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
+        torch.set_float32_matmul_precision("highest")
+        torch.backends.cuda.matmul.allow_tf32 = False
+        return _run(output, m, session, reference_policy, original)
+    finally:
+        torch.set_float32_matmul_precision(original["float32_matmul_precision"])
+        torch.backends.cuda.matmul.allow_tf32 = original["allow_tf32"]
+        torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = (
+            original["fp16_reduced_precision_reduction"])
 
 
 def main() -> int:
@@ -368,12 +438,15 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--m", type=int, choices=SHAPES)
     parser.add_argument("--session", type=int, choices=(1, 2))
+    parser.add_argument("--reference-policy", choices=(HISTORICAL_POLICY, EXPLICIT_POLICY),
+                        default=HISTORICAL_POLICY)
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args()
     if args.verify == (args.m is not None and args.session is not None):
         parser.error("choose --verify or both --m and --session")
     try:
-        result = verify(args.output) if args.verify else run(args.output, args.m, args.session)
+        result = (verify(args.output) if args.verify else
+                  run(args.output, args.m, args.session, args.reference_policy))
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as error:
         if not args.verify and args.output.is_dir():
             prior.write_json(args.output / "failure.json", {"type": type(error).__name__, "message": str(error)})

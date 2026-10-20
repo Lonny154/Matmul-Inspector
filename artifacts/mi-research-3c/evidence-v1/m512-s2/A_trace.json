@@ -1,0 +1,1512 @@
+
+  {
+    "schemaVersion": 1,
+    "deviceProperties": [
+    {
+      "id": 0, "name": "NVIDIA GeForce RTX 4060 Ti", "totalGlobalMem": 17175150592,
+      "computeMajor": 8, "computeMinor": 9,
+      "maxThreadsPerBlock": 1024, "maxThreadsPerMultiprocessor": 1536,
+      "regsPerBlock": 65536, "warpSize": 32,
+      "sharedMemPerBlock": 49152, "numSms": 34
+    , "regsPerMultiprocessor": 65536, "sharedMemPerBlockOptin": 101376, "sharedMemPerMultiprocessor": 102400
+    }
+    ],
+      "trace_id": "A7070CD23B2349D2A4FF74F5E0B9C333",
+      "cuda_driver_version": 13040,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+  "displayTimeUnit": "ms",
+  "baseTimeNanoseconds": 1790857026000000000,
+  "traceEvents": [
+  {
+    "ph": "X", "cat": "cuda_runtime", "name": "cudaStreamIsCapturing", "pid": 191274, "tid": 1965148352,
+    "ts": 1664051802351.312, "dur": 8.747,
+    "args": {
+            "cbid": 317, "correlation": 5
+    }
+  },
+  {
+    "ph": "f", "id": 5, "pid": 191274, "tid": 1965148352, "ts": 1664051802351.312,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "overhead", "name": "Activity Buffer Request", "pid": -1, "tid": 0,
+    "ts": 1664051802360.350, "dur": 2436.178
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051805004.939, "dur": 203.453,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051805004.939,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051805208.425, "dur": 200.029,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051805208.425,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051805408.518, "dur": 199.230,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051805408.518,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051805607.780, "dur": 198.686,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051805607.780,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051805806.466, "dur": 198.814,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051805806.466,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806005.344, "dur": 198.878,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806005.344,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806204.254, "dur": 198.718,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806204.254,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806403.004, "dur": 198.430,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806403.004,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806601.466, "dur": 198.173,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806601.466,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806799.672, "dur": 198.813,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806799.672,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051806998.517, "dur": 198.526,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051806998.517,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051807197.075, "dur": 198.750,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051807197.075,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051807395.857, "dur": 198.206,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051807395.857,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051807594.095, "dur": 198.174,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051807594.095,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051807792.269, "dur": 461.403,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051807792.269,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051808254.024, "dur": 200.766,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051808254.024,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051808454.822, "dur": 417.083,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051808454.822,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051808872.257, "dur": 200.350,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051808872.257,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051809072.639, "dur": 199.390,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051809072.639,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051809272.061, "dur": 198.942,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051809272.061,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051809471.035, "dur": 198.910,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051809471.035,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051809669.977, "dur": 198.494,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051809669.977,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051809868.471, "dur": 198.750,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051809868.471,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051810067.253, "dur": 198.654,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051810067.253,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051810265.939, "dur": 198.078,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051810265.939,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051810464.049, "dur": 198.109,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051810464.049,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051810662.190, "dur": 198.334,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051810662.190,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051810860.556, "dur": 198.142,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051810860.556,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051811058.730, "dur": 198.814,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051811058.730,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051811257.576, "dur": 198.590,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051811257.576,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051811456.166, "dur": 198.462,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051811456.166,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051811654.660, "dur": 198.558,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051811654.660,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051811853.250, "dur": 198.174,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051811853.250,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051812051.456, "dur": 198.493,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051812051.456,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051812249.982, "dur": 198.141,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051812249.982,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051812448.155, "dur": 198.846,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051812448.155,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051812647.033, "dur": 198.846,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051812647.033,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051812845.911, "dur": 198.206,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051812845.911,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051813044.149, "dur": 198.238,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051813044.149,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051813242.419, "dur": 198.878,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051813242.419,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051813441.329, "dur": 198.525,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051813441.329,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051813639.854, "dur": 198.687,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051813639.854,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051813838.572, "dur": 198.430,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051813838.572,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051814037.034, "dur": 198.718,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051814037.034,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051814235.784, "dur": 198.782,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051814235.784,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051814434.598, "dur": 198.590,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051814434.598,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051814633.220, "dur": 198.814,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051814633.220,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051814832.066, "dur": 198.622,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051814832.066,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051815030.720, "dur": 198.173,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051815030.720,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051815228.926, "dur": 198.302,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051815228.926,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051815427.260, "dur": 198.173,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051815427.260,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051815625.465, "dur": 198.526,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051815625.465,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051815824.023, "dur": 198.494,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051815824.023,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051816022.549, "dur": 198.142,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051816022.549,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051816220.723, "dur": 198.334,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051816220.723,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051816419.057, "dur": 198.590,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051816419.057,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051816617.647, "dur": 198.494,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051816617.647,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051816816.173, "dur": 198.494,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051816816.173,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051817014.698, "dur": 198.815,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051817014.698,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051817213.544, "dur": 198.142,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051817213.544,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051817411.750, "dur": 198.526,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051817411.750,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051817610.308, "dur": 198.654,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051817610.308,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051817808.994, "dur": 198.302,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051817808.994,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818007.328, "dur": 198.206,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818007.328,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818205.566, "dur": 198.078,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818205.566,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818403.676, "dur": 198.206,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818403.676,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818601.914, "dur": 198.397,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818601.914,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818800.343, "dur": 198.174,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818800.343,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051818998.549, "dur": 198.366,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051818998.549,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051819196.947, "dur": 198.846,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051819196.947,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051819395.793, "dur": 441.659,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051819395.793,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051819837.836, "dur": 201.246,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051819837.836,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051820039.114, "dur": 400.476,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051820039.114,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051820439.814, "dur": 200.478,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051820439.814,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051820640.324, "dur": 199.166,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051820640.324,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051820839.490, "dur": 198.686,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051820839.490,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051821038.208, "dur": 198.877,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051821038.208,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051821237.118, "dur": 198.749,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051821237.118,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051821435.899, "dur": 198.782,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051821435.899,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051821634.713, "dur": 198.366,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051821634.713,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051821833.111, "dur": 198.334,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051821833.111,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051822031.445, "dur": 198.558,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051822031.445,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051822230.003, "dur": 198.174,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051822230.003,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051822428.209, "dur": 198.302,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051822428.209,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051822626.511, "dur": 198.270,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051822626.511,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051822824.813, "dur": 198.494,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051822824.813,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051823023.338, "dur": 198.622,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051823023.338,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051823221.992, "dur": 198.750,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051823221.992,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051823420.742, "dur": 198.910,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051823420.742,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051823619.684, "dur": 198.238,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051823619.684,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051823817.922, "dur": 198.718,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051823817.922,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051824016.672, "dur": 198.622,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051824016.672,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051824215.326, "dur": 198.558,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051824215.326,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051824413.916, "dur": 198.430,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051824413.916,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051824612.377, "dur": 198.238,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051824612.377,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051824810.679, "dur": 198.302,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051824810.679,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051825009.013, "dur": 198.462,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051825009.013,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051825207.507, "dur": 198.590,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051825207.507,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051825406.097, "dur": 198.558,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051825406.097,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "kernel", "name": "fc1_kernel", "pid": 0, "tid": 7,
+    "ts": 1664051825604.687, "dur": 199.038,
+    "args": {
+            "queued": 0, "device": 0, "context": 1,      "stream": 7, "correlation": 7,      "registers per thread": 121,      "shared memory": 24576,      "blocks per SM": 3.764706,      "warps per SM": 15.058824,      "grid": [128, 1, 1],      "block": [128, 1, 1],      "est. achieved occupancy %": 31
+    }
+  },
+  {
+    "ph": "f", "id": 7, "pid": 0, "tid": 7, "ts": 1664051825604.687,
+    "cat": "ac2g", "name": "ac2g", "bp": "e"
+  },
+  {
+    "ph": "X", "cat": "cuda_runtime", "name": "cudaGraphLaunch", "pid": 191274, "tid": 1965148352,
+    "ts": 1664051804808.451, "dur": 97.295,
+    "args": {
+            "cbid": 311, "correlation": 7
+    }
+  },
+  {
+    "ph": "s", "id": 7, "pid": 191274, "tid": 1965148352, "ts": 1664051804808.451,
+    "cat": "ac2g", "name": "ac2g"
+  },
+  {
+    "ph": "X", "cat": "cuda_runtime", "name": "cudaDeviceSynchronize", "pid": 191274, "tid": 1965148352,
+    "ts": 1664051804974.046, "dur": 20830.780,
+    "args": {
+            "cbid": 165, "correlation": 12
+    }
+  },
+  {
+    "ph": "s", "id": 12, "pid": 191274, "tid": 1965148352, "ts": 1664051804974.046,
+    "cat": "ac2g", "name": "ac2g"
+  },
+  {
+    "ph": "X", "cat": "cuda_runtime", "name": "cudaDeviceSynchronize", "pid": 191274, "tid": 1965148352,
+    "ts": 1664051825861.553, "dur": 7.895,
+    "args": {
+            "cbid": 165, "correlation": 16
+    }
+  },
+  {
+    "ph": "s", "id": 16, "pid": 191274, "tid": 1965148352, "ts": 1664051825861.553,
+    "cat": "ac2g", "name": "ac2g"
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 191274, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 191274, "tid": 0,
+    "args": {
+      "labels": "CPU"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 191274, "tid": 0,
+    "args": {
+      "sort_index": 191274
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 0, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 0, "tid": 0,
+    "args": {
+      "labels": "GPU 0"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 0, "tid": 0,
+    "args": {
+      "sort_index": 5000000
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 1, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 1, "tid": 0,
+    "args": {
+      "labels": "GPU 1"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 1, "tid": 0,
+    "args": {
+      "sort_index": 5000001
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 2, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 2, "tid": 0,
+    "args": {
+      "labels": "GPU 2"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 2, "tid": 0,
+    "args": {
+      "sort_index": 5000002
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 3, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 3, "tid": 0,
+    "args": {
+      "labels": "GPU 3"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 3, "tid": 0,
+    "args": {
+      "sort_index": 5000003
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 4, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 4, "tid": 0,
+    "args": {
+      "labels": "GPU 4"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 4, "tid": 0,
+    "args": {
+      "sort_index": 5000004
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 5, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 5, "tid": 0,
+    "args": {
+      "labels": "GPU 5"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 5, "tid": 0,
+    "args": {
+      "sort_index": 5000005
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 6, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 6, "tid": 0,
+    "args": {
+      "labels": "GPU 6"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 6, "tid": 0,
+    "args": {
+      "sort_index": 5000006
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 7, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 7, "tid": 0,
+    "args": {
+      "labels": "GPU 7"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 7, "tid": 0,
+    "args": {
+      "sort_index": 5000007
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 8, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 8, "tid": 0,
+    "args": {
+      "labels": "GPU 8"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 8, "tid": 0,
+    "args": {
+      "sort_index": 5000008
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 9, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 9, "tid": 0,
+    "args": {
+      "labels": "GPU 9"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 9, "tid": 0,
+    "args": {
+      "sort_index": 5000009
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 10, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 10, "tid": 0,
+    "args": {
+      "labels": "GPU 10"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 10, "tid": 0,
+    "args": {
+      "sort_index": 5000010
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 11, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 11, "tid": 0,
+    "args": {
+      "labels": "GPU 11"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 11, "tid": 0,
+    "args": {
+      "sort_index": 5000011
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 12, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 12, "tid": 0,
+    "args": {
+      "labels": "GPU 12"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 12, "tid": 0,
+    "args": {
+      "sort_index": 5000012
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 13, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 13, "tid": 0,
+    "args": {
+      "labels": "GPU 13"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 13, "tid": 0,
+    "args": {
+      "sort_index": 5000013
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 14, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 14, "tid": 0,
+    "args": {
+      "labels": "GPU 14"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 14, "tid": 0,
+    "args": {
+      "sort_index": 5000014
+    }
+  },
+  {
+    "name": "process_name", "ph": "M", "ts": 1664051802258.687, "pid": 15, "tid": 0,
+    "args": {
+      "name": "python"
+    }
+  },
+  {
+    "name": "process_labels", "ph": "M", "ts": 1664051802258.687, "pid": 15, "tid": 0,
+    "args": {
+      "labels": "GPU 15"
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 15, "tid": 0,
+    "args": {
+      "sort_index": 5000015
+    }
+  },
+  {
+    "name": "thread_name", "ph": "M", "ts": 1664051802258.687, "pid": 0, "tid": 7,
+    "args": {
+      "name": "stream 7 "
+    }
+  },
+  {
+    "name": "thread_sort_index", "ph": "M", "ts": 1664051802258.687, "pid": 0, "tid": 7,
+    "args": {
+      "sort_index": 7
+    }
+  },
+  {
+    "ph": "X", "cat": "Trace", "ts": 1664051802208.833, "dur": 23672.890,
+    "pid": "Spans", "tid": "PyTorch Profiler",
+    "name": "PyTorch Profiler (0)",
+    "args": {
+      "Op count": 0
+    }
+  },
+  {
+    "name": "process_sort_index", "ph": "M", "ts": 1664051802208.833,
+    "pid": "Spans", "tid": 0,
+    "args": {
+      "sort_index": 536870912
+    }
+  },
+  {
+    "name": "Iteration Start: PyTorch Profiler", "ph": "i", "s": "g",
+    "pid": "Traces", "tid": "Trace PyTorch Profiler", "ts": 1664051802208.833
+  },
+  {
+    "name": "Record Window End", "ph": "i", "s": "g",
+    "pid": "", "tid": "", "ts": 1664051825974.820
+  }
+  ],
+  "traceName": "artifacts/mi-research-3c/evidence-v1/m512-s2/A_trace.json"
+}

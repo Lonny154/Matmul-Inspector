@@ -1,0 +1,664 @@
+{
+  "geometry": {
+    "conventional_ctas": 128,
+    "reduction_ctas": 1024,
+    "scratch_bytes": 8388608,
+    "split_partial_ctas": 256
+  },
+  "graph_setup_ms": {
+    "A": 1.250767,
+    "B": 2.470855,
+    "C": 16.054184
+  },
+  "m": 512,
+  "pairs": {
+    "AB": {
+      "decision": {
+        "aa_control": {
+          "kernel": "A",
+          "max_absolute_difference_ms": 0.007936305999755859,
+          "paired_X_minus_Y_ms": [
+            0.00254913330078125,
+            -0.0007788848876953125,
+            -0.002341766357421875,
+            -0.003540477752685547,
+            -0.002641277313232422,
+            0.007936305999755859,
+            0.006230411529541016,
+            0.001617279052734375
+          ],
+          "paired_difference_ms": {
+            "cv": null,
+            "max_ms": 0.007936305999755859,
+            "median_absolute_deviation_ms": 0.0029107189178466794,
+            "median_ms": 0.0004191970825195312,
+            "min_ms": -0.003540477752685547,
+            "stdev_ms": 0.004248096493787752
+          },
+          "rounds": 8
+        },
+        "ab_exceeds_aa_variability": false,
+        "cuda_event_ms": {
+          "A": {
+            "cv": 0.011257357609115311,
+            "max_ms": 0.21485696792602538,
+            "median_absolute_deviation_ms": 0.0009067249298095881,
+            "median_ms": 0.2099351978302002,
+            "min_ms": 0.2074892807006836,
+            "stdev_ms": 0.0023696719730954986
+          },
+          "B": {
+            "cv": 0.01609198502257642,
+            "max_ms": 0.22378463745117189,
+            "median_absolute_deviation_ms": 0.0028324794769287037,
+            "median_ms": 0.21761247634887695,
+            "min_ms": 0.21459711074829102,
+            "stdev_ms": 0.003512958815564276
+          }
+        },
+        "decision": "INCONCLUSIVE",
+        "decision_schema_version": 3,
+        "host_clock_preflight": {
+          "median_raw_minus_perf_ms": -0.00044300000000063733,
+          "median_raw_over_perf": 0.9999779590015537,
+          "read_span_bound_ms": 0.011973,
+          "rule": "all five differences have one sign and exceed the largest paired read span",
+          "samples": [
+            {
+              "monotonic_raw_ms": 20.133661,
+              "perf_counter_ms": 20.136171,
+              "raw_minus_perf_ms": -0.0025100000000009004,
+              "raw_over_perf": 0.999875348694645,
+              "read_span_bound_ms": 0.011973
+            },
+            {
+              "monotonic_raw_ms": 20.09562,
+              "perf_counter_ms": 20.096184,
+              "raw_minus_perf_ms": -0.0005640000000006751,
+              "raw_over_perf": 0.9999719349703406,
+              "read_span_bound_ms": 0.004188
+            },
+            {
+              "monotonic_raw_ms": 20.102993,
+              "perf_counter_ms": 20.103199,
+              "raw_minus_perf_ms": -0.0002059999999985962,
+              "raw_over_perf": 0.9999897528746545,
+              "read_span_bound_ms": 0.004408
+            },
+            {
+              "monotonic_raw_ms": 20.098465,
+              "perf_counter_ms": 20.098908,
+              "raw_minus_perf_ms": -0.00044300000000063733,
+              "raw_over_perf": 0.9999779590015537,
+              "read_span_bound_ms": 0.005751
+            },
+            {
+              "monotonic_raw_ms": 20.091081,
+              "perf_counter_ms": 20.091365,
+              "raw_minus_perf_ms": -0.0002840000000006171,
+              "raw_over_perf": 0.9999858645741591,
+              "read_span_bound_ms": 0.004288
+            }
+          ],
+          "status": "NO_RESOLVED_DIFFERENCE"
+        },
+        "host_wall_ms": {
+          "A": {
+            "cv": 0.011764136751250319,
+            "max_ms": 0.21605928,
+            "median_absolute_deviation_ms": 0.0008169249999999961,
+            "median_ms": 0.21098848,
+            "min_ms": 0.20854603000000002,
+            "stdev_ms": 0.002492278383232248
+          },
+          "B": {
+            "cv": 0.016525851141270063,
+            "max_ms": 0.22517821000000002,
+            "median_absolute_deviation_ms": 0.003243640000000006,
+            "median_ms": 0.219580475,
+            "min_ms": 0.21594817,
+            "stdev_ms": 0.003636309490689511
+          }
+        },
+        "monotonic_raw_ms": {
+          "A": {
+            "cv": 0.011758148872287912,
+            "max_ms": 0.21603772,
+            "median_absolute_deviation_ms": 0.0008163249999999928,
+            "median_ms": 0.210963265,
+            "min_ms": 0.20853670000000002,
+            "stdev_ms": 0.0024908027372569576
+          },
+          "B": {
+            "cv": 0.01649160728733168,
+            "max_ms": 0.22515918,
+            "median_absolute_deviation_ms": 0.0032427349999999966,
+            "median_ms": 0.21951965499999998,
+            "min_ms": 0.21592942,
+            "stdev_ms": 0.003628301182483682
+          }
+        },
+        "paired_A_minus_B_ms": [
+          -0.011239681243896488,
+          -0.012724170684814462,
+          -0.00010591506958010366,
+          -0.007839679718017578,
+          -0.0016377449035644698,
+          -0.006393909454345703,
+          -0.007702713012695317,
+          -0.014796485900878925
+        ],
+        "paired_difference_ms": {
+          "cv": null,
+          "max_ms": -0.00010591506958010366,
+          "median_absolute_deviation_ms": 0.004210729598999027,
+          "median_ms": -0.0077711963653564475,
+          "min_ms": -0.014796485900878925,
+          "stdev_ms": 0.005129605061286456
+        },
+        "paired_host_A_minus_B_ms": [
+          -0.011788259999999995,
+          -0.013457789999999997,
+          9.392999999999208e-05,
+          -0.008963689999999996,
+          -0.0009861499999999912,
+          -0.006280630000000009,
+          -0.009472479999999978,
+          -0.014614860000000007
+        ],
+        "paired_raw_A_minus_B_ms": [
+          -0.011806480000000015,
+          -0.01343945999999999,
+          8.380999999999971e-05,
+          -0.008867000000000012,
+          -0.000982440000000011,
+          -0.006286539999999974,
+          -0.00947219999999998,
+          -0.014610889999999977
+        ],
+        "paired_signs": {
+          "A_faster": 8,
+          "B_faster": 0,
+          "ties": 0
+        },
+        "ranking_supported": false,
+        "raw_boundary_discrepancy": false,
+        "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+        "rounds": 8,
+        "speedup_A_over_B": null,
+        "timing_basis": "paired eager CUDA-event milliseconds per operation",
+        "timing_boundary_discrepancy": false,
+        "timing_boundary_ms": {
+          "A": {
+            "round_event_minus_wall_range": [
+              -0.200265415527344,
+              -0.10195755358886771
+            ],
+            "unranked_event_minus_wall": -0.14386792822265448
+          },
+          "B": {
+            "round_event_minus_wall_range": [
+              -0.2826516286621086,
+              -0.09737093493652438
+            ],
+            "unranked_event_minus_wall": -0.09289496105957085
+          }
+        },
+        "warnings": [
+          "AB_WITHIN_AA_VARIABILITY"
+        ]
+      },
+      "event_median_us": {
+        "A": 209.9351978302002,
+        "B": 217.61247634887695
+      },
+      "event_range_us": {
+        "A": [
+          207.4892807006836,
+          214.8569679260254
+        ],
+        "B": [
+          214.59711074829102,
+          223.78463745117188
+        ]
+      },
+      "physical_labels": [
+        "A",
+        "B"
+      ]
+    },
+    "AC": {
+      "decision": {
+        "aa_control": {
+          "kernel": "A",
+          "max_absolute_difference_ms": 0.013376636505126953,
+          "paired_X_minus_Y_ms": [
+            7.686614990234375e-06,
+            0.013376636505126953,
+            -0.003602886199951172,
+            -0.007955188751220704,
+            0.0040444755554199215,
+            -0.005041923522949219,
+            0.002292804718017578,
+            0.0010387229919433594
+          ],
+          "paired_difference_ms": {
+            "cv": null,
+            "max_ms": 0.013376636505126953,
+            "median_absolute_deviation_ms": 0.003823680877685547,
+            "median_ms": 0.0005232048034667969,
+            "min_ms": -0.007955188751220704,
+            "stdev_ms": 0.0065590876274179725
+          },
+          "rounds": 8
+        },
+        "ab_exceeds_aa_variability": false,
+        "cuda_event_ms": {
+          "A": {
+            "cv": 0.00933133524264077,
+            "max_ms": 0.21395679473876952,
+            "median_absolute_deviation_ms": 0.0013934421539306407,
+            "median_ms": 0.21141360282897947,
+            "min_ms": 0.20817407608032226,
+            "stdev_ms": 0.001972409100313584
+          },
+          "B": {
+            "cv": 0.010659788947497957,
+            "max_ms": 0.2168668746948242,
+            "median_absolute_deviation_ms": 0.0008062458038330111,
+            "median_ms": 0.21134272575378416,
+            "min_ms": 0.20974016189575195,
+            "stdev_ms": 0.002257273003150796
+          }
+        },
+        "decision": "INCONCLUSIVE",
+        "decision_schema_version": 3,
+        "host_clock_preflight": {
+          "median_raw_minus_perf_ms": -0.00044300000000063733,
+          "median_raw_over_perf": 0.9999779590015537,
+          "read_span_bound_ms": 0.011973,
+          "rule": "all five differences have one sign and exceed the largest paired read span",
+          "samples": [
+            {
+              "monotonic_raw_ms": 20.133661,
+              "perf_counter_ms": 20.136171,
+              "raw_minus_perf_ms": -0.0025100000000009004,
+              "raw_over_perf": 0.999875348694645,
+              "read_span_bound_ms": 0.011973
+            },
+            {
+              "monotonic_raw_ms": 20.09562,
+              "perf_counter_ms": 20.096184,
+              "raw_minus_perf_ms": -0.0005640000000006751,
+              "raw_over_perf": 0.9999719349703406,
+              "read_span_bound_ms": 0.004188
+            },
+            {
+              "monotonic_raw_ms": 20.102993,
+              "perf_counter_ms": 20.103199,
+              "raw_minus_perf_ms": -0.0002059999999985962,
+              "raw_over_perf": 0.9999897528746545,
+              "read_span_bound_ms": 0.004408
+            },
+            {
+              "monotonic_raw_ms": 20.098465,
+              "perf_counter_ms": 20.098908,
+              "raw_minus_perf_ms": -0.00044300000000063733,
+              "raw_over_perf": 0.9999779590015537,
+              "read_span_bound_ms": 0.005751
+            },
+            {
+              "monotonic_raw_ms": 20.091081,
+              "perf_counter_ms": 20.091365,
+              "raw_minus_perf_ms": -0.0002840000000006171,
+              "raw_over_perf": 0.9999858645741591,
+              "read_span_bound_ms": 0.004288
+            }
+          ],
+          "status": "NO_RESOLVED_DIFFERENCE"
+        },
+        "host_wall_ms": {
+          "A": {
+            "cv": 0.009360267194023266,
+            "max_ms": 0.2155363,
+            "median_absolute_deviation_ms": 0.001469849999999981,
+            "median_ms": 0.21295867,
+            "min_ms": 0.20940017,
+            "stdev_ms": 0.001991871212169509
+          },
+          "B": {
+            "cv": 0.009804001018200057,
+            "max_ms": 0.21804049,
+            "median_absolute_deviation_ms": 0.0005817000000000183,
+            "median_ms": 0.213017895,
+            "min_ms": 0.21136939000000002,
+            "stdev_ms": 0.0020913176216199713
+          }
+        },
+        "monotonic_raw_ms": {
+          "A": {
+            "cv": 0.009367189073363051,
+            "max_ms": 0.21550884,
+            "median_absolute_deviation_ms": 0.001477519999999996,
+            "median_ms": 0.21294188,
+            "min_ms": 0.20936728999999998,
+            "stdev_ms": 0.0019931100364823794
+          },
+          "B": {
+            "cv": 0.0098031017911213,
+            "max_ms": 0.21801562,
+            "median_absolute_deviation_ms": 0.0005765999999999966,
+            "median_ms": 0.21300144,
+            "min_ms": 0.21133953000000003,
+            "stdev_ms": 0.0020909035442666303
+          }
+        },
+        "paired_A_minus_B_ms": [
+          0.0027375984191894687,
+          -0.0028793716430663974,
+          -0.002084808349609363,
+          0.0006812667846679832,
+          0.0008374404907226518,
+          0.0023648071289062433,
+          -0.007030391693115229,
+          0.002324790954589845
+        ],
+        "paired_difference_ms": {
+          "cv": null,
+          "max_ms": 0.0027375984191894687,
+          "median_absolute_deviation_ms": 0.0017918491363525385,
+          "median_ms": 0.0007593536376953175,
+          "min_ms": -0.007030391693115229,
+          "stdev_ms": 0.0033924003116691166
+        },
+        "paired_host_A_minus_B_ms": [
+          0.0015701500000000201,
+          -0.0031850399999999723,
+          -0.0023351100000000014,
+          0.0005620499999999806,
+          0.0011220299999999683,
+          0.0020002399999999865,
+          -0.006476349999999992,
+          0.0026461099999999793
+        ],
+        "paired_raw_A_minus_B_ms": [
+          0.001562849999999969,
+          -0.003203169999999993,
+          -0.002343839999999986,
+          0.0005611499999999836,
+          0.001132649999999984,
+          0.0020090599999999983,
+          -0.006466719999999988,
+          0.002633499999999991
+        ],
+        "paired_signs": {
+          "A_faster": 3,
+          "B_faster": 5,
+          "ties": 0
+        },
+        "ranking_supported": false,
+        "raw_boundary_discrepancy": false,
+        "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+        "rounds": 8,
+        "speedup_A_over_B": null,
+        "timing_basis": "paired eager CUDA-event milliseconds per operation",
+        "timing_boundary_discrepancy": false,
+        "timing_boundary_ms": {
+          "A": {
+            "round_event_minus_wall_range": [
+              -0.17691833666992096,
+              -0.12096616516113201
+            ],
+            "unranked_event_minus_wall": -0.10594590710449125
+          },
+          "B": {
+            "round_event_minus_wall_range": [
+              -0.24694449096679705,
+              -0.11736153051757725
+            ],
+            "unranked_event_minus_wall": -0.10415913879394623
+          }
+        },
+        "warnings": [
+          "AB_WITHIN_AA_VARIABILITY"
+        ]
+      },
+      "event_median_us": {
+        "A": 211.4136028289795,
+        "C": 211.34272575378418
+      },
+      "event_range_us": {
+        "A": [
+          208.17407608032227,
+          213.95679473876953
+        ],
+        "C": [
+          209.74016189575195,
+          216.86687469482422
+        ]
+      },
+      "physical_labels": [
+        "A",
+        "C"
+      ]
+    },
+    "BC": {
+      "decision": {
+        "aa_control": {
+          "kernel": "A",
+          "max_absolute_difference_ms": 0.007613449096679687,
+          "paired_X_minus_Y_ms": [
+            0.007198715209960937,
+            -1.7910003662109376e-05,
+            0.0004310417175292969,
+            0.0033584022521972656,
+            0.007613449096679687,
+            0.0007343864440917968,
+            0.0019180870056152344,
+            0.0015823936462402344
+          ],
+          "paired_difference_ms": {
+            "cv": null,
+            "max_ms": 0.007613449096679687,
+            "median_absolute_deviation_ms": 0.0014636802673339843,
+            "median_ms": 0.0017502403259277344,
+            "min_ms": -1.7910003662109376e-05,
+            "stdev_ms": 0.002997322052778492
+          },
+          "rounds": 8
+        },
+        "ab_exceeds_aa_variability": false,
+        "cuda_event_ms": {
+          "A": {
+            "cv": 0.012641042951416362,
+            "max_ms": 0.22310688018798827,
+            "median_absolute_deviation_ms": 0.001761121749877928,
+            "median_ms": 0.22094847679138183,
+            "min_ms": 0.21604543685913086,
+            "stdev_ms": 0.0027819041918925426
+          },
+          "B": {
+            "cv": 0.009253248450349966,
+            "max_ms": 0.21474687576293947,
+            "median_absolute_deviation_ms": 0.0007550334930419844,
+            "median_ms": 0.2113601589202881,
+            "min_ms": 0.20908992767333984,
+            "stdev_ms": 0.0019602503346522367
+          }
+        },
+        "decision": "INCONCLUSIVE",
+        "decision_schema_version": 3,
+        "host_clock_preflight": {
+          "median_raw_minus_perf_ms": -0.00044300000000063733,
+          "median_raw_over_perf": 0.9999779590015537,
+          "read_span_bound_ms": 0.011973,
+          "rule": "all five differences have one sign and exceed the largest paired read span",
+          "samples": [
+            {
+              "monotonic_raw_ms": 20.133661,
+              "perf_counter_ms": 20.136171,
+              "raw_minus_perf_ms": -0.0025100000000009004,
+              "raw_over_perf": 0.999875348694645,
+              "read_span_bound_ms": 0.011973
+            },
+            {
+              "monotonic_raw_ms": 20.09562,
+              "perf_counter_ms": 20.096184,
+              "raw_minus_perf_ms": -0.0005640000000006751,
+              "raw_over_perf": 0.9999719349703406,
+              "read_span_bound_ms": 0.004188
+            },
+            {
+              "monotonic_raw_ms": 20.102993,
+              "perf_counter_ms": 20.103199,
+              "raw_minus_perf_ms": -0.0002059999999985962,
+              "raw_over_perf": 0.9999897528746545,
+              "read_span_bound_ms": 0.004408
+            },
+            {
+              "monotonic_raw_ms": 20.098465,
+              "perf_counter_ms": 20.098908,
+              "raw_minus_perf_ms": -0.00044300000000063733,
+              "raw_over_perf": 0.9999779590015537,
+              "read_span_bound_ms": 0.005751
+            },
+            {
+              "monotonic_raw_ms": 20.091081,
+              "perf_counter_ms": 20.091365,
+              "raw_minus_perf_ms": -0.0002840000000006171,
+              "raw_over_perf": 0.9999858645741591,
+              "read_span_bound_ms": 0.004288
+            }
+          ],
+          "status": "NO_RESOLVED_DIFFERENCE"
+        },
+        "host_wall_ms": {
+          "A": {
+            "cv": 0.012675914057110363,
+            "max_ms": 0.22433353,
+            "median_absolute_deviation_ms": 0.001964270000000004,
+            "median_ms": 0.22230423,
+            "min_ms": 0.21754131999999998,
+            "stdev_ms": 0.002807985499345709
+          },
+          "B": {
+            "cv": 0.009215993499707462,
+            "max_ms": 0.21604828,
+            "median_absolute_deviation_ms": 0.000701834999999984,
+            "median_ms": 0.21290596499999997,
+            "min_ms": 0.21019297,
+            "stdev_ms": 0.00196557949042297
+          }
+        },
+        "monotonic_raw_ms": {
+          "A": {
+            "cv": 0.0126372494135143,
+            "max_ms": 0.22431497,
+            "median_absolute_deviation_ms": 0.002025284999999974,
+            "median_ms": 0.22222316000000003,
+            "min_ms": 0.21751936,
+            "stdev_ms": 0.0027989617392318767
+          },
+          "B": {
+            "cv": 0.009213648354822428,
+            "max_ms": 0.21602031,
+            "median_absolute_deviation_ms": 0.0006942700000000107,
+            "median_ms": 0.21288526000000002,
+            "min_ms": 0.21017219999999998,
+            "stdev_ms": 0.0019648654250100776
+          }
+        },
+        "paired_A_minus_B_ms": [
+          0.0013891220092773493,
+          0.0074566459655761586,
+          0.014016952514648434,
+          0.00827583312988281,
+          0.010643844604492164,
+          0.010926399230957035,
+          0.008226242065429684,
+          0.004862079620361337
+        ],
+        "paired_difference_ms": {
+          "cv": null,
+          "max_ms": 0.014016952514648434,
+          "median_absolute_deviation_ms": 0.0025340843200683527,
+          "median_ms": 0.008251037597656247,
+          "min_ms": 0.0013891220092773493,
+          "stdev_ms": 0.0038790001431902635
+        },
+        "paired_host_A_minus_B_ms": [
+          0.0018383499999999886,
+          0.007621380000000011,
+          0.014010499999999981,
+          0.008005009999999951,
+          0.010575620000000008,
+          0.011458480000000021,
+          0.008226120000000003,
+          0.004201879999999991
+        ],
+        "paired_raw_A_minus_B_ms": [
+          0.0018332499999999996,
+          0.007620089999999991,
+          0.01400972000000003,
+          0.008007519999999992,
+          0.010491550000000025,
+          0.01146338,
+          0.008194359999999996,
+          0.004212799999999994
+        ],
+        "paired_signs": {
+          "A_faster": 0,
+          "B_faster": 8,
+          "ties": 0
+        },
+        "ranking_supported": false,
+        "raw_boundary_discrepancy": false,
+        "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+        "rounds": 8,
+        "speedup_A_over_B": null,
+        "timing_basis": "paired eager CUDA-event milliseconds per operation",
+        "timing_boundary_discrepancy": false,
+        "timing_boundary_ms": {
+          "A": {
+            "round_event_minus_wall_range": [
+              -0.20192866833496126,
+              -0.0910524261474599
+            ],
+            "unranked_event_minus_wall": -0.2469544577636711
+          },
+          "B": {
+            "round_event_minus_wall_range": [
+              -0.20069662451171766,
+              -0.09106463269042919
+            ],
+            "unranked_event_minus_wall": -0.13830448254394412
+          }
+        },
+        "warnings": [
+          "AB_WITHIN_AA_VARIABILITY"
+        ]
+      },
+      "event_median_us": {
+        "B": 220.94847679138184,
+        "C": 211.3601589202881
+      },
+      "event_range_us": {
+        "B": [
+          216.04543685913086,
+          223.10688018798828
+        ],
+        "C": [
+          209.08992767333984,
+          214.74687576293945
+        ]
+      },
+      "physical_labels": [
+        "B",
+        "C"
+      ]
+    }
+  },
+  "reference_policy": "fp32_rounded_fp16",
+  "schema_version": 2,
+  "session": 2
+}
