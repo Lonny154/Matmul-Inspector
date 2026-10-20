@@ -1,0 +1,70 @@
+{
+  "created_at_utc": "2026-10-20T19:27:21.396378+00:00",
+  "execution_source_paths": {
+    "B": "/home/daniel/projects/matmul-inspector/artifacts/mi-research-4/n64-eager-v1/sources/B.py"
+  },
+  "failure": {
+    "exception_type": "TrustedSourceFailure",
+    "message": "trusted local experiment failed at timeout; details omitted from artifacts",
+    "stage": "timeout",
+    "traceback": null
+  },
+  "git": {
+    "commit": "f2d6607653d04972bbc04757bd0ac5bf1864af6d",
+    "dirty": true
+  },
+  "logs": [],
+  "spec": {
+    "benchmark": {
+      "iterations": 100,
+      "mode": "preallocated",
+      "rounds": 8,
+      "warmups": 30
+    },
+    "correctness": {
+      "atol": 0.01,
+      "rtol": 0.01
+    },
+    "kernels": {
+      "A": {
+        "implementation": "triton_fc1",
+        "parameters": {
+          "block_k": 32,
+          "block_m": 32,
+          "block_n": 32,
+          "group_size_m": 1,
+          "num_stages": 2,
+          "num_warps": 4
+        }
+      },
+      "B": {
+        "implementation": "triton_source",
+        "parameters": {
+          "block_k": 32,
+          "block_m": 16,
+          "block_n": 16,
+          "group_size_m": 1,
+          "num_stages": 2,
+          "num_warps": 4
+        },
+        "source": {
+          "entry_point": "matmul_into",
+          "interface_version": "matmul_into_v1",
+          "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_research_4_single_kernel_strassen.py",
+          "path": "sources/B.py",
+          "sha256": "0257dd59374f6abb4a008bd136db1dc5633c2fb993ea0706d044f12517a2398f"
+        }
+      }
+    },
+    "schema_version": 3,
+    "seed": 0,
+    "timeout_seconds": 180,
+    "workload": {
+      "dtype": "float16",
+      "k": 64,
+      "m": 64,
+      "n": 64
+    }
+  },
+  "status": "failed"
+}

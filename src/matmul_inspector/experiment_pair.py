@@ -418,8 +418,21 @@ def run_worker(spec: Mapping[str, Any], *, runtime_spec: Mapping[str, Any] | Non
     messages = context.Queue()
     process = context.Process(target=experiment._worker, args=(execution, PairBackend, messages))
     process.start()
+    deadline = time.monotonic() + float(spec["timeout_seconds"])
     try:
-        process.join(float(spec["timeout_seconds"]))
+        # A trusted kernel can return a large PTX capture. Drain the result
+        # before joining: the child cannot exit while its Queue feeder waits
+        # for the parent to read a payload larger than the pipe buffer.
+        message = None
+        while time.monotonic() < deadline:
+            try:
+                message = messages.get(timeout=max(0.0, min(0.1, deadline - time.monotonic())))
+                break
+            except queue.Empty:
+                if not process.is_alive():
+                    break
+        if message is not None:
+            process.join(max(0.0, deadline - time.monotonic()))
         if process.is_alive():
             process.terminate()
             process.join(5)
@@ -429,15 +442,12 @@ def run_worker(spec: Mapping[str, Any], *, runtime_spec: Mapping[str, Any] | Non
             payload = {"status": "failed", "failure": {"stage": "timeout",
                         "message": f"GPU worker exceeded {spec['timeout_seconds']} seconds"}}
             logs = []
+        elif message is None:
+            payload = {"status": "failed", "failure": {"stage": "execution",
+                        "message": f"worker exited {process.exitcode} without a result"}}
+            logs = []
         else:
-            try:
-                message = messages.get(timeout=1)
-            except queue.Empty:
-                payload = {"status": "failed", "failure": {"stage": "execution",
-                            "message": f"worker exited {process.exitcode} without a result"}}
-                logs = []
-            else:
-                payload, logs = message["payload"], message["logs"]
+            payload, logs = message["payload"], message["logs"]
     finally:
         messages.close()
         messages.join_thread()
