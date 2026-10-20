@@ -1,0 +1,25 @@
+{
+  "calls_per_block": 100,
+  "date": "2026-10-20",
+  "decision_rule": "No historical result changes; retain every slow sample; compare complete-operation median and stability across both sessions.",
+  "diagnostic_script_sha256": "c326d0d4161264dc797a3497e32cae383c91fd29d9a36d6476f33f5b00431d2a",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti",
+  "instrumented_blocks_per_session": 8,
+  "primary_comparison": "original per-call scratch allocation versus preallocated scratch, balanced within each fresh process",
+  "rounds_per_session": 8,
+  "schema_version": 1,
+  "secondary": "conventional control, partial/reduction eager blocks, separately labeled instrumented probe and optional CUDA Graph phase probe",
+  "session_order": [
+    1,
+    2
+  ],
+  "shape": {
+    "dtype": "float16",
+    "k": 4096,
+    "m": 32,
+    "n": 2048
+  },
+  "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+  "spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+  "warmups_per_function": 30
+}
