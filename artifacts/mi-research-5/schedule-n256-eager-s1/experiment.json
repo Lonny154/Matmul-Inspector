@@ -1,0 +1,59 @@
+{
+  "benchmark": {
+    "iterations": 20,
+    "mode": "preallocated",
+    "rounds": 8,
+    "warmups": 10
+  },
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "kernels": {
+    "A": {
+      "implementation": "triton_source",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 16,
+        "block_n": 16,
+        "group_size_m": 1,
+        "num_stages": 2,
+        "num_warps": 4
+      },
+      "source": {
+        "entry_point": "matmul_into",
+        "interface_version": "matmul_into_v1",
+        "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_research_5_peer_corpus.py",
+        "path": "sources/A.py",
+        "sha256": "3378cfa1d9703ab9d504a4357e3407763ecf9a270e17ba198be83b4f098762a8"
+      }
+    },
+    "B": {
+      "implementation": "triton_source",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 16,
+        "block_n": 16,
+        "group_size_m": 1,
+        "num_stages": 2,
+        "num_warps": 4
+      },
+      "source": {
+        "entry_point": "matmul_into",
+        "interface_version": "matmul_into_v1",
+        "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_research_5_peer_liveness.py",
+        "path": "sources/B.py",
+        "sha256": "f580b6d635b288dc8ab9998cd92f9c7e01efe0212cdc03ff8cd52e26f49b436d"
+      }
+    }
+  },
+  "schema_version": 3,
+  "seed": 0,
+  "timeout_seconds": 180,
+  "workload": {
+    "dtype": "float16",
+    "k": 256,
+    "m": 256,
+    "n": 256
+  }
+}

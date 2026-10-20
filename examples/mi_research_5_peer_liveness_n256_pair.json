@@ -1,0 +1,20 @@
+{
+  "schema_version": 3,
+  "workload": {"m": 256, "n": 256, "k": 256, "dtype": "float16"},
+  "seed": 0,
+  "correctness": {"atol": 0.01, "rtol": 0.01},
+  "benchmark": {"mode": "preallocated", "warmups": 10, "iterations": 20, "rounds": 8},
+  "timeout_seconds": 180,
+  "kernels": {
+    "A": {"implementation": "triton_source", "parameters": {
+      "block_m": 16, "block_n": 16, "block_k": 32,
+      "num_warps": 4, "num_stages": 2, "group_size_m": 1},
+      "source": {"path": "examples/kernels/mi_research_4c_fused_rank7.py",
+                 "entry_point": "matmul_into", "interface_version": "matmul_into_v1"}},
+    "B": {"implementation": "triton_source", "parameters": {
+      "block_m": 16, "block_n": 16, "block_k": 32,
+      "num_warps": 4, "num_stages": 2, "group_size_m": 1},
+      "source": {"path": "examples/kernels/mi_research_5_peer_liveness.py",
+                 "entry_point": "matmul_into", "interface_version": "matmul_into_v1"}}
+  }
+}
