@@ -1,0 +1,319 @@
+{
+  "classification_reason": "Low-output Split-2 has a lower median and six favorable rounds in each session, but two unfavorable rounds recur and both complete-operation comparisons are INCONCLUSIVE. FC1 shows a supported conventional advantage in one session without a fresh-session repeat.",
+  "fresh_repeat_count": 1,
+  "method": "Offline descriptive join of verified paired bundles. Every raw block and operation count remains in each bundle. Negative paired A-B favors conventional A. No cross-session confidence threshold is added.",
+  "overall_classification": "INCONCLUSIVE",
+  "preflight_sha256": "cdcf906829aaf153b4f4c3069c4ed29a1e199ce46c319a89902beebd93a6b5b4",
+  "schema_version": 1,
+  "sessions": [
+    {
+      "AA_max_absolute_gap_ms_per_operation": 0.0028774404525756837,
+      "B_event_rounds_ms_per_operation": [
+        0.03748863935470581,
+        0.034253439903259277,
+        0.041830401420593265,
+        0.03501215934753418,
+        0.0985644817352295,
+        0.09819135665893555,
+        0.03254271984100342,
+        0.03701632022857666
+      ],
+      "bundle": "low-output-split2",
+      "clock_medians_ms_per_operation": {
+        "cuda_event": {
+          "A": 0.0629086399078369,
+          "B": 0.03725247979164124
+        },
+        "monotonic_raw": {
+          "A": 0.06351853,
+          "B": 0.03765449
+        },
+        "perf_counter": {
+          "A": 0.06352536,
+          "B": 0.037657104999999996
+        }
+      },
+      "compiler": {
+        "A_kernel": "fc1_kernel",
+        "A_metadata": {
+          "global_scratch_size": 0,
+          "n_regs": 119,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 24576
+        },
+        "A_ptx_sha256": "2b0633490e7c09795b16b8ac18cf4f50c597c389578dfd5fa8b254cb1a071980",
+        "B_capture_scope": "reduction launch only",
+        "B_captured_kernel": "reduce_partials",
+        "B_reduction_metadata": {
+          "n_regs": 22,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 0
+        },
+        "B_reduction_ptx_sha256": "b43a6541cac2aa8a54ccfe276d2f02fb4ca1b6e5c7caebcc9b48f08d1d10fe5e",
+        "sass_A": "UNAVAILABLE",
+        "sass_B": "UNAVAILABLE"
+      },
+      "correctness": {
+        "max_absolute_error_B": [
+          0.125,
+          0.125,
+          0.125
+        ],
+        "passed": true,
+        "seeds": [
+          0,
+          1,
+          2
+        ]
+      },
+      "decision": "INCONCLUSIVE",
+      "event_over_perf_boundary": false,
+      "host_clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "paired_A_minus_B": {
+        "cuda_event": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.0037158405780792284,
+          "max_ms_per_operation": 0.030407361984252923,
+          "median_ms_per_operation": 0.023039200305938718,
+          "min_ms_per_operation": -0.035209603309631354
+        },
+        "monotonic_raw": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.0036113649999999966,
+          "max_ms_per_operation": 0.030210390000000004,
+          "median_ms_per_operation": 0.023053050000000002,
+          "min_ms_per_operation": -0.03498024999999999
+        },
+        "perf_counter": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.003609555000000004,
+          "max_ms_per_operation": 0.030210909999999994,
+          "median_ms_per_operation": 0.023055264999999995,
+          "min_ms_per_operation": -0.03497687000000001
+        }
+      },
+      "ranking_supported": false,
+      "raw_boundary_discrepancy": false,
+      "shape": "low_output",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:54:35.397, 210, 405, 41, 10.98, 12",
+        "pre": "2026/10/20 10:54:18.263, 210, 405, 40, 10.99, 10"
+      },
+      "warnings": []
+    },
+    {
+      "AA_max_absolute_gap_ms_per_operation": 0.003735356330871582,
+      "B_event_rounds_ms_per_operation": [
+        0.08125247955322265,
+        0.07465919971466065,
+        0.07626751899719238,
+        0.07460864067077637,
+        0.07629536151885986,
+        0.0748748779296875,
+        0.06980607986450195,
+        0.07420928001403809
+      ],
+      "bundle": "fc1-split2",
+      "clock_medians_ms_per_operation": {
+        "cuda_event": {
+          "A": 0.06354432106018065,
+          "B": 0.07476703882217407
+        },
+        "monotonic_raw": {
+          "A": 0.06396628,
+          "B": 0.075197015
+        },
+        "perf_counter": {
+          "A": 0.06397101,
+          "B": 0.075200095
+        }
+      },
+      "compiler": {
+        "A_kernel": "fc1_kernel",
+        "A_metadata": {
+          "global_scratch_size": 0,
+          "n_regs": 121,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 24576
+        },
+        "A_ptx_sha256": "16be26977e1fc6b029cdaac1df5870f307b4e1e9f63f0240ec223f04f4fda668",
+        "B_capture_scope": "reduction launch only",
+        "B_captured_kernel": "reduce_partials",
+        "B_reduction_metadata": {
+          "n_regs": 22,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 0
+        },
+        "B_reduction_ptx_sha256": "c55e88127b68d46b35e81d79d7418baaaf52317068a19ee69f29f30df46b36a2",
+        "sass_A": "UNAVAILABLE",
+        "sass_B": "UNAVAILABLE"
+      },
+      "correctness": {
+        "max_absolute_error_B": [
+          0.0625,
+          0.0625,
+          0.0625
+        ],
+        "passed": true,
+        "seeds": [
+          0,
+          1,
+          2
+        ]
+      },
+      "decision": "A_FASTER",
+      "event_over_perf_boundary": false,
+      "host_clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "paired_A_minus_B": {
+        "cuda_event": {
+          "A_faster_rounds": 8,
+          "B_faster_rounds": 0,
+          "mad_ms_per_operation": 0.0020852804183960037,
+          "max_ms_per_operation": -0.006002879142761236,
+          "median_ms_per_operation": -0.011932959556579595,
+          "min_ms_per_operation": -0.017664961814880364
+        },
+        "monotonic_raw": {
+          "A_faster_rounds": 8,
+          "B_faster_rounds": 0,
+          "mad_ms_per_operation": 0.0018726149999999993,
+          "max_ms_per_operation": -0.0059859699999999984,
+          "median_ms_per_operation": -0.0126891,
+          "min_ms_per_operation": -0.017605449999999995
+        },
+        "perf_counter": {
+          "A_faster_rounds": 8,
+          "B_faster_rounds": 0,
+          "mad_ms_per_operation": 0.001867855000000005,
+          "max_ms_per_operation": -0.005989379999999989,
+          "median_ms_per_operation": -0.012692854999999996,
+          "min_ms_per_operation": -0.017608629999999986
+        }
+      },
+      "ranking_supported": true,
+      "raw_boundary_discrepancy": false,
+      "shape": "fc1",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:55:15.416, 210, 405, 42, 11.20, 6",
+        "pre": "2026/10/20 10:55:00.876, 210, 405, 41, 11.03, 10"
+      },
+      "warnings": []
+    },
+    {
+      "AA_max_absolute_gap_ms_per_operation": 0.00526144027709961,
+      "B_event_rounds_ms_per_operation": [
+        0.06816544055938721,
+        0.03421184062957763,
+        0.03810303926467896,
+        0.037424960136413575,
+        0.03422208070755005,
+        0.03451904058456421,
+        0.06907904148101807,
+        0.03485696077346802
+      ],
+      "bundle": "low-output-split2-repeat",
+      "clock_medians_ms_per_operation": {
+        "cuda_event": {
+          "A": 0.06301504135131836,
+          "B": 0.03614096045494079
+        },
+        "monotonic_raw": {
+          "A": 0.06339619499999999,
+          "B": 0.036524495000000004
+        },
+        "perf_counter": {
+          "A": 0.063400215,
+          "B": 0.036527229999999994
+        }
+      },
+      "compiler": {
+        "A_kernel": "fc1_kernel",
+        "A_metadata": {
+          "global_scratch_size": 0,
+          "n_regs": 119,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 24576
+        },
+        "A_ptx_sha256": "2b0633490e7c09795b16b8ac18cf4f50c597c389578dfd5fa8b254cb1a071980",
+        "B_capture_scope": "reduction launch only",
+        "B_captured_kernel": "reduce_partials",
+        "B_reduction_metadata": {
+          "n_regs": 22,
+          "n_spills": 0,
+          "num_stages": 3,
+          "num_warps": 4,
+          "shared": 0
+        },
+        "B_reduction_ptx_sha256": "b43a6541cac2aa8a54ccfe276d2f02fb4ca1b6e5c7caebcc9b48f08d1d10fe5e",
+        "sass_A": "UNAVAILABLE",
+        "sass_B": "UNAVAILABLE"
+      },
+      "correctness": {
+        "max_absolute_error_B": [
+          0.125,
+          0.125,
+          0.125
+        ],
+        "passed": true,
+        "seeds": [
+          0,
+          1,
+          2
+        ]
+      },
+      "decision": "INCONCLUSIVE",
+      "event_over_perf_boundary": false,
+      "host_clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "paired_A_minus_B": {
+        "cuda_event": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.0021286416053772073,
+          "max_ms_per_operation": 0.03023648023605347,
+          "median_ms_per_operation": 0.026592639684677122,
+          "min_ms_per_operation": -0.007178239822387696
+        },
+        "monotonic_raw": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.001895909999999999,
+          "max_ms_per_operation": 0.030204589999999996,
+          "median_ms_per_operation": 0.026739645,
+          "min_ms_per_operation": -0.007281139999999997
+        },
+        "perf_counter": {
+          "A_faster_rounds": 2,
+          "B_faster_rounds": 6,
+          "mad_ms_per_operation": 0.0018932899999999885,
+          "max_ms_per_operation": 0.030205069999999994,
+          "median_ms_per_operation": 0.026742595000000004,
+          "min_ms_per_operation": -0.007278439999999997
+        }
+      },
+      "ranking_supported": false,
+      "raw_boundary_discrepancy": false,
+      "shape": "low_output",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:56:05.163, 210, 405, 43, 11.13, 7",
+        "pre": "2026/10/20 10:55:43.500, 210, 405, 42, 11.18, 11"
+      },
+      "warnings": [
+        "AB_WITHIN_AA_VARIABILITY"
+      ]
+    }
+  ],
+  "split4_executed": false
+}

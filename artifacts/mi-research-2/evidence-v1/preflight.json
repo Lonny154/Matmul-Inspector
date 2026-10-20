@@ -1,0 +1,58 @@
+{
+  "benchmark": {
+    "aa_rounds": 8,
+    "iterations_per_block": 100,
+    "mode": "preallocated",
+    "rounds": 8,
+    "warmups_per_kernel": 30
+  },
+  "budget": {
+    "conditional_split4_comparison": 1,
+    "initial_comparisons": 2,
+    "maximum_fresh_repeat": 1
+  },
+  "comparisons": [
+    {
+      "conventional_output_ctas": 192,
+      "name": "fc1",
+      "scratch_bytes_per_call": 12582912,
+      "shape": {
+        "dtype": "float16",
+        "k": 768,
+        "m": 512,
+        "n": 3072
+      },
+      "spec_path": "examples/mi_research_2_fc1_split2.json",
+      "spec_sha256": "75923a30fe10e2f16ff47fe1bec5204771a2ab58fcddc717ae004a595800b7f9",
+      "split2_partial_ctas": 384,
+      "split2_reduction_ctas": 1536,
+      "timed_launches_A": 1,
+      "timed_launches_B": 2
+    },
+    {
+      "conventional_output_ctas": 16,
+      "name": "low_output",
+      "scratch_bytes_per_call": 524288,
+      "shape": {
+        "dtype": "float16",
+        "k": 4096,
+        "m": 32,
+        "n": 2048
+      },
+      "spec_path": "examples/mi_research_2_low_output_split2.json",
+      "spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+      "split2_partial_ctas": 32,
+      "split2_reduction_ctas": 64,
+      "timed_launches_A": 1,
+      "timed_launches_B": 2
+    }
+  ],
+  "date": "2026-10-20",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti",
+  "gpu_sms": 34,
+  "measurement_note": "B allocates FP32 scratch per call and enqueues partial GEMM then deterministic reduction inside the timed wrapper; compiler capture returns reduction launch only.",
+  "recorded_before_gpu_execution": true,
+  "study": "MI-Research-2 Split-K versus conventional GEMM",
+  "trusted_source_path": "examples/kernels/mi_research_2_split2.py",
+  "trusted_source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9"
+}
