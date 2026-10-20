@@ -1,0 +1,149 @@
+{
+  "classification": "C",
+  "coefficients_sha256": "4abdcb3db4094b17dba24e8c23b17206fae2e82d769b61fa35952831480a68ef",
+  "comparison_limit": "Historical eager and new graph sessions differ in process, execution mode, and measurement time. Their medians do not establish a controlled mode speedup or a causal mechanism.",
+  "external_anchor_status": "NOT_MEASURED",
+  "historical_eager": {
+    "decision": "INCONCLUSIVE",
+    "event_us": {
+      "A": {
+        "cv": 0.5473529240553953,
+        "max_us": 1048.2272148132324,
+        "median_us": 380.8784008026123,
+        "min_us": 322.91839122772217
+      },
+      "B": {
+        "cv": 0.544451805102868,
+        "max_us": 892.0928001403809,
+        "median_us": 300.54240226745605,
+        "min_us": 275.7200002670288
+      }
+    },
+    "matched_to_graph": false,
+    "mode": "eager"
+  },
+  "historical_eager_manifest_sha256": "b7c8a76cf187872d73c45555a522074c44926399a83add25897c6b44cb23dd94",
+  "milestone": "MI-Research-6B",
+  "mode": "fixed_address_cuda_graph",
+  "operations_per_replay": 20,
+  "performance_improvement_demonstrated": false,
+  "schema_version": 1,
+  "sessions": [
+    {
+      "aa_max_absolute_gap_us": 7.203203439712522,
+      "capture_order": [
+        "A",
+        "B"
+      ],
+      "capture_setup_ms": {
+        "A": 31.445951,
+        "B": 6.14402
+      },
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "decision_reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+      "event_us": {
+        "A": {
+          "cv": 0.012920162867708938,
+          "mad_us": 0.37280023097991943,
+          "max_us": 60.843199491500854,
+          "median_us": 59.92160141468048,
+          "min_us": 58.24959874153137
+        },
+        "B": {
+          "cv": 0.013948949004398123,
+          "mad_us": 0.47920048236846924,
+          "max_us": 60.58719754219055,
+          "median_us": 59.05280113220215,
+          "min_us": 58.45760107040405
+        }
+      },
+      "first_compile_ms": {
+        "A": 384.73172,
+        "B": 2.859807
+      },
+      "host_clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "manifest_sha256": "4ac7b5f1f91be14f65bfa910a6879e97ea586be15bb91692431d6714726edbe5",
+      "paired_A_minus_B_us": [
+        0.25600194931030273,
+        -0.19679665565490723,
+        1.0399997234344482,
+        0.7568001747131348,
+        0.9808003902435303,
+        -0.20800232887268066,
+        1.2575984001159668,
+        0.7839977741241455
+      ],
+      "paired_mad_us": 0.3784000873565674,
+      "paired_median_us": 0.7703989744186401,
+      "physical_kernels_per_replay": {
+        "A": 560,
+        "B": 480
+      },
+      "session": 1,
+      "topology_passed": true,
+      "warnings": [
+        "AB_WITHIN_AA_VARIABILITY"
+      ]
+    },
+    {
+      "aa_max_absolute_gap_us": 19.406402111053467,
+      "capture_order": [
+        "B",
+        "A"
+      ],
+      "capture_setup_ms": {
+        "A": 8.864532,
+        "B": 28.315959
+      },
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "decision_reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+      "event_us": {
+        "A": {
+          "cv": 0.0508631019505396,
+          "mad_us": 0.26000142097473145,
+          "max_us": 68.32960247993469,
+          "median_us": 60.232800245285034,
+          "min_us": 58.21760296821594
+        },
+        "B": {
+          "cv": 0.06294739266447114,
+          "mad_us": 0.35440027713775635,
+          "max_us": 68.20639967918396,
+          "median_us": 59.52480137348175,
+          "min_us": 59.033602476119995
+        }
+      },
+      "first_compile_ms": {
+        "A": 257.220604,
+        "B": 1.825165
+      },
+      "host_clock_preflight": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "de048944f94e4170cf1cbbb2b35c193b70c708b7b64c724203e4f87ced3f3b01",
+      "paired_A_minus_B_us": [
+        7.311999797821045,
+        -1.337599754333496,
+        -8.857601881027222,
+        1.4591991901397705,
+        0.7503986358642578,
+        0.6655991077423096,
+        0.8128046989440918,
+        -7.383996248245239
+      ],
+      "paired_mad_us": 1.3983994722366333,
+      "paired_median_us": 0.7079988718032837,
+      "physical_kernels_per_replay": {
+        "A": 560,
+        "B": 480
+      },
+      "session": 2,
+      "topology_passed": true,
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE",
+        "AB_WITHIN_AA_VARIABILITY"
+      ]
+    }
+  ],
+  "source_sha256": "8b328950567868b2d119e021a0dd3bcc312d6e1c8138a1577b0e0491949fbca1"
+}
