@@ -97,6 +97,44 @@ def pair_order(round_index: int) -> list[str]:
     return ["A", "B"] if round_index % 2 else ["B", "A"]
 
 
+def measure_paired_rounds(measure, torch, functions, iterations: int, count: int,
+                          options: Mapping[str, Any], *, with_aa: bool,
+                          aa_placement: str = "before"):
+    """Execute the existing balanced blocks with an optional diagnostic phase order."""
+    if aa_placement not in ("before", "after"):
+        raise ValueError("A/A placement must be before or after")
+    aa_rounds, rounds, sequence = [], [], []
+    for index in range(1, count + 1):
+        if not with_aa:
+            phases = ("ab",)
+        else:
+            phases = ("aa", "ab") if aa_placement == "before" else ("ab", "aa")
+        for phase in phases:
+            if phase == "aa":
+                order = ["X", "Y"] if index % 2 else ["Y", "X"]
+                aa_rounds.append({"round": index, "order": order,
+                                  "measurements": {slot: measure(
+                                      torch, functions["A"], iterations, **options) for slot in order}})
+            else:
+                order = pair_order(index)
+                rounds.append({"round": index, "order": order,
+                               "measurements": {label: measure(
+                                   torch, functions[label], iterations, **options) for label in order}})
+            sequence.append({"round": index, "phase": phase, "order": order,
+                             "iterations_per_block": iterations})
+    return aa_rounds, rounds, sequence
+
+
+def expected_diagnostic_sequence(count: int, iterations: int, placement: str) -> list[dict[str, Any]]:
+    if placement not in ("before", "after"):
+        raise ValueError("A/A placement must be before or after")
+    return [{"round": index, "phase": phase,
+             "order": (["X", "Y"] if index % 2 else ["Y", "X"]) if phase == "aa" else pair_order(index),
+             "iterations_per_block": iterations}
+            for index in range(1, count + 1)
+            for phase in (("aa", "ab") if placement == "before" else ("ab", "aa"))]
+
+
 def raw_clock():
     """Return the optional Linux RAW reader; never substitute another clock."""
     if sys.platform.startswith("linux") and hasattr(time, "CLOCK_MONOTONIC_RAW"):
@@ -332,6 +370,10 @@ class PairBackend:
             return {**partial, "status": "failed", "failure": {
                 "stage": "correctness", "message": "one or both candidates failed the independent reference"}}
         bench = spec["benchmark"]
+        diagnostic_placement = spec.get("_diagnostic_aa_placement")
+        if diagnostic_placement is not None and (
+                spec["schema_version"] != 3 or diagnostic_placement not in ("before", "after")):
+            raise experiment.StageFailure("benchmark", "invalid diagnostic A/A placement")
         log("benchmark: separate warmups, unranked timer controls, and balanced paired rounds")
         try:
             clock_reader = raw_clock() if spec["schema_version"] == 3 else None
@@ -344,20 +386,10 @@ class PairBackend:
             measure_options = {"raw_clock": clock_reader} if spec["schema_version"] == 3 else {}
             controls = {label: measure(torch, functions[label], bench["iterations"], **measure_options)
                         for label in LABELS}
-            aa_rounds = []
-            rounds = []
-            for index in range(1, bench["rounds"] + 1):
-                if spec["schema_version"] == 3:
-                    aa_order = ["X", "Y"] if index % 2 else ["Y", "X"]
-                    aa_rounds.append({"round": index, "order": aa_order,
-                                      "measurements": {slot: measure(
-                                          torch, functions["A"], bench["iterations"], **measure_options)
-                                          for slot in aa_order}})
-                order = pair_order(index)
-                rounds.append({"round": index, "order": order,
-                               "measurements": {label: measure(torch, functions[label], bench["iterations"],
-                                                                **measure_options)
-                                                for label in order}})
+            aa_rounds, rounds, sequence = measure_paired_rounds(
+                measure, torch, functions, bench["iterations"], bench["rounds"],
+                measure_options, with_aa=spec["schema_version"] == 3,
+                aa_placement=diagnostic_placement or "before")
         except Exception as error:
             raise experiment.StageFailure("benchmark", f"paired measurement failed: {error}") from error
         return {**partial, "status": "success", "local_compiler_capture": captured_local,
@@ -374,7 +406,9 @@ class PairBackend:
             "unranked_timing_controls": controls, "rounds": rounds,
             **({"host_clock_preflight": clock_check, "aa_rounds": aa_rounds,
                 "aa_kernel": "A", "aa_iterations_per_measurement": bench["iterations"]}
-               if spec["schema_version"] == 3 else {})}}
+               if spec["schema_version"] == 3 else {}),
+            **({"diagnostic_aa_placement": diagnostic_placement,
+                "measurement_sequence": sequence} if diagnostic_placement is not None else {})}}
 
 
 def run_worker(spec: Mapping[str, Any], *, runtime_spec: Mapping[str, Any] | None = None) -> dict[str, Any]:
@@ -764,6 +798,9 @@ def render_report(spec: Mapping[str, Any], correctness: Mapping[str, Any],
                   "so the host windows differ by timestamp-read overhead. No clock is rescaled or treated "
                   "as a universal absolute reference.", ""]
         preflight = decision.get("host_clock_preflight") or {}
+        if provenance.get("diagnostic_aa_placement"):
+            lines.append(f"- Diagnostic A/A placement: {provenance['diagnostic_aa_placement']} "
+                         "each A/B pair; exact phase order is in `raw_result.json`.")
         lines.append(f"- Host-clock preflight: {preflight.get('status', 'UNAVAILABLE')}; "
                      f"median RAW/perf rate ratio {preflight.get('median_raw_over_perf', 'UNAVAILABLE')}; "
                      f"five 20 ms windows when RAW is available.")
@@ -891,6 +928,16 @@ def verify_bundle(output: Path) -> dict[str, Any]:
             set(decision.get("warnings", [])) & {
                 "MISSING_DIAGNOSTICS", "INVALID_CLOCK_PREFLIGHT", "INVALID_DIAGNOSTICS"}):
         raise ValueError("successful v3 bundle has invalid timing diagnostics")
+    diagnostic = raw.get("benchmark", {}).get("diagnostic_aa_placement")
+    if diagnostic is not None:
+        if (spec["schema_version"] != 3 or diagnostic not in ("before", "after") or
+                provenance.get("diagnostic_aa_placement") != diagnostic or
+                raw["benchmark"].get("measurement_sequence") != expected_diagnostic_sequence(
+                    spec["benchmark"]["rounds"], spec["benchmark"]["iterations"], diagnostic)):
+            raise ValueError("diagnostic phase order does not replay")
+    elif (provenance.get("diagnostic_aa_placement") is not None or
+          "measurement_sequence" in raw.get("benchmark", {})):
+        raise ValueError("diagnostic placement metadata is incomplete")
     if _has_local(spec):
         if provenance.get("trusted_local_source_opt_in") is not True:
             raise ValueError("trusted source opt-in provenance missing")
@@ -949,8 +996,12 @@ def verify_bundle(output: Path) -> dict[str, Any]:
 
 def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | None = None,
              allow_trusted_local_source: bool = False,
+             diagnostic_aa_placement: str | None = None,
              runner=run_worker, compiler_capture=capture_compiler) -> dict[str, Any]:
     validated = validate_spec(spec)
+    if diagnostic_aa_placement is not None and (
+            diagnostic_aa_placement not in ("before", "after") or validated["schema_version"] != 3):
+        raise ValueError("diagnostic A/A placement requires a v3 pair spec and before/after")
     has_local = _has_local(validated)
     if has_local and not allow_trusted_local_source:
         raise ValueError("trusted local source requires --allow-trusted-local-source; this is not a sandbox")
@@ -973,10 +1024,13 @@ def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | 
             public_spec["kernels"][label]["source"] = {
                 **preserved["candidate"]["source"], "path": f"sources/{label}.py"}
         runtime_spec["_allow_trusted_local_source"] = True
+    if diagnostic_aa_placement is not None:
+        runtime_spec["_diagnostic_aa_placement"] = diagnostic_aa_placement
     _write_json(output / "experiment.json", public_spec)
     source = Path(__file__).with_name("triton_fc1.py")
     (output / "candidate_source.py").write_bytes(source.read_bytes())
-    raw = (runner(public_spec, runtime_spec=runtime_spec) if has_local else runner(public_spec))
+    raw = (runner(public_spec, runtime_spec=runtime_spec)
+           if has_local or diagnostic_aa_placement is not None else runner(public_spec))
     _write_json(output / "raw_result.json", raw)
     correctness = raw.get("correctness", {"passed": None})
     rows = timing_rows(raw)
@@ -1000,6 +1054,16 @@ def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | 
         driver_version = driver.stdout.strip().splitlines()[0] if driver.returncode == 0 else None
     except (OSError, subprocess.TimeoutExpired, IndexError):
         driver_version = None
+    if validated["schema_version"] == 3:
+        if diagnostic_aa_placement is None:
+            measurement = ("separate compile and warmup; A/A then alternating A/B blocks; "
+                           "CUDA-event, perf_counter, optional MONOTONIC_RAW clocks")
+        else:
+            measurement = ("separate compile and warmup; "
+                           f"A/A {diagnostic_aa_placement} each alternating A/B pair; "
+                           "CUDA-event, perf_counter, optional MONOTONIC_RAW clocks")
+    else:
+        measurement = "separate compile and warmup; alternating A/B blocks with CUDA-event and host clocks"
     provenance = {
         "command": list(command or []), "python": platform.python_version(),
         "platform": platform.platform(), "driver_version": driver_version,
@@ -1019,10 +1083,9 @@ def run_pair(spec: Mapping[str, Any], output: Path, *, command: Sequence[str] | 
                                if public_spec["kernels"][label]["implementation"] == experiment.SOURCE_IMPLEMENTATION
                                else _digest(output / "candidate_source.py"))}
             for label in LABELS} if has_local else None,
-        "measurement": ("separate compile and warmup; A/A then alternating A/B blocks; "
-                        "CUDA-event, perf_counter, optional MONOTONIC_RAW clocks"
-                        if validated["schema_version"] == 3 else
-                        "separate compile and warmup; alternating A/B blocks with CUDA-event and host clocks")}
+        "measurement": measurement,
+        **({"diagnostic_aa_placement": diagnostic_aa_placement}
+           if diagnostic_aa_placement is not None else {})}
     _write_json(output / "provenance.json", provenance)
     (output / "report.md").write_text(
         render_report(validated, correctness, decision, compiler, provenance), encoding="utf-8")
@@ -1038,9 +1101,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parser.add_argument("--verify", type=Path)
     parser.add_argument("--allow-trusted-local-source", action="store_true",
                         help="execute explicitly selected local Python source; this is not a sandbox")
+    parser.add_argument("--diagnostic-aa-placement", choices=("before", "after"),
+                        help="v3 diagnostic: place the same A/A blocks before or after each A/B pair")
     args = parser.parse_args(arguments)
     if args.verify:
-        if args.spec or args.output or args.allow_trusted_local_source:
+        if args.spec or args.output or args.allow_trusted_local_source or args.diagnostic_aa_placement:
             parser.error("--verify cannot be combined with run options")
         try:
             print(json.dumps(verify_bundle(args.verify), sort_keys=True))
@@ -1056,8 +1121,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
                    "--output", str(args.output)]
         if args.allow_trusted_local_source:
             command.append("--allow-trusted-local-source")
+        if args.diagnostic_aa_placement:
+            command.extend(["--diagnostic-aa-placement", args.diagnostic_aa_placement])
         decision = run_pair(spec, args.output, command=command,
-                            allow_trusted_local_source=args.allow_trusted_local_source)
+                            allow_trusted_local_source=args.allow_trusted_local_source,
+                            diagnostic_aa_placement=args.diagnostic_aa_placement)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
         print(f"paired comparison failed: {error}", file=sys.stderr)
         return 1

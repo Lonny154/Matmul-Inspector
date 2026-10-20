@@ -1,0 +1,321 @@
+{
+  "classification": "C",
+  "classification_reason": "Both after-session paired medians favor A while both before-session medians are near zero. Within-session drifts and wide A/B ranges plus only two sessions per condition prevent distinguishing a placement effect from session variation. No causal mechanism is isolated.",
+  "condition_summaries": {
+    "after": {
+      "A_event_medians_ms_per_operation": [
+        0.06955919981002807,
+        0.06370815992355347
+      ],
+      "B_event_medians_ms_per_operation": [
+        0.07429568052291871,
+        0.06572479963302613
+      ],
+      "session_count": 2,
+      "session_paired_event_medians_ms_per_operation": [
+        -0.0025417590141296395,
+        -0.001989600658416746
+      ]
+    },
+    "before": {
+      "A_event_medians_ms_per_operation": [
+        0.06864383935928345,
+        0.06829807996749879
+      ],
+      "B_event_medians_ms_per_operation": [
+        0.06884176015853882,
+        0.06859679937362671
+      ],
+      "session_count": 2,
+      "session_paired_event_medians_ms_per_operation": [
+        5.119800567627425e-05,
+        6.81614875793421e-05
+      ]
+    }
+  },
+  "method": "Descriptive session-level summaries from saved raw_result.json and comparison.json; one session is one independent unit. A-B negative favors A. MAD is median absolute deviation about the within-session median. No inferential threshold is applied.",
+  "schema_version": 1,
+  "session_summaries": [
+    {
+      "AA": {
+        "max_absolute_gap_ms_per_operation": 0.014176640510559082,
+        "paired_X_minus_Y_mad_ms_per_operation": 0.0028121614456176757,
+        "paired_X_minus_Y_median_ms_per_operation": -0.0014131188392639158
+      },
+      "AB": {
+        "paired_A_minus_B": {
+          "cuda_event": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": -0.004871840476989749,
+            "last_four_median_ms_per_operation": 5.119800567627425e-05,
+            "max_ms_per_operation": 0.010611839294433587,
+            "median_absolute_deviation_ms_per_operation": 0.001272962093353265,
+            "median_ms_per_operation": 5.119800567627425e-05,
+            "min_ms_per_operation": -0.01130496501922608
+          },
+          "monotonic_raw": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": -0.0044189450000000005,
+            "last_four_median_ms_per_operation": -1.7130000000000752e-05,
+            "max_ms_per_operation": 0.010384349999999997,
+            "median_absolute_deviation_ms_per_operation": 0.0019197500000000022,
+            "median_ms_per_operation": -1.7130000000000752e-05,
+            "min_ms_per_operation": -0.011021929999999997
+          },
+          "perf_counter": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": -0.0044182500000000055,
+            "last_four_median_ms_per_operation": -1.5634999999999954e-05,
+            "max_ms_per_operation": 0.010388170000000002,
+            "median_absolute_deviation_ms_per_operation": 0.0019243499999999983,
+            "median_ms_per_operation": -1.5634999999999954e-05,
+            "min_ms_per_operation": -0.011027529999999994
+          }
+        },
+        "timing_medians_ms_per_operation": {
+          "cuda_event": {
+            "A": 0.06864383935928345,
+            "B": 0.06884176015853882
+          },
+          "monotonic_raw": {
+            "A": 0.069622975,
+            "B": 0.069751515
+          },
+          "perf_counter": {
+            "A": 0.06963319000000001,
+            "B": 0.069759425
+          }
+        }
+      },
+      "all_three_seed_checks_zero_error": true,
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "host_clock_preflight": {
+        "median_raw_over_perf": 0.9999749295103888,
+        "status": "NO_RESOLVED_DIFFERENCE"
+      },
+      "iterations_per_block": 100,
+      "placement": "before",
+      "rounds": 8,
+      "session": "s1-before",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:33:22.798, 390, 405, 50, 15.82, 17",
+        "pre": "2026/10/20 10:33:07.321, 210, 405, 50, 13.74, 26"
+      }
+    },
+    {
+      "AA": {
+        "max_absolute_gap_ms_per_operation": 0.004208641052246094,
+        "paired_X_minus_Y_mad_ms_per_operation": 0.0008556818962097167,
+        "paired_X_minus_Y_median_ms_per_operation": -0.0021483182907104494
+      },
+      "AB": {
+        "paired_A_minus_B": {
+          "cuda_event": {
+            "A_faster_rounds": 6,
+            "B_faster_rounds": 2,
+            "first_four_median_ms_per_operation": 0.0014558386802673295,
+            "last_four_median_ms_per_operation": -0.004870560169219974,
+            "max_ms_per_operation": 0.005621757507324229,
+            "median_absolute_deviation_ms_per_operation": 0.0049532818794250505,
+            "median_ms_per_operation": -0.0025417590141296395,
+            "min_ms_per_operation": -0.016803841590881344
+          },
+          "monotonic_raw": {
+            "A_faster_rounds": 6,
+            "B_faster_rounds": 2,
+            "first_four_median_ms_per_operation": 0.000980765000000008,
+            "last_four_median_ms_per_operation": -0.0046853699999999995,
+            "max_ms_per_operation": 0.005396849999999996,
+            "median_absolute_deviation_ms_per_operation": 0.004440930000000001,
+            "median_ms_per_operation": -0.0029667499999999954,
+            "min_ms_per_operation": -0.015914330000000004
+          },
+          "perf_counter": {
+            "A_faster_rounds": 6,
+            "B_faster_rounds": 2,
+            "first_four_median_ms_per_operation": 0.0009785499999999947,
+            "last_four_median_ms_per_operation": -0.004688099999999994,
+            "max_ms_per_operation": 0.005402580000000004,
+            "median_absolute_deviation_ms_per_operation": 0.004431949999999997,
+            "median_ms_per_operation": -0.0029763049999999985,
+            "min_ms_per_operation": -0.015920039999999996
+          }
+        },
+        "timing_medians_ms_per_operation": {
+          "cuda_event": {
+            "A": 0.06955919981002807,
+            "B": 0.07429568052291871
+          },
+          "monotonic_raw": {
+            "A": 0.071066865,
+            "B": 0.075000855
+          },
+          "perf_counter": {
+            "A": 0.07107762000000001,
+            "B": 0.07500979499999999
+          }
+        }
+      },
+      "all_three_seed_checks_zero_error": true,
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "host_clock_preflight": {
+        "median_raw_over_perf": 0.9999784565002907,
+        "status": "NO_RESOLVED_DIFFERENCE"
+      },
+      "iterations_per_block": 100,
+      "placement": "after",
+      "rounds": 8,
+      "session": "s2-after",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:33:49.312, 390, 405, 46, 15.59, 16",
+        "pre": "2026/10/20 10:33:32.431, 315, 405, 48, 13.98, 20"
+      }
+    },
+    {
+      "AA": {
+        "max_absolute_gap_ms_per_operation": 0.005242881774902344,
+        "paired_X_minus_Y_mad_ms_per_operation": 0.003158395290374756,
+        "paired_X_minus_Y_median_ms_per_operation": -0.0004366421699523926
+      },
+      "AB": {
+        "paired_A_minus_B": {
+          "cuda_event": {
+            "A_faster_rounds": 7,
+            "B_faster_rounds": 1,
+            "first_four_median_ms_per_operation": -0.0005887985229492201,
+            "last_four_median_ms_per_operation": -0.0040897607803344685,
+            "max_ms_per_operation": 0.004472641944885253,
+            "median_absolute_deviation_ms_per_operation": 0.002129440307617185,
+            "median_ms_per_operation": -0.001989600658416746,
+            "min_ms_per_operation": -0.005745921134948734
+          },
+          "monotonic_raw": {
+            "A_faster_rounds": 7,
+            "B_faster_rounds": 1,
+            "first_four_median_ms_per_operation": -0.0006492850000000016,
+            "last_four_median_ms_per_operation": -0.004045390000000002,
+            "max_ms_per_operation": 0.0035685699999999975,
+            "median_absolute_deviation_ms_per_operation": 0.002115274999999999,
+            "median_ms_per_operation": -0.0019643350000000037,
+            "min_ms_per_operation": -0.005645530000000001
+          },
+          "perf_counter": {
+            "A_faster_rounds": 7,
+            "B_faster_rounds": 1,
+            "first_four_median_ms_per_operation": -0.0006501849999999976,
+            "last_four_median_ms_per_operation": -0.0040466450000000015,
+            "max_ms_per_operation": 0.0035689699999999908,
+            "median_absolute_deviation_ms_per_operation": 0.0021151249999999955,
+            "median_ms_per_operation": -0.0019648300000000007,
+            "min_ms_per_operation": -0.005646720000000008
+          }
+        },
+        "timing_medians_ms_per_operation": {
+          "cuda_event": {
+            "A": 0.06370815992355347,
+            "B": 0.06572479963302613
+          },
+          "monotonic_raw": {
+            "A": 0.06438788,
+            "B": 0.066841945
+          },
+          "perf_counter": {
+            "A": 0.06439269,
+            "B": 0.06684639
+          }
+        }
+      },
+      "all_three_seed_checks_zero_error": true,
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "host_clock_preflight": {
+        "median_raw_over_perf": 0.9999868053246143,
+        "status": "NO_RESOLVED_DIFFERENCE"
+      },
+      "iterations_per_block": 100,
+      "placement": "after",
+      "rounds": 8,
+      "session": "s3-after",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:34:09.755, 225, 405, 44, 12.22, 8",
+        "pre": "2026/10/20 10:33:55.919, 2565, 9001, 46, 32.37, 2"
+      }
+    },
+    {
+      "AA": {
+        "max_absolute_gap_ms_per_operation": 0.008018879890441895,
+        "paired_X_minus_Y_mad_ms_per_operation": 0.002687199115753174,
+        "paired_X_minus_Y_median_ms_per_operation": -0.0031636810302734376
+      },
+      "AB": {
+        "paired_A_minus_B": {
+          "cuda_event": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": 6.81614875793421e-05,
+            "last_four_median_ms_per_operation": 0.0010841608047485324,
+            "max_ms_per_operation": 0.007688002586364748,
+            "median_absolute_deviation_ms_per_operation": 0.003828957080841071,
+            "median_ms_per_operation": 6.81614875793421e-05,
+            "min_ms_per_operation": -0.01855487823486328
+          },
+          "monotonic_raw": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": 0.000489164999999998,
+            "last_four_median_ms_per_operation": 0.000984674999999999,
+            "max_ms_per_operation": 0.007857450000000004,
+            "median_absolute_deviation_ms_per_operation": 0.0033867500000000074,
+            "median_ms_per_operation": 0.000489164999999998,
+            "min_ms_per_operation": -0.01891572
+          },
+          "perf_counter": {
+            "A_faster_rounds": 4,
+            "B_faster_rounds": 4,
+            "first_four_median_ms_per_operation": 0.0004906249999999945,
+            "last_four_median_ms_per_operation": 0.0009833750000000016,
+            "max_ms_per_operation": 0.007852239999999996,
+            "median_absolute_deviation_ms_per_operation": 0.0033879500000000007,
+            "median_ms_per_operation": 0.0004906249999999945,
+            "min_ms_per_operation": -0.01891652
+          }
+        },
+        "timing_medians_ms_per_operation": {
+          "cuda_event": {
+            "A": 0.06829807996749879,
+            "B": 0.06859679937362671
+          },
+          "monotonic_raw": {
+            "A": 0.06902032999999999,
+            "B": 0.06925967499999999
+          },
+          "perf_counter": {
+            "A": 0.06903249,
+            "B": 0.06926657
+          }
+        }
+      },
+      "all_three_seed_checks_zero_error": true,
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "host_clock_preflight": {
+        "median_raw_over_perf": 0.9999818283977435,
+        "status": "NO_RESOLVED_DIFFERENCE"
+      },
+      "iterations_per_block": 100,
+      "placement": "before",
+      "rounds": 8,
+      "session": "s4-before",
+      "telemetry_csv": {
+        "post": "2026/10/20 10:35:16.434, 480, 810, 41, 16.01, 14",
+        "pre": "2026/10/20 10:35:00.495, 2565, 9001, 42, 24.40, 8"
+      }
+    }
+  ],
+  "source_plan_sha256": "f931f2dc9207ec88ca8c3584e738417d95aa5d1aba40ca98ca6125d315dd51fe"
+}
