@@ -1,0 +1,301 @@
+--- baseline
++++ candidate
+@@ -6,1608 +6,1456 @@
+ .target sm_89
+ .address_size 64
+ 
+-	// .globl	_rank8_kernel           // -- Begin function _rank8_kernel
++	// .globl	_strassen_kernel        // -- Begin function _strassen_kernel
+ .extern .shared .align 16 .b8 global_smem[];
+-                                        // @_rank8_kernel
+-.visible .entry _rank8_kernel(
+-	.param .u64 .ptr .global .align 1 _rank8_kernel_param_0,
+-	.param .u64 .ptr .global .align 1 _rank8_kernel_param_1,
+-	.param .u64 .ptr .global .align 1 _rank8_kernel_param_2,
+-	.param .u64 .ptr .global .align 1 _rank8_kernel_param_3,
+-	.param .u64 .ptr .global .align 1 _rank8_kernel_param_4
++                                        // @_strassen_kernel
++.visible .entry _strassen_kernel(
++	.param .u64 .ptr .global .align 1 _strassen_kernel_param_0,
++	.param .u64 .ptr .global .align 1 _strassen_kernel_param_1,
++	.param .u64 .ptr .global .align 1 _strassen_kernel_param_2,
++	.param .u64 .ptr .global .align 1 _strassen_kernel_param_3,
++	.param .u64 .ptr .global .align 1 _strassen_kernel_param_4
+ )
+ .reqntid 128
+ {
+-	.reg .pred 	%p<85>;
+-	.reg .b16 	%rs<257>;
+-	.reg .b32 	%r<1490>;
+-	.reg .b64 	%rd<93>;
++	.reg .pred 	%p<75>;
++	.reg .b16 	%rs<385>;
++	.reg .b32 	%r<1761>;
++	.reg .b64 	%rd<100>;
+ $L__func_begin0:
+ 
+ // %bb.0:
+-	ld.param.b64 	%rd9, [_rank8_kernel_param_2];
+-	ld.param.b64 	%rd8, [_rank8_kernel_param_1];
+-	ld.param.b64 	%rd7, [_rank8_kernel_param_0];
++	ld.param.b64 	%rd10, [_strassen_kernel_param_2];
++	ld.param.b64 	%rd9, [_strassen_kernel_param_1];
++	ld.param.b64 	%rd11, [_strassen_kernel_param_0];
+ $L__tmp0:
+-	mov.u32 	%r12, %ctaid.x;
+-	shl.b32 	%r13, %r12, 4;
++	mov.u32 	%r23, %ctaid.x;
++	shl.b32 	%r24, %r23, 4;
+ 	mov.u32 	%r1, %tid.x;
+-	bfe.u32 	%r14, %r1, 3, 4;
++	bfe.u32 	%r25, %r1, 3, 4;
+ 	and.b32 	%r2, %r1, 3;
+-	shl.b32 	%r15, %r2, 2;
++	shl.b32 	%r26, %r2, 2;
+ 	and.b32 	%r3, %r1, 7;
+-	or.b32 	%r4, %r14, %r13;
++	or.b32 	%r4, %r25, %r24;
+ 	mov.u32 	%r5, %ctaid.y;
+ 	shl.b32 	%r6, %r5, 4;
+-	or.b32 	%r16, %r15, %r6;
+-	shl.b32 	%r17, %r3, 2;
+-	bfe.u32 	%r18, %r1, 2, 5;
++	or.b32 	%r27, %r26, %r6;
++	shl.b32 	%r28, %r3, 2;
++	bfe.u32 	%r29, %r1, 2, 5;
+ $L__tmp1:
+-	setp.lt.s32 	%p9, %r4, 64;
+-	setp.lt.u32 	%p10, %r5, 4;
+-	shl.b32 	%r19, %r4, 7;
+-	cvt.s64.s32 	%rd1, %r19;
+-	mad.wide.s32 	%rd11, %r19, 2, %rd7;
+-	cvt.u64.u32 	%rd2, %r17;
+-	mad.wide.u32 	%rd17, %r17, 2, %rd11;
+-	shl.b32 	%r20, %r1, 3;
+-	and.b32 	%r21, %r20, 1016;
+-	and.b32 	%r22, %r1, 48;
+-	xor.b32 	%r23, %r21, %r22;
+-	mov.b32 	%r24, global_smem;
+-	add.s32 	%r1188, %r24, %r23;
+-	selp.b32 	%r1189, 8, 0, %p9;
+-	// begin inline asm
+-	cp.async.ca.shared.global [ %r1188 + 0 ], [ %rd17 + 0 ], 0x8, %r1189;
+-	// end inline asm
+-	cp.async.commit_group;
+-	shl.b32 	%r25, %r18, 7;
+-	cvt.u64.u32 	%rd3, %r16;
+-	mad.wide.u32 	%rd4, %r16, 2, %rd8;
+-	mad.wide.u32 	%rd10, %r25, 2, %rd4;
+-	and.b32 	%r26, %r20, 888;
+-	and.b32 	%r7, %r1, 16;
+-	bfe.s32 	%r27, %r1, 4, 1;
+-	and.b32 	%r28, %r27, 144;
+-	xor.b32 	%r29, %r28, %r26;
+-	add.s32 	%r30, %r24, %r29;
+-	add.s32 	%r1190, %r30, 1024;
+-	selp.b32 	%r1191, 8, 0, %p10;
+-	// begin inline asm
+-	cp.async.ca.shared.global [ %r1190 + 0 ], [ %rd10 + 0 ], 0x8, %r1191;
+-	// end inline asm
+-	cp.async.commit_group;
+-	shl.b32 	%r31, %r1, 6;
+-	and.b32 	%r32, %r31, 960;
+-	and.b32 	%r33, %r20, 48;
+-	xor.b32 	%r34, %r33, %r7;
+-	or.b32 	%r35, %r34, %r32;
+-	xor.b32 	%r36, %r35, 32;
+-	shl.b32 	%r37, %r1, 5;
+-	and.b32 	%r38, %r37, 864;
+-	bfe.s32 	%r39, %r1, 2, 1;
++	setp.lt.s32 	%p8, %r4, 64;
++	setp.lt.u32 	%p9, %r5, 4;
++	shl.b32 	%r30, %r4, 7;
++	cvt.s64.s32 	%rd1, %r30;
++	mad.wide.s32 	%rd2, %r30, 2, %rd11;
++	add.s32 	%r31, %r30, 8192;
++	cvt.s64.s32 	%rd3, %r31;
++	mad.wide.s32 	%rd4, %r31, 2, %rd11;
++	cvt.u64.u32 	%rd5, %r28;
++	mul.wide.u32 	%rd12, %r28, 2;
++	add.s64 	%rd55, %rd2, %rd12;
++	shl.b32 	%r32, %r1, 3;
++	and.b32 	%r33, %r32, 1016;
++	and.b32 	%r34, %r1, 48;
++	xor.b32 	%r35, %r33, %r34;
++	mov.b32 	%r36, global_smem;
++	add.s32 	%r1355, %r36, %r35;
++	selp.b32 	%r7, 8, 0, %p8;
++	// begin inline asm
++	cp.async.ca.shared.global [ %r1355 + 0 ], [ %rd55 + 0 ], 0x8, %r7;
++	// end inline asm
++	cp.async.commit_group;
++	add.s64 	%rd56, %rd4, %rd12;
++	add.s64 	%rd69, %rd56, 128;
++	add.s32 	%r1356, %r1355, 1024;
++	// begin inline asm
++	cp.async.ca.shared.global [ %r1356 + 0 ], [ %rd69 + 0 ], 0x8, %r7;
++	// end inline asm
++	cp.async.commit_group;
++	shl.b32 	%r37, %r29, 7;
++	mad.wide.u32 	%rd13, %r37, 2, %rd9;
++	cvt.u64.u32 	%rd6, %r27;
++	mad.wide.u32 	%rd57, %r27, 2, %rd13;
++	and.b32 	%r38, %r32, 888;
++	and.b32 	%r8, %r1, 16;
++	bfe.s32 	%r39, %r1, 4, 1;
+ 	and.b32 	%r40, %r39, 144;
+-	or.b32 	%r41, %r40, %r38;
+-	xor.b32 	%r42, %r41, 16;
+-	cvt.u64.u32 	%rd5, %r18;
+-	add.s32 	%r8, %r24, %r35;
+-	add.s32 	%r9, %r24, %r36;
+-	add.s32 	%r43, %r24, %r41;
+-	add.s32 	%r10, %r43, 1024;
+-	add.s32 	%r44, %r24, %r42;
+-	add.s32 	%r11, %r44, 1024;
+-	mov.b32 	%r1426, 0f00000000;
+-	mov.b64 	%rd85, 32;
+-	mov.pred 	%p77, -1;
+-	mov.b32 	%r1427, %r1426;
+-	mov.b32 	%r1428, %r1426;
+-	mov.b32 	%r1429, %r1426;
+-	mov.b32 	%r1430, %r1426;
+-	mov.b32 	%r1431, %r1426;
+-	mov.b32 	%r1432, %r1426;
+-	mov.b32 	%r1433, %r1426;
++	xor.b32 	%r41, %r40, %r38;
++	add.s32 	%r9, %r36, %r41;
++	add.s32 	%r1357, %r9, 2048;
++	selp.b32 	%r10, 8, 0, %p9;
++	// begin inline asm
++	cp.async.ca.shared.global [ %r1357 + 0 ], [ %rd57 + 0 ], 0x8, %r10;
++	// end inline asm
++	cp.async.commit_group;
++	add.s64 	%rd71, %rd57, 16512;
++	add.s32 	%r1358, %r9, 3072;
++	// begin inline asm
++	cp.async.ca.shared.global [ %r1358 + 0 ], [ %rd71 + 0 ], 0x8, %r10;
++	// end inline asm
++	cp.async.commit_group;
++	shl.b32 	%r42, %r1, 6;
++	and.b32 	%r43, %r42, 960;
++	and.b32 	%r44, %r32, 48;
++	xor.b32 	%r45, %r44, %r8;
++	or.b32 	%r46, %r45, %r43;
++	xor.b32 	%r47, %r46, 32;
++	shl.b32 	%r48, %r1, 5;
++	and.b32 	%r49, %r48, 864;
++	bfe.s32 	%r50, %r1, 2, 1;
++	and.b32 	%r51, %r50, 144;
++	or.b32 	%r52, %r51, %r49;
++	xor.b32 	%r53, %r52, 16;
++	cvt.u64.u32 	%rd7, %r29;
++	add.s32 	%r11, %r36, %r46;
++	add.s32 	%r12, %r36, %r47;
++	add.s32 	%r13, %r11, 1024;
++	add.s32 	%r14, %r12, 1024;
++	add.s32 	%r15, %r36, %r52;
++	add.s32 	%r16, %r15, 2048;
++	add.s32 	%r17, %r36, %r53;
++	add.s32 	%r18, %r17, 2048;
++	add.s32 	%r19, %r15, 3072;
++	add.s32 	%r20, %r17, 3072;
++	mov.b32 	%r1705, 0f00000000;
++	mov.b64 	%rd93, 32;
++	mov.pred 	%p68, -1;
++	mov.b32 	%r1706, %r1705;
++	mov.b32 	%r1707, %r1705;
++	mov.b32 	%r1708, %r1705;
++	mov.b32 	%r1709, %r1705;
++	mov.b32 	%r1710, %r1705;
++	mov.b32 	%r1711, %r1705;
++	mov.b32 	%r1712, %r1705;
+ $L__BB0_1:                              // =>This Inner Loop Header: Depth=1
+-	mov.pred 	%p1, %p77;
++	mov.pred 	%p1, %p68;
+ 	cp.async.wait_group 	0;
+ 	bar.sync 	0;
+-	ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%r159, %r160, %r161, %r162}, [%r8];
+-	mov.b32 	{%rs1, %rs2}, %r159;
+-	mov.b32 	{%rs3, %rs4}, %r160;
+-	mov.b32 	{%rs5, %rs6}, %r161;
+-	mov.b32 	{%rs7, %rs8}, %r162;
+-	ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%r163, %r164, %r165, %r166}, [%r9];
+-	mov.b32 	{%rs9, %rs10}, %r163;
+-	mov.b32 	{%rs11, %rs12}, %r164;
+-	mov.b32 	{%rs13, %rs14}, %r165;
+-	mov.b32 	{%rs15, %rs16}, %r166;
+-	cvt.f32.f16 	%r167, %rs1;
+-	cvt.f32.f16 	%r168, %rs2;
+-	cvt.f32.f16 	%r169, %rs3;
+-	cvt.f32.f16 	%r170, %rs4;
+-	cvt.f32.f16 	%r171, %rs5;
+-	cvt.f32.f16 	%r172, %rs6;
+-	cvt.f32.f16 	%r173, %rs7;
+-	cvt.f32.f16 	%r174, %rs8;
+-	cvt.f32.f16 	%r175, %rs9;
+-	cvt.f32.f16 	%r176, %rs10;
+-	cvt.f32.f16 	%r177, %rs11;
+-	cvt.f32.f16 	%r178, %rs12;
+-	cvt.f32.f16 	%r179, %rs13;
+-	cvt.f32.f16 	%r180, %rs14;
+-	cvt.f32.f16 	%r181, %rs15;
+-	cvt.f32.f16 	%r182, %rs16;
+-	add.f32 	%r45, %r167, 0f00000000;
+-	add.f32 	%r46, %r168, 0f00000000;
+-	add.f32 	%r47, %r169, 0f00000000;
+-	add.f32 	%r48, %r170, 0f00000000;
+-	add.f32 	%r49, %r171, 0f00000000;
+-	add.f32 	%r50, %r172, 0f00000000;
+-	add.f32 	%r51, %r173, 0f00000000;
+-	add.f32 	%r52, %r174, 0f00000000;
+-	add.f32 	%r53, %r175, 0f00000000;
+-	add.f32 	%r54, %r176, 0f00000000;
+-	add.f32 	%r55, %r177, 0f00000000;
+-	add.f32 	%r56, %r178, 0f00000000;
+-	add.f32 	%r57, %r179, 0f00000000;
+-	add.f32 	%r58, %r180, 0f00000000;
+-	add.f32 	%r59, %r181, 0f00000000;
+-	add.f32 	%r60, %r182, 0f00000000;
+-	ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%r183, %r184, %r185, %r186}, [%r10];
+-	mov.b32 	{%rs17, %rs18}, %r183;
+-	mov.b32 	{%rs19, %rs20}, %r184;
+-	mov.b32 	{%rs21, %rs22}, %r185;
+-	mov.b32 	{%rs23, %rs24}, %r186;
+-	ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%r187, %r188, %r189, %r190}, [%r11];
+-	mov.b32 	{%rs25, %rs26}, %r187;
+-	mov.b32 	{%rs27, %rs28}, %r188;
+-	mov.b32 	{%rs29, %rs30}, %r189;
+-	mov.b32 	{%rs31, %rs32}, %r190;
+-	cvt.f32.f16 	%r191, %rs17;
+-	cvt.f32.f16 	%r192, %rs18;
+-	cvt.f32.f16 	%r193, %rs19;
+-	cvt.f32.f16 	%r194, %rs20;
+-	cvt.f32.f16 	%r195, %rs21;
+-	cvt.f32.f16 	%r196, %rs22;
+-	cvt.f32.f16 	%r197, %rs23;
+-	cvt.f32.f16 	%r198, %rs24;
+-	cvt.f32.f16 	%r199, %rs25;
+-	cvt.f32.f16 	%r200, %rs26;
+-	cvt.f32.f16 	%r201, %rs27;
+-	cvt.f32.f16 	%r202, %rs28;
+-	cvt.f32.f16 	%r203, %rs29;
+-	cvt.f32.f16 	%r204, %rs30;
+-	cvt.f32.f16 	%r205, %rs31;
+-	cvt.f32.f16 	%r206, %rs32;
+-	add.f32 	%r61, %r191, 0f00000000;
+-	add.f32 	%r62, %r192, 0f00000000;
+-	add.f32 	%r63, %r193, 0f00000000;
+-	add.f32 	%r64, %r194, 0f00000000;
+-	add.f32 	%r65, %r195, 0f00000000;
+-	add.f32 	%r66, %r196, 0f00000000;
+-	add.f32 	%r67, %r197, 0f00000000;
+-	add.f32 	%r68, %r198, 0f00000000;
+-	add.f32 	%r69, %r199, 0f00000000;
+-	add.f32 	%r70, %r200, 0f00000000;
+-	add.f32 	%r71, %r201, 0f00000000;
+-	add.f32 	%r72, %r202, 0f00000000;
+-	add.f32 	%r73, %r203, 0f00000000;
+-	add.f32 	%r74, %r204, 0f00000000;
+-	add.f32 	%r75, %r205, 0f00000000;
+... diff truncated; 6200 lines omitted ...
