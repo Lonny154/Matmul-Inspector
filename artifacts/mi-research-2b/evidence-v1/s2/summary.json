@@ -1,0 +1,215 @@
+{
+  "correctness_passed": true,
+  "graph_phase_probe": {
+    "partial": {
+      "execution_mode": "CUDA Graph diagnostic; not eager paired timing",
+      "nodes_per_replay": 100,
+      "samples": [
+        {
+          "cuda_event_ms_per_100_nodes": 2.7592320442199707,
+          "host_submission_ms_per_replay": 0.0577,
+          "host_wall_ms_per_replay": 2.81079
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 2.8968958854675293,
+          "host_submission_ms_per_replay": 0.029786,
+          "host_wall_ms_per_replay": 3.110408
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 2.737152099609375,
+          "host_submission_ms_per_replay": 0.031139,
+          "host_wall_ms_per_replay": 2.778047
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 2.732032060623169,
+          "host_submission_ms_per_replay": 0.041809,
+          "host_wall_ms_per_replay": 2.776173
+        }
+      ],
+      "status": "CAPTURED"
+    },
+    "reduction": {
+      "execution_mode": "CUDA Graph diagnostic; not eager paired timing",
+      "nodes_per_replay": 100,
+      "samples": [
+        {
+          "cuda_event_ms_per_100_nodes": 0.11673600226640701,
+          "host_submission_ms_per_replay": 0.04213,
+          "host_wall_ms_per_replay": 0.155706
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 0.11631999909877777,
+          "host_submission_ms_per_replay": 0.03161,
+          "host_wall_ms_per_replay": 0.148091
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 0.11673600226640701,
+          "host_submission_ms_per_replay": 0.030658,
+          "host_wall_ms_per_replay": 0.149844
+        },
+        {
+          "cuda_event_ms_per_100_nodes": 0.130048006772995,
+          "host_submission_ms_per_replay": 0.091003,
+          "host_wall_ms_per_replay": 0.198968
+        }
+      ],
+      "status": "CAPTURED"
+    }
+  },
+  "iterations_per_block": 100,
+  "measurements": {
+    "alloc": {
+      "event_blocks_ms": [
+        6.950943946838379,
+        3.477407932281494,
+        7.002272129058838,
+        7.120192050933838,
+        7.0655999183654785,
+        6.765279769897461,
+        6.76639986038208,
+        6.628352165222168
+      ],
+      "event_median_ms_per_call": 0.06858671903610229,
+      "event_range_ms_per_call": [
+        0.03477407932281494,
+        0.07120192050933838
+      ],
+      "host_submission_blocks_ms": [
+        6.982814,
+        3.487113,
+        7.032939,
+        7.161354,
+        7.098534,
+        6.803104,
+        6.795889,
+        6.656154
+      ],
+      "host_submission_median_ms_per_block": 6.892959
+    },
+    "alloc_minus_reuse_event_ms_per_call": [
+      0.0223638391494751,
+      -0.004127681255340576,
+      0.026512961387634277,
+      0.02465087890625,
+      0.022712321281433107,
+      0.02139615535736084,
+      0.021186556816101074,
+      0.021669440269470215
+    ],
+    "conventional": {
+      "event_blocks_ms": [
+        6.151904106140137,
+        6.162367820739746,
+        6.143807888031006,
+        6.577151775360107,
+        6.4194560050964355,
+        6.784704208374023,
+        6.126239776611328,
+        6.583263874053955
+      ],
+      "event_median_ms_per_call": 0.0629091191291809,
+      "event_range_ms_per_call": [
+        0.06126239776611328,
+        0.06784704208374023
+      ],
+      "host_submission_blocks_ms": [
+        2.055044,
+        2.141739,
+        2.11653,
+        2.113956,
+        2.17933,
+        2.26345,
+        2.00068,
+        1.616881
+      ],
+      "host_submission_median_ms_per_block": 2.115243
+    },
+    "partial": {
+      "event_blocks_ms": [
+        3.3996798992156982,
+        3.254175901412964,
+        3.1201279163360596,
+        3.7939200401306152,
+        3.2143359184265137,
+        3.6474881172180176,
+        3.609600067138672,
+        3.2027199268341064
+      ],
+      "event_median_ms_per_call": 0.03326927900314331,
+      "event_range_ms_per_call": [
+        0.031201279163360594,
+        0.037939200401306154
+      ],
+      "host_submission_blocks_ms": [
+        3.645074,
+        2.228694,
+        1.488327,
+        3.160283,
+        3.216961,
+        2.502684,
+        3.028212,
+        3.188788
+      ],
+      "host_submission_median_ms_per_block": 3.0942475
+    },
+    "reduction": {
+      "event_blocks_ms": [
+        3.1343040466308594,
+        2.8734400272369385,
+        2.782144069671631,
+        3.0533440113067627,
+        3.042304039001465,
+        3.0515201091766357,
+        3.0320639610290527,
+        2.64572811126709
+      ],
+      "event_median_ms_per_call": 0.030371840000152587,
+      "event_range_ms_per_call": [
+        0.0264572811126709,
+        0.03134304046630859
+      ],
+      "host_submission_blocks_ms": [
+        3.167226,
+        2.92697,
+        2.822181,
+        3.101602,
+        3.0693,
+        3.098045,
+        3.065854,
+        2.602915
+      ],
+      "host_submission_median_ms_per_block": 3.067577
+    },
+    "reuse": {
+      "event_blocks_ms": [
+        4.714560031890869,
+        3.8901760578155518,
+        4.35097599029541,
+        4.655104160308838,
+        4.794367790222168,
+        4.625664234161377,
+        4.647744178771973,
+        4.4614081382751465
+      ],
+      "event_median_ms_per_call": 0.04636704206466675,
+      "event_range_ms_per_call": [
+        0.03890176057815552,
+        0.047943677902221676
+      ],
+      "host_submission_blocks_ms": [
+        4.755121,
+        2.277105,
+        4.363028,
+        4.681813,
+        4.54814,
+        4.651625,
+        4.675772,
+        4.409576
+      ],
+      "host_submission_median_ms_per_block": 4.5998825
+    }
+  },
+  "rounds": 8,
+  "schema_version": 1,
+  "session": 2
+}

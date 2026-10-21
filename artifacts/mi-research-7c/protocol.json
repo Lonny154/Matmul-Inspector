@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "base_commit": "d146df92e1ab9a4c908c0182cdd26caf9d9674e7",
+  "mode": "one warmed fixed-address CUDA Graph node per target process",
+  "size": 96,
+  "dtype": "float16",
+  "source_sha256": {
+    "A": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+    "B": "10b94103a2dbf3d1649d1e3d79560d45830eeb5d960161905d69a6d5947db418"
+  },
+  "correctness_cases": ["seed-0", "seed-1", "seed-2", "zero", "identity", "cancellation"],
+  "reference": "FP32 matmul of exact FP16 inputs rounded to FP16",
+  "tolerance": {"atol": 0.01, "rtol": 0.01},
+  "eager_warmups": 10,
+  "graph_warmups": 10,
+  "profiler": "Nsight Compute CLI 2026.2.1.0, graph-node mode, kernel replay",
+  "profiler_start": "CUDA profiler start/stop encloses exactly one replay of the one-node graph after correctness and warmup",
+  "kernel_filter": "regex:^_fused$ with function-name basis",
+  "permission_probe_metric": "sm__warps_active.avg.pct_of_peak_sustained_active",
+  "cache_control": "none",
+  "clock_control": "none",
+  "capture_budget": "at most two targeted Nsight Compute captures per kernel; stop if hardware-counter access is denied",
+  "no_kernel_or_compiler_changes": true
+}

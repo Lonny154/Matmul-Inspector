@@ -1,0 +1,245 @@
+{
+  "classification": "B \u2014 Multiple contributors identified",
+  "environment_sha256": "6f6286923b2a29aa39198c030ecc25cdc1cddfa2150d8cac860167c3c95e6fe2",
+  "historical_7b_analysis_manifest_sha256": "e6c1992e9c3b1c80cea8827954c9dd99f079275d54ecafc001db4ee182990c9e",
+  "interpretation": "B used all 34 SMs rather than four, with nearly unchanged occupancy on active SMs. It executed fewer local-memory instructions and requested fewer L1 bytes, while executing more total and tensor-pipe instructions and reading more DRAM bytes. These one-node counter captures do not isolate the latency contribution of each mechanism.",
+  "measured_active_sm_coverage": {
+    "A": 4,
+    "B": 34
+  },
+  "protocol_sha256": "1d1e056579ce5d1e33b1d0b02892f76944c2b6c3c668a7e494d1c482a66f64cd",
+  "schema_version": 1,
+  "sessions": {
+    "A": {
+      "occupancy": {
+        "Achieved Active Warps Per SM": 4.0,
+        "Achieved Occupancy": 8.33,
+        "Block Limit Registers": 2.0,
+        "Theoretical Occupancy": 16.67
+      },
+      "permission_probe": {
+        "console_sha256": "7163b0951ce4b441acd90807bcfb21869a1426e69a47b70b89907a36dd7fbdb8",
+        "grid": "(2, 2, 1)",
+        "kernel": "_fused",
+        "metrics": {
+          "sm__warps_active.avg.pct_of_peak_sustained_active": 8.33
+        },
+        "rows": 1
+      },
+      "records": {
+        "preflight": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "bc9b0391751ee3c64929850a252d6aa16bc218f9e4ecae45e539fdfc183c7fc9"
+        },
+        "profile": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "30a091a28d7242ad40f77c1cf1e5878ae3505d113252d9c92c760da65589caa1"
+        },
+        "profile2": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "4068120c8081aedb0fbdf135fb36df70e02d944dd6da2ff7203a435aa7d97af8"
+        }
+      },
+      "targeted_capture": {
+        "console_sha256": "891f3a9fc701b55b88630c4c37022410a0b9f8af2d463e5e0a582e1390dc7306",
+        "grid": "(2, 2, 1)",
+        "kernel": "_fused",
+        "metrics": {
+          "dram__bytes_read.sum": 109824.0,
+          "dram__bytes_write.sum": 0.0,
+          "l1tex__t_bytes.sum": 2428928.0,
+          "l1tex__t_bytes_lookup_hit.sum": 568064.0,
+          "l1tex__t_bytes_lookup_miss.sum": 1860864.0,
+          "l1tex__t_bytes_pipe_lsu_mem_local_op_ld.sum": 1236992.0,
+          "l1tex__t_bytes_pipe_lsu_mem_local_op_st.sum": 1099776.0,
+          "lts__t_bytes.sum": 2232480.0,
+          "sm__ctas_launched.max": 1.0,
+          "sm__ctas_launched.min": 0.0,
+          "sm__ctas_launched.sum": 4.0,
+          "sm__cycles_active.max": 38801.0,
+          "sm__cycles_active.min": 0.0,
+          "smsp__inst_executed.sum": 108864.0,
+          "smsp__inst_executed_pipe_tensor.sum": 8832.0,
+          "smsp__issue_active.avg.pct_of_peak_sustained_active": 17.74,
+          "smsp__sass_inst_executed_op_local_ld.sum": 9632.0,
+          "smsp__sass_inst_executed_op_local_st.sum": 7728.0,
+          "smsp__warp_issue_stalled_lg_throttle_per_warp_active.pct": 3.32,
+          "smsp__warp_issue_stalled_long_scoreboard_per_warp_active.pct": 27.16,
+          "smsp__warps_eligible.avg.per_cycle_active": 0.18
+        },
+        "rows": 44
+      }
+    },
+    "B": {
+      "occupancy": {
+        "Achieved Active Warps Per SM": 4.23,
+        "Achieved Occupancy": 8.81,
+        "Block Limit Registers": 2.0,
+        "Theoretical Occupancy": 16.67
+      },
+      "permission_probe": {
+        "console_sha256": "1c4f6612d6f8c569a5d6a9ca85d93dffff086077472c356acfa9b92a9b4d0daa",
+        "grid": "(2, 2, 9)",
+        "kernel": "_fused",
+        "metrics": {
+          "sm__warps_active.avg.pct_of_peak_sustained_active": 8.76
+        },
+        "rows": 1
+      },
+      "records": {
+        "preflight": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "bf60918214106485b812d7af852ff0eb19553c252e65af06209ffa18f8951a9c"
+        },
+        "profile": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "177509fad6b48825c78ecc466826b3cd67779e5adfc8567f459343c451403092"
+        },
+        "profile2": {
+          "compiler_metadata": {
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "correctness_cases": 6,
+          "environment": {
+            "compute_capability": "8.9",
+            "cuda_runtime": "12.8",
+            "gpu": "NVIDIA GeForce RTX 4060 Ti",
+            "python": "3.13.11",
+            "sm_count": 34,
+            "torch": "2.11.0+cu128",
+            "triton": "3.6.0"
+          },
+          "sha256": "a43cfe7c16da31c670c119b29b1049007e2009af8f8d2811fe23a52697a1a723"
+        }
+      },
+      "targeted_capture": {
+        "console_sha256": "3871b820e634292ef9eb4a0ffdd062080120627ab571dcf52d8b70e7a90d2af1",
+        "grid": "(2, 2, 9)",
+        "kernel": "_fused",
+        "metrics": {
+          "dram__bytes_read.sum": 387584.0,
+          "dram__bytes_write.sum": 0.0,
+          "l1tex__t_bytes.sum": 1476608.0,
+          "l1tex__t_bytes_lookup_hit.sum": 492800.0,
+          "l1tex__t_bytes_lookup_miss.sum": 983808.0,
+          "l1tex__t_bytes_pipe_lsu_mem_local_op_ld.sum": 512000.0,
+          "l1tex__t_bytes_pipe_lsu_mem_local_op_st.sum": 507904.0,
+          "lts__t_bytes.sum": 2002752.0,
+          "sm__ctas_launched.max": 2.0,
+          "sm__ctas_launched.min": 1.0,
+          "sm__ctas_launched.sum": 36.0,
+          "sm__cycles_active.max": 22975.0,
+          "sm__cycles_active.min": 6135.0,
+          "smsp__inst_executed.sum": 310368.0,
+          "smsp__inst_executed_pipe_tensor.sum": 24576.0,
+          "smsp__issue_active.avg.pct_of_peak_sustained_active": 15.79,
+          "smsp__sass_inst_executed_op_local_ld.sum": 4000.0,
+          "smsp__sass_inst_executed_op_local_st.sum": 3840.0,
+          "smsp__warp_issue_stalled_lg_throttle_per_warp_active.pct": 0.07,
+          "smsp__warp_issue_stalled_long_scoreboard_per_warp_active.pct": 15.57,
+          "smsp__warps_eligible.avg.per_cycle_active": 0.16
+        },
+        "rows": 44
+      }
+    }
+  },
+  "static_compiler_evidence": {
+    "A": {
+      "ptx_mma_sync_text_count": 552,
+      "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+      "ttir_dot_count": 23,
+      "ttir_sha256": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+    },
+    "B": {
+      "ptx_mma_sync_text_count": 1536,
+      "ptx_sha256": "f8df8aa6abe1f3e84678bda1cb8479568f3cdee5f5fc7c3daa8adc400635a91f",
+      "ttir_dot_count": 64,
+      "ttir_sha256": "7e355f93f2c7604d1269116518567e0d1bf8fe145c70d2a61a629a5f131a25b5"
+    }
+  },
+  "targeted_capture_2_sha256": "5ced1b0f1f602b013b1c1fbe662ebdafe77148ed360498bf1459dc07a71a2283"
+}

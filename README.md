@@ -217,6 +217,46 @@ The [prefix-coverage investigation](docs/tensor_game_prefix_coverage.md) traces
 the exact beam stages and tests an experimental prefix-survival objective.
 The [final-ranking investigation](docs/tensor_game_final_ranking.md) tests a
 decoder-cutoff hinge under matched tiny-set training and validation.
+The [proposal-coverage study](docs/tensor_game_proposal_coverage_study.md)
+separates ternary action representability, deterministic output-factor choice,
+heuristic pair filtering, exact scoring, and downstream search.
+The [multi-w provider study](docs/tensor_game_multi_w_provider_study.md) tests
+bounded output-factor alternatives and measures their recall, search impact, and
+CPU evaluation cost without changing the default provider.
+The [quota-provider study](docs/tensor_game_quota_provider_study.md) adds exact
+separable top-k output generation and protects baseline proposals while tracing
+remaining interference in global beam scheduling.
+The [provenance-aware beam study](docs/tensor_game_provenance_beam_study.md)
+adds optional per-edge admission quotas and depth-level interference diagnostics
+without changing the default global beam policy.
+The [Strassen w-coverage study](docs/tensor_game_w_coverage_study.md) exhaustively
+separates pair, output-factor, complete-action, and admission cutoffs across all
+5,040 known term orderings without changing the solver.
+The [structural-pairs study](docs/tensor_game_structural_pairs_study.md) tests a
+fixed-budget, sign-invariant pair-diversity quota and records its negative exact
+coverage result alongside matched rank-7 and rank-8 searches.
+The [residual-subspace and two-step lookahead study](docs/tensor_game_residual_lookahead_study.md)
+tests exact short-horizon and algebraic residual diagnostics offline.
+The [exact tensor-rank feasibility study](docs/tensor_game_rank_feasibility_study.md)
+tests rational flattening-rank lower bounds as offline impossibility checks.
+The [experimental feasibility-gate study](docs/tensor_game_feasibility_gate_study.md)
+measures opt-in late-depth exact pruning under matched CPU search limits.
+The [feasibility-guided exploration study](docs/tensor_game_feasible_exploration_study.md)
+combines exact pruning with quota multi-`w` proposals and provenance admission.
+The [meet-in-the-middle study](docs/tensor_game_meet_in_middle_study.md) tests
+bounded exact 3+4 complement matching with separate ordinary and oracle pools.
+The [algebraic-pools study](docs/tensor_game_algebraic_pools_study.md) derives
+bounded action proposals from exact low-rank residual-slice combinations.
+The [algebraic output-completion study](docs/tensor_game_algebraic_w_completion_study.md)
+compares residual, structural, and exact slice-projection `w` selection on a
+frozen algebraic pair manifest.
+The [TG-Global-1 design](docs/tensor_game_tempered_search_design.md) documents a
+separate CPU-only parallel-tempering prototype over complete rank-7 candidates
+with bounded exact two-term repair and strict oracle/discovery separation.
+The [TG-Global-2 study](docs/tensor_game_tempered_search_study.md) compares
+matched independent and exchanged replicas with and without exact repair.
+The [TG-Global-3 study](docs/tensor_game_completion_depth_study.md) audits
+bounded two-, three-, and four-term completion and one exact recombination step.
 The [prefix-generalization investigation](docs/tensor_game_prefix_generalization.md)
 tests broader verified-positive coverage and audits beam-aware supervision cost.
 The [policy-interference investigation](docs/tensor_game_policy_interference.md)
@@ -249,6 +289,22 @@ the repaired TG-4Y release gates and the rollout of `bounded_128` as the public
 default. Explicit `exhaustive` selection remains available as a fallback.
 The [release-preparation summary](docs/tensor_game_release_preparation.md)
 collects usage, evidence, limitations, and the remaining publication checklist.
+The [hardware-aware schedule lowering study](docs/hardware_aware_schedule_lowering.md)
+adds a CPU-queryable family manifest, one exact materialized GPU template,
+correctness and launch-topology gates, and an independent CUDA Graph replication.
+Its validated exact coverage remains limited; it is not a speedup claim.
+The [mixed-group lowering study](docs/hardware_aware_mixed_group_lowering.md)
+adds one reusable fused GEMM/reconstruction template. It raises validated exact
+coverage but leaves most legal schedules unsupported or numerically incorrect
+at larger Strassen sizes. It is a coverage result, not an optimization claim.
+The [HBM lifetime lowering study](docs/hardware_aware_hbm_lifetime_lowering.md)
+adds typed, intentional HBM form/product/partial lifetimes and deterministic
+buffer and output-state audits. It reaches 82/156 exact-passing mappings while
+retaining the large-Strassen numerical failures and the uncalibrated new paths.
+The [general schedule lowering IR study](docs/hardware_aware_general_lowering_ir.md)
+adds a bounded schedule-semantics IR and group primitive registry. It reaches
+132/156 correctness-passing exact mappings on the retained corpus while
+keeping legacy paths as controls and large-Strassen failures separate.
 
 Direct script entry points remain available from a source checkout, but the
 installed dispatcher is normally simpler:
@@ -279,6 +335,39 @@ with the run, and loaded only in the worker process.
 See the [experiment runner guide](docs/experiment_runner.md) for configuration,
 result fields, failure behavior, and the callable Python interface.
 
+For a one-command comparison with a self-contained, hash-verified evidence
+bundle, run:
+
+```sh
+matmul-inspector-python experiment compare \
+  --spec examples/mi_workflow_1_fc1.json \
+  --output results/my-fc1-comparison
+```
+
+See the [MI-Workflow-1 getting-started guide](docs/mi_workflow_1.md).
+
+For a direct paired comparison of two registered Triton FC1 configurations:
+
+```sh
+matmul-inspector-python experiment pair \
+  --spec examples/mi_workflow_2_fc1_pair.json \
+  --output results/my-fc1-pair
+```
+
+See the [MI-Workflow-2 paired comparison guide](docs/mi_workflow_2.md).
+
+To compare a trusted standalone Triton kernel with a registered FC1 kernel,
+use the v2 example and opt in to running the local Python source:
+
+```sh
+matmul-inspector-python experiment pair \
+  --spec examples/mi_workflow_3_local_pair.json \
+  --allow-trusted-local-source \
+  --output results/my-local-fc1-pair
+```
+
+See the [MI-Workflow-3 trusted local kernel guide](docs/mi_workflow_3.md).
+
 Run a reproducibly shuffled, sequential batch of predefined FC1 candidates with
 fresh matched baselines. From a source checkout, the checked-in example is:
 
@@ -308,6 +397,55 @@ commands.
   residual ranking, streaming-heap memory reduction, and matched CPU benchmarks.
   The case study includes evidence-backed figures and their reproducible
   generation requirements.
+- [Tensor Game hardware-cost study](docs/tensor_game_hardware_cost_study.md) —
+  adds optional static algebraic descriptors and deterministic Pareto analysis
+  without changing the default bounded search ranking.
+- [Hardware-aware rank-8 tensor study](docs/hardware_aware_tensor_search.md) —
+  generates exact CPU-only basis-equivalent candidates and a static Pareto
+  frontier. It does not benchmark or predict GPU latency.
+- [Direct exact rank-8/9 structural search](docs/hardware_aware_rank89_constraint_search.md)
+  — uses an optional bounded CP-SAT solver to study exact finite action pools
+  and operand reuse without GPU execution.
+- [Hardware-aware execution schedule model](docs/hardware_aware_schedule_model.md)
+  — builds exact block DAGs and compares abstract CPU-only memory, fusion, and
+  recomputation schedules without predicting GPU latency.
+- [Constraint-based execution schedule search](docs/hardware_aware_schedule_search.md)
+  — searches fixed-order launch groups, materialization, and bounded
+  recomputation under an abstract capacity using optional CPU-only CP-SAT.
+- [Selected GPU schedule study](docs/hardware_aware_schedule_gpu_study.md) —
+  tests a small static-frontier subset with RTX 4060 Ti Triton lowerings,
+  correctness gates, CUDA-event timing, and compiler evidence.
+- [Recompute-vs-store mechanism study](docs/hardware_aware_schedule_mechanism_study.md)
+  — isolates the selected rank-8 schedule's preparation, consumer, launch,
+  graph-replay, and memory-hierarchy effects on the RTX 4060 Ti.
+- [Measurement-calibrated schedule search](docs/hardware_aware_schedule_calibration.md)
+  — ranks the bounded legal schedule corpus with separate eager and CUDA Graph
+  evidence. Only validated GPU-lowering mappings receive calibrated ranks.
+- [Bounded schedule-family lowering](docs/hardware_aware_schedule_lowering.md)
+  — classifies the retained corpus into exact materialized, approximate legacy,
+  and unsupported mappings with correctness and launch-topology gates.
+- [Mixed GEMM/reconstruction lowering](docs/hardware_aware_mixed_group_lowering.md)
+  — tests one exact fused family across the same corpus and records the
+  remaining semantic and numerical limits.
+- [HBM-backed schedule lifetime lowering](docs/hardware_aware_hbm_lifetime_lowering.md)
+  — records intentional cross-group values, partial-output transitions,
+  selected-schedule coverage, and the remaining backend architecture gap.
+- [General schedule lowering IR](docs/hardware_aware_general_lowering_ir.md)
+  — translates retained legal schedules into a validated bounded IR and
+  composes group primitives without per-schedule kernel source edits.
+- [IR-wide calibration and reselection](docs/ha_schedule_10_calibration_reselection.md)
+  — provides bounded CPU replay and optional GPU evidence capture for
+  mode-specific two-batch schedule selection.
+- [Bounded Schedule Agent Prototype](docs/schedule_agent_prototype.md)
+  — validates bounded proposals, runs two controlled batches, and retains
+  correctness, timing, feedback, and replay evidence.
+- [Schedule-Agent-Live-1 integration](docs/schedule_agent_live_1.md)
+  — documents the optional bounded live provider and credential-free CPU replay.
+- [Schedule-Agent-Live-2 decision ablation](docs/schedule_agent_live_2.md)
+  — retains six model-only proposals with and without GPU evidence; no valid matched pair resulted.
+- [Tensor Game Triton lowering study](docs/tensor_game_triton_lowering_study.md)
+  — validates conventional and Strassen decompositions through one experimental
+  FP32 block-lowering interface with skip-safe GPU tests and benchmark capture.
 - [AI-assisted FC1 kernel search](docs/ai_assisted_kernel_search_case_study.md) —
   separates candidate correctness, CUDA-event timing, and compiler evidence in a
   controlled Triton optimization workflow.

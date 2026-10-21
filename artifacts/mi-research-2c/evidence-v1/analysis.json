@@ -1,0 +1,515 @@
+{
+  "basis": "derived from saved per-block results; no outlier removal",
+  "canonical_source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+  "canonical_spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+  "classification": "A",
+  "diagnostic_script_sha256": "f64fae49517514ac42a87efdbcbdbf7d22c78d30eef9bd9470c91a5ec45a3b99",
+  "interpretation": "Graph mode B_FASTER in both fresh sessions under existing paired rule; eager mode INCONCLUSIVE in both. Graph B blocks did not reproduce the slow eager state in these sixteen graph rounds. Graph capture also changes scratch lifetime and host submission. Causal attribution and rare-tail behavior remain unproven.",
+  "schema_version": 1,
+  "session_order": [
+    "eager-1",
+    "graph-1",
+    "graph-2",
+    "eager-2"
+  ],
+  "sessions": {
+    "eager-1": {
+      "aa_max_absolute_gap_us": 4.927682876586914,
+      "clock_preflight_status": "NO_RESOLVED_DIFFERENCE",
+      "clock_warnings": [],
+      "complete_operations_per_block": 100,
+      "correctness_max_abs_error_by_seed": [
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 0
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 1
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 2
+        }
+      ],
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "decision_reason": "event ranges overlap or paired host directions disagree",
+      "graph_profile_kernel_nodes": null,
+      "graph_setup_ms": null,
+      "host_submission_calls_per_block": 100,
+      "kernel_metrics": {
+        "A": {
+          "event_cv": 0.042230548342280204,
+          "event_mad_us": 2.100160121917721,
+          "event_median_us": 64.93695974349976,
+          "event_range_us": [
+            62.0633602142334,
+            68.90495777130127
+          ],
+          "event_submission_pearson_r": -0.1977914551544663,
+          "event_us_per_complete_operation_by_round": [
+            68.09599876403809,
+            68.90495777130127,
+            63.06816101074218,
+            62.73024082183838,
+            66.8671989440918,
+            62.0633602142334,
+            62.94335842132569,
+            66.80575847625732
+          ],
+          "host_submission_median_ms_per_block": 5.6644965,
+          "host_submission_ms_per_block_by_round": [
+            6.718994,
+            1.342551,
+            1.338132,
+            5.925476,
+            3.463542,
+            5.622049,
+            5.749752,
+            5.706944
+          ],
+          "perf_median_us": 65.431655,
+          "raw_median_us": 65.42732000000001
+        },
+        "B": {
+          "event_cv": 0.3935043993994392,
+          "event_mad_us": 3.747677803039551,
+          "event_median_us": 114.06239986419678,
+          "event_range_us": [
+            34.78528022766113,
+            120.71200370788574
+          ],
+          "event_submission_pearson_r": 0.9998985755037756,
+          "event_us_per_complete_operation_by_round": [
+            119.9407958984375,
+            34.944961071014404,
+            34.78528022766113,
+            112.4454402923584,
+            113.67327690124512,
+            114.47999954223633,
+            114.45152282714844,
+            120.71200370788574
+          ],
+          "host_submission_median_ms_per_block": 11.440996,
+          "host_submission_ms_per_block_by_round": [
+            12.027519,
+            3.164973,
+            3.071254,
+            11.277875,
+            11.407033,
+            11.478867,
+            11.474959,
+            12.283535
+          ],
+          "perf_median_us": 114.701915,
+          "raw_median_us": 114.697625
+        }
+      },
+      "mode": "eager",
+      "paired_A_minus_B_event_us_by_round": [
+        -51.84479713439941,
+        33.95999670028687,
+        28.282880783081048,
+        -49.71519947052001,
+        -46.80607795715333,
+        -52.41663932800292,
+        -51.50816440582275,
+        -53.90624523162843
+      ],
+      "paired_A_minus_B_mad_us": 2.5497603416442978,
+      "paired_A_minus_B_median_us": -50.61168193817138,
+      "paired_signs": {
+        "A_faster": 6,
+        "B_faster": 2,
+        "ties": 0
+      },
+      "ranking_supported": false,
+      "raw_boundary_discrepancy": false,
+      "rounds": 8,
+      "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+      "timing_boundary_discrepancy": false
+    },
+    "eager-2": {
+      "aa_max_absolute_gap_us": 3.464322090148926,
+      "clock_preflight_status": "NO_RESOLVED_DIFFERENCE",
+      "clock_warnings": [],
+      "complete_operations_per_block": 100,
+      "correctness_max_abs_error_by_seed": [
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 0
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 1
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 2
+        }
+      ],
+      "correctness_passed": true,
+      "decision": "INCONCLUSIVE",
+      "decision_reason": "event ranges overlap or paired host directions disagree",
+      "graph_profile_kernel_nodes": null,
+      "graph_setup_ms": null,
+      "host_submission_calls_per_block": 100,
+      "kernel_metrics": {
+        "A": {
+          "event_cv": 0.04414552881717344,
+          "event_mad_us": 1.5307211875915527,
+          "event_median_us": 62.914559841156006,
+          "event_range_us": [
+            61.30655765533447,
+            68.57728004455566
+          ],
+          "event_submission_pearson_r": 0.3045430640153265,
+          "event_us_per_complete_operation_by_round": [
+            68.57728004455566,
+            61.461119651794434,
+            63.79519939422608,
+            66.7136001586914,
+            62.03392028808594,
+            61.30655765533447,
+            65.90240001678467,
+            61.50144100189209
+          ],
+          "host_submission_median_ms_per_block": 4.372986,
+          "host_submission_ms_per_block_by_round": [
+            4.495028,
+            4.630314,
+            4.169649,
+            4.2225,
+            4.397483,
+            1.169291,
+            4.348489,
+            4.698644
+          ],
+          "perf_median_us": 63.573240000000006,
+          "raw_median_us": 63.56907
+        },
+        "B": {
+          "event_cv": 0.25949678520853836,
+          "event_mad_us": 2.8415966033935547,
+          "event_median_us": 99.54288005828857,
+          "event_range_us": [
+            33.94335985183716,
+            107.48000144958496
+          ],
+          "event_submission_pearson_r": 0.9997648670145872,
+          "event_us_per_complete_operation_by_round": [
+            98.99007797241211,
+            107.48000144958496,
+            104.94720458984375,
+            98.74431610107422,
+            103.62879753112793,
+            33.94335985183716,
+            97.94560432434082,
+            100.09568214416504
+          ],
+          "host_submission_median_ms_per_block": 9.992759,
+          "host_submission_ms_per_block_by_round": [
+            9.949186,
+            10.774965,
+            10.521754,
+            9.900714,
+            10.289843,
+            2.746376,
+            9.831083,
+            10.036332
+          ],
+          "perf_median_us": 100.326595,
+          "raw_median_us": 100.32284999999999
+        }
+      },
+      "mode": "eager",
+      "paired_A_minus_B_event_us_by_round": [
+        -30.412797927856435,
+        -46.01888179779053,
+        -41.15200519561767,
+        -32.03071594238281,
+        -41.59487724304199,
+        27.363197803497314,
+        -32.04320430755615,
+        -38.59424114227294
+      ],
+      "paired_A_minus_B_mad_us": 5.369603633880615,
+      "paired_A_minus_B_median_us": -35.31872272491455,
+      "paired_signs": {
+        "A_faster": 7,
+        "B_faster": 1,
+        "ties": 0
+      },
+      "ranking_supported": false,
+      "raw_boundary_discrepancy": false,
+      "rounds": 8,
+      "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+      "timing_boundary_discrepancy": false
+    },
+    "graph-1": {
+      "aa_max_absolute_gap_us": 1.8793582916259766,
+      "clock_preflight_status": "NO_RESOLVED_DIFFERENCE",
+      "clock_warnings": [],
+      "complete_operations_per_block": 100,
+      "correctness_max_abs_error_by_seed": [
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 0
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 1
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 2
+        }
+      ],
+      "correctness_passed": true,
+      "decision": "B_FASTER",
+      "decision_reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+      "graph_profile_kernel_nodes": {
+        "A": 100,
+        "B": 200
+      },
+      "graph_setup_ms": {
+        "A": 16.615601,
+        "B": 2.679792
+      },
+      "host_submission_calls_per_block": 1,
+      "kernel_metrics": {
+        "A": {
+          "event_cv": 0.03460623276794718,
+          "event_mad_us": 1.858079433441162,
+          "event_median_us": 60.583200454711914,
+          "event_range_us": [
+            58.702402114868164,
+            63.6729621887207
+          ],
+          "event_submission_pearson_r": 0.35526428634425417,
+          "event_us_per_complete_operation_by_round": [
+            60.152320861816406,
+            63.385601043701165,
+            63.60000133514404,
+            58.74783992767334,
+            58.702402114868164,
+            61.01408004760742,
+            60.043840408325195,
+            63.6729621887207
+          ],
+          "host_submission_median_ms_per_block": 0.051693,
+          "host_submission_ms_per_block_by_round": [
+            0.082226,
+            0.039605,
+            0.066015,
+            0.051267,
+            0.052119,
+            0.050917,
+            0.050907,
+            0.106342
+          ],
+          "perf_median_us": 61.69786,
+          "raw_median_us": 61.691705
+        },
+        "B": {
+          "event_cv": 0.07523245376006484,
+          "event_mad_us": 2.1080005168914795,
+          "event_median_us": 31.702558994293213,
+          "event_range_us": [
+            29.35647964477539,
+            35.32576084136963
+          ],
+          "event_submission_pearson_r": 0.3117503743653823,
+          "event_us_per_complete_operation_by_round": [
+            35.32576084136963,
+            29.542078971862793,
+            33.75808000564575,
+            29.35647964477539,
+            30.61055898666382,
+            34.420480728149414,
+            29.79487895965576,
+            32.79455900192261
+          ],
+          "host_submission_median_ms_per_block": 0.0934875,
+          "host_submission_ms_per_block_by_round": [
+            0.083328,
+            0.072207,
+            0.087376,
+            0.066476,
+            0.11079,
+            0.11068,
+            0.099599,
+            0.100411
+          ],
+          "perf_median_us": 34.49794000000001,
+          "raw_median_us": 34.492585000000005
+        }
+      },
+      "mode": "cuda_graph",
+      "paired_A_minus_B_event_us_by_round": [
+        24.826560020446774,
+        33.84352207183837,
+        29.84192132949829,
+        29.391360282897946,
+        28.091843128204346,
+        26.59359931945801,
+        30.248961448669434,
+        30.878403186798096
+      ],
+      "paired_A_minus_B_mad_us": 1.3932800292968759,
+      "paired_A_minus_B_median_us": 29.616640806198117,
+      "paired_signs": {
+        "A_faster": 0,
+        "B_faster": 8,
+        "ties": 0
+      },
+      "ranking_supported": true,
+      "raw_boundary_discrepancy": false,
+      "rounds": 8,
+      "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+      "timing_boundary_discrepancy": false
+    },
+    "graph-2": {
+      "aa_max_absolute_gap_us": 7.231040000915527,
+      "clock_preflight_status": "NO_RESOLVED_DIFFERENCE",
+      "clock_warnings": [],
+      "complete_operations_per_block": 100,
+      "correctness_max_abs_error_by_seed": [
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 0
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 1
+        },
+        {
+          "A": 0.0,
+          "B": 0.125,
+          "seed": 2
+        }
+      ],
+      "correctness_passed": true,
+      "decision": "B_FASTER",
+      "decision_reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+      "graph_profile_kernel_nodes": {
+        "A": 100,
+        "B": 200
+      },
+      "graph_setup_ms": {
+        "A": 1.751297,
+        "B": 17.155942
+      },
+      "host_submission_calls_per_block": 1,
+      "kernel_metrics": {
+        "A": {
+          "event_cv": 0.032537930212797286,
+          "event_mad_us": 1.6473603248596191,
+          "event_median_us": 60.459840297698975,
+          "event_range_us": [
+            57.60928153991699,
+            63.279361724853516
+          ],
+          "event_submission_pearson_r": 0.11992657351596211,
+          "event_us_per_complete_operation_by_round": [
+            61.43904209136963,
+            62.25759983062744,
+            58.9628791809082,
+            63.279361724853516,
+            61.26175880432129,
+            58.65056037902832,
+            57.60928153991699,
+            59.65792179107666
+          ],
+          "host_submission_median_ms_per_block": 0.1203785,
+          "host_submission_ms_per_block_by_round": [
+            0.182166,
+            0.102965,
+            0.161787,
+            0.122743,
+            0.15221,
+            0.103266,
+            0.117173,
+            0.118014
+          ],
+          "perf_median_us": 62.16112999999999,
+          "raw_median_us": 62.152570000000004
+        },
+        "B": {
+          "event_cv": 0.078107877700684,
+          "event_mad_us": 1.8264007568359375,
+          "event_median_us": 31.144959926605225,
+          "event_range_us": [
+            28.789119720458984,
+            35.784640312194824
+          ],
+          "event_submission_pearson_r": -0.49504971380049395,
+          "event_us_per_complete_operation_by_round": [
+            35.784640312194824,
+            30.256640911102295,
+            28.789119720458984,
+            33.34752082824707,
+            29.796159267425537,
+            29.694719314575195,
+            33.987839221954346,
+            32.033278942108154
+          ],
+          "host_submission_median_ms_per_block": 0.14313700000000001,
+          "host_submission_ms_per_block_by_round": [
+            0.13714,
+            0.159523,
+            0.255325,
+            0.148543,
+            0.145657,
+            0.135858,
+            0.140617,
+            0.107755
+          ],
+          "perf_median_us": 33.460525,
+          "raw_median_us": 33.455014999999996
+        }
+      },
+      "mode": "cuda_graph",
+      "paired_A_minus_B_event_us_by_round": [
+        25.6544017791748,
+        32.00095891952515,
+        30.173759460449215,
+        29.93184089660644,
+        31.465599536895756,
+        28.955841064453125,
+        23.62144231796265,
+        27.624642848968506
+      ],
+      "paired_A_minus_B_mad_us": 1.9204783439636248,
+      "paired_A_minus_B_median_us": 29.443840980529785,
+      "paired_signs": {
+        "A_faster": 0,
+        "B_faster": 8,
+        "ties": 0
+      },
+      "ranking_supported": true,
+      "raw_boundary_discrepancy": false,
+      "rounds": 8,
+      "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+      "timing_boundary_discrepancy": false
+    }
+  },
+  "unsupported_claims": [
+    "CUDA Graphs eliminate all Split-2 slow blocks",
+    "Host orchestration alone caused the historical slow mode",
+    "A graph-mode ranking establishes eager-mode speedup",
+    "Sixteen graph rounds establish tail-latency percentiles"
+  ]
+}

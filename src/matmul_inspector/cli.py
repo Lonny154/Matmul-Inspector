@@ -7,7 +7,7 @@ import sys
 from typing import Sequence
 
 from . import __version__
-from . import experiment, experiment_batch, experiment_session, nki, ptx, reporting, sass, tensor_game_cli
+from . import experiment, experiment_batch, experiment_compare, experiment_pair, experiment_session, nki, ptx, reporting, sass, tensor_game_cli
 
 
 COMMANDS = {
@@ -51,6 +51,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
         print(f"matmul-inspector {__version__}")
         return 0
     command = values.pop(0)
+    if command == "experiment" and values[:1] == ["compare"]:
+        return experiment_compare.main(values[1:])
+    if command == "experiment" and values[:1] == ["pair"]:
+        return experiment_pair.main(values[1:])
     selected = COMMANDS.get(command)
     if selected is None:
         parser().error(f"invalid command: {command!r}")

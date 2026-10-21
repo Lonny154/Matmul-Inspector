@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Matmul Inspector GEMM comparison decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "decision", "reason", "timing_basis", "speedup_baseline_over_candidate"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "decision": {"enum": ["INCONCLUSIVE", "FAILED", "REJECTED_INCORRECT", "CANDIDATE_FASTER", "BASELINE_FASTER"]},
+    "reason": {"type": "string"},
+    "timing_basis": {"type": "string"},
+    "speedup_baseline_over_candidate": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "rounds": {"type": "integer", "minimum": 5},
+    "baseline_median_ms": {"type": "number", "exclusiveMinimum": 0},
+    "candidate_median_ms": {"type": "number", "exclusiveMinimum": 0},
+    "baseline_range_ms": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "candidate_range_ms": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "baseline_cv": {"type": "number", "minimum": 0},
+    "candidate_cv": {"type": "number", "minimum": 0},
+    "paired_baseline_minus_candidate_ms": {"type": "array", "items": {"type": "number"}}
+  }
+}

@@ -1,0 +1,322 @@
+{
+  "benchmark": {
+    "baseline_summary": {
+      "count": 8,
+      "max_ms": 0.0694271993637085,
+      "mean_ms": 0.06561755955219269,
+      "median_ms": 0.06471776008605956,
+      "min_ms": 0.06456319808959961,
+      "stdev_ms": 0.0018170667343917824
+    },
+    "candidate_summary": {
+      "count": 8,
+      "max_ms": 0.08577823638916016,
+      "mean_ms": 0.07543252050876617,
+      "median_ms": 0.07133647918701172,
+      "min_ms": 0.06763264179229736,
+      "stdev_ms": 0.008087874508706584
+    },
+    "iterations_per_measurement": 100,
+    "measurement": "steady-state block timing with CUDA events and host clocks",
+    "mode": "allocating",
+    "rounds": [
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.4805121421813965,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06480512142181397,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.4207761421813965,
+        "baseline_host_submission_ms_per_block": 2.278793,
+        "baseline_host_wall_ms_per_block": 6.059736,
+        "baseline_latency_ms": 0.06480512142181397,
+        "candidate_cuda_event_elapsed_ms_per_block": 7.2221760749816895,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.0722217607498169,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.4688420749816897,
+        "candidate_host_submission_ms_per_block": 6.523853,
+        "candidate_host_wall_ms_per_block": 6.753334,
+        "candidate_latency_ms": 0.0722217607498169,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "round": 1
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.478015899658203,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06478015899658203,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.42132089965820274,
+        "baseline_host_submission_ms_per_block": 3.162348,
+        "baseline_host_wall_ms_per_block": 6.056695,
+        "baseline_latency_ms": 0.06478015899658203,
+        "candidate_cuda_event_elapsed_ms_per_block": 6.853568077087402,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.06853568077087402,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.4521560770874027,
+        "candidate_host_submission_ms_per_block": 6.354536,
+        "candidate_host_wall_ms_per_block": 6.401412,
+        "candidate_latency_ms": 0.06853568077087402,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "round": 2
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.462463855743408,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06462463855743408,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.4203648557434079,
+        "baseline_host_submission_ms_per_block": 3.109908,
+        "baseline_host_wall_ms_per_block": 6.042099,
+        "baseline_latency_ms": 0.06462463855743408,
+        "candidate_cuda_event_elapsed_ms_per_block": 6.763264179229736,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.06763264179229736,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.3816321792297366,
+        "candidate_host_submission_ms_per_block": 6.27489,
+        "candidate_host_wall_ms_per_block": 6.381632,
+        "candidate_latency_ms": 0.06763264179229736,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "round": 3
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.94271993637085,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.0694271993637085,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.3648969363708492,
+        "baseline_host_submission_ms_per_block": 4.581471,
+        "baseline_host_wall_ms_per_block": 6.577823,
+        "baseline_latency_ms": 0.0694271993637085,
+        "candidate_cuda_event_elapsed_ms_per_block": 6.946432113647461,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.0694643211364746,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.45662011364746125,
+        "candidate_host_submission_ms_per_block": 6.444337,
+        "candidate_host_wall_ms_per_block": 6.489812,
+        "candidate_latency_ms": 0.0694643211364746,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "round": 4
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.456319808959961,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06456319808959961,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.40873180895996075,
+        "baseline_host_submission_ms_per_block": 5.399893,
+        "baseline_host_wall_ms_per_block": 6.047588,
+        "baseline_latency_ms": 0.06456319808959961,
+        "candidate_cuda_event_elapsed_ms_per_block": 8.51251220703125,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.0851251220703125,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.5707142070312496,
+        "candidate_host_submission_ms_per_block": 7.894431,
+        "candidate_host_wall_ms_per_block": 7.941798,
+        "candidate_latency_ms": 0.0851251220703125,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "round": 5
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.465536117553711,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06465536117553711,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.4106961175537105,
+        "baseline_host_submission_ms_per_block": 5.317529,
+        "baseline_host_wall_ms_per_block": 6.05484,
+        "baseline_latency_ms": 0.06465536117553711,
+        "candidate_cuda_event_elapsed_ms_per_block": 8.42512035369873,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.0842512035369873,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.5030373536987307,
+        "candidate_host_submission_ms_per_block": 7.704055,
+        "candidate_host_wall_ms_per_block": 7.922083,
+        "candidate_latency_ms": 0.0842512035369873,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "round": 6
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.743040084838867,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06743040084838867,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.43473908483886703,
+        "baseline_host_submission_ms_per_block": 5.071431,
+        "baseline_host_wall_ms_per_block": 6.308301,
+        "baseline_latency_ms": 0.06743040084838867,
+        "candidate_cuda_event_elapsed_ms_per_block": 7.045119762420654,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.07045119762420654,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.47783876242065393,
+        "candidate_host_submission_ms_per_block": 4.280951,
+        "candidate_host_wall_ms_per_block": 6.567281,
+        "candidate_latency_ms": 0.07045119762420654,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "round": 7
+      },
+      {
+        "baseline_cuda_event_elapsed_ms_per_block": 6.465439796447754,
+        "baseline_cuda_event_elapsed_ms_per_operation": 0.06465439796447754,
+        "baseline_cuda_event_minus_host_wall_ms_per_block": 0.42235779644775384,
+        "baseline_host_submission_ms_per_block": 5.179982,
+        "baseline_host_wall_ms_per_block": 6.043082,
+        "baseline_latency_ms": 0.06465439796447754,
+        "candidate_cuda_event_elapsed_ms_per_block": 8.577823638916016,
+        "candidate_cuda_event_elapsed_ms_per_operation": 0.08577823638916016,
+        "candidate_cuda_event_minus_host_wall_ms_per_block": 0.5825326389160157,
+        "candidate_host_submission_ms_per_block": 7.960211,
+        "candidate_host_wall_ms_per_block": 7.995291,
+        "candidate_latency_ms": 0.08577823638916016,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "round": 8
+      }
+    ],
+    "speedup_baseline_over_candidate": 0.9072183099533004,
+    "speedup_definition": "ratio of baseline round-median CUDA-event ms/operation to candidate round-median CUDA-event ms/operation",
+    "timing_boundaries": {
+      "cuda_event": "device interval from an event before block submission to an event after all block operations; may include host-induced stream idle gaps",
+      "host_submission": "host wall interval from before start-event submission through end-event submission, ending before synchronization",
+      "host_wall": "host wall interval from before start-event submission through end-event completion"
+    },
+    "timing_boundary_check": {
+      "interpretation": "A positive event-minus-wall value is a concrete cross-timer discrepancy. The placement brackets event completion, but the discrepancy alone does not identify its cause.",
+      "measurements": {
+        "baseline": {
+          "cuda_event_elapsed_ms_per_block": 6.495840072631836,
+          "cuda_event_elapsed_ms_per_operation": 0.06495840072631837,
+          "cuda_event_minus_host_wall_ms_per_block": 0.3633200726318355,
+          "cuda_event_not_greater_than_synchronized_host_wall": false,
+          "host_submission_ms_per_block": 3.012142,
+          "host_wall_ms_per_block": 6.13252
+        },
+        "candidate": {
+          "cuda_event_elapsed_ms_per_block": 6.975488185882568,
+          "cuda_event_elapsed_ms_per_operation": 0.06975488185882568,
+          "cuda_event_minus_host_wall_ms_per_block": 0.4429641858825679,
+          "cuda_event_not_greater_than_synchronized_host_wall": false,
+          "host_submission_ms_per_block": 6.488653,
+          "host_wall_ms_per_block": 6.532524
+        }
+      },
+      "placement": [
+        "host wall start",
+        "CUDA start-event record",
+        "operation submissions",
+        "CUDA end-event record",
+        "host submission end",
+        "end-event synchronize",
+        "host wall end",
+        "CUDA elapsed-time query"
+      ],
+      "purpose": "unranked pre-measurement check using the same operations per block"
+    },
+    "unit": "ms",
+    "units": {
+      "cuda_event_elapsed_ms_per_block": "ms/block",
+      "cuda_event_elapsed_ms_per_operation": "ms/operation",
+      "cuda_event_minus_host_wall_ms_per_block": "ms/block",
+      "host_submission_ms_per_block": "ms/block",
+      "host_wall_ms_per_block": "ms/block"
+    },
+    "warmups_per_implementation": 30,
+    "wrapper_work_per_call": {
+      "baseline": "torch.matmul allocates its output per call",
+      "candidate": "triton_gemm validates inputs, allocates output, constructs the grid, and launches per call"
+    }
+  },
+  "config": {
+    "baseline": {
+      "implementation": "pytorch_matmul"
+    },
+    "benchmark": {
+      "iterations": 100,
+      "mode": "allocating",
+      "rounds": 8,
+      "warmups": 30
+    },
+    "candidate": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      }
+    },
+    "correctness": {
+      "atol": 0.01,
+      "rtol": 0.01
+    },
+    "seed": 0,
+    "timeout_seconds": 180,
+    "workload": {
+      "dtype": "float16",
+      "k": 768,
+      "m": 512,
+      "n": 3072
+    }
+  },
+  "correctness": {
+    "atol": 0.01,
+    "candidate_accumulation": "FP32 Triton tl.dot accumulator with FP16 output",
+    "candidate_nonfinite_count": 0,
+    "candidate_shape": [
+      512,
+      3072
+    ],
+    "dtype_match": true,
+    "max_absolute_error": 0.0,
+    "mean_absolute_error": 0.0,
+    "passed": true,
+    "preallocated_output_overwrite_verified": {
+      "baseline": null,
+      "candidate": null
+    },
+    "reference": "pytorch_matmul (cuBLAS)",
+    "reference_accumulation": "PyTorch/cuBLAS implementation-selected FP16 GEMM accumulation",
+    "reference_nonfinite_count": 0,
+    "reference_shape": [
+      512,
+      3072
+    ],
+    "rtol": 0.01,
+    "shape_match": true
+  },
+  "created_at_utc": "2026-10-19T20:36:20.970239+00:00",
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592,
+      "type": "cuda"
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "python": "3.13.11",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "finished_at_utc": "2026-10-19T20:36:24.791925+00:00",
+  "git": {
+    "commit": "1a5dd403ddb40dcb9b7b93937aac776e8174b982",
+    "dirty": true
+  },
+  "run_directory": "/tmp/mi-workflow-1-fc1-v1/raw/20261019T203620.970239Z-5c854c86",
+  "run_id": "20261019T203620.970239Z-5c854c86",
+  "schema_version": 2,
+  "setup": {
+    "duration_ms": {
+      "baseline": 216.38699899995117,
+      "candidate": 365.3216499988048
+    },
+    "measurement": "host wall time through first synchronized invocation",
+    "unit": "ms"
+  },
+  "status": "success"
+}

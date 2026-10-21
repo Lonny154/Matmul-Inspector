@@ -1,0 +1,31 @@
+{
+  "aa_placement": "before",
+  "capture": {
+    "A_kernels_per_replay": 100,
+    "B_partial_kernels_per_replay": 100,
+    "B_reduction_kernels_per_replay": 100,
+    "scratch": "preallocated FP32, 524288 bytes, fixed address, overwritten by each partial launch"
+  },
+  "capture_preflight_observation": "PyTorch CUDAGraph.debug_dump returned no file; a separately retained one-operation profiler trace exposed partial then reduction on CUDA.",
+  "complete_operations_per_block": 100,
+  "graph_diagnostic_script_sha256": "f64fae49517514ac42a87efdbcbdbf7d22c78d30eef9bd9470c91a5ec45a3b99",
+  "historical_2b_manifest_sha256": "90dfa907f17ddf612293e9608cb5c9f9b00045c1c204da35d8ccfecff0311153",
+  "rounds_per_session": 8,
+  "schema_version": 1,
+  "session_order": [
+    "eager-1",
+    "graph-1",
+    "graph-2",
+    "eager-2"
+  ],
+  "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+  "spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+  "stop_rule": "Two fresh sessions per mode; retain all blocks and failures; no additional search.",
+  "warmups_per_candidate": 30,
+  "workload": {
+    "dtype": "float16",
+    "k": 4096,
+    "m": 32,
+    "n": 2048
+  }
+}

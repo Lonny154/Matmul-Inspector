@@ -1,0 +1,2698 @@
+{
+  "base_spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+  "capture_order": [
+    "C",
+    "B",
+    "A"
+  ],
+  "compiler": {
+    "conventional": {
+      "kernel_name": "fc1_kernel",
+      "metadata": {
+        "n_regs": 119,
+        "n_spills": 0,
+        "num_stages": 3,
+        "num_warps": 4,
+        "shared": 24576
+      },
+      "ptx_sha256": "2b0633490e7c09795b16b8ac18cf4f50c597c389578dfd5fa8b254cb1a071980"
+    },
+    "partial": {
+      "kernel_name": "split_k_partial",
+      "metadata": {
+        "n_regs": 124,
+        "n_spills": 0,
+        "num_stages": 3,
+        "num_warps": 4,
+        "shared": 24576
+      },
+      "ptx_sha256": "762cabe86dbf1911404aaf1ae7b8e310b64a2e6f9f965258cbc317b7dfd7cefb"
+    },
+    "reduction": {
+      "kernel_name": "reduce_partials",
+      "metadata": {
+        "n_regs": 22,
+        "n_spills": 0,
+        "num_stages": 3,
+        "num_warps": 4,
+        "shared": 0
+      },
+      "ptx_sha256": "b43a6541cac2aa8a54ccfe276d2f02fb4ca1b6e5c7caebcc9b48f08d1d10fe5e"
+    }
+  },
+  "correctness": {
+    "passed": true,
+    "reference": "pytorch_matmul (cuBLAS)",
+    "seeds": [
+      {
+        "checks": {
+          "A": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "B": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.125,
+            "mean_absolute_error": 0.00020667817443609238,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "C": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          }
+        },
+        "seed": 0
+      },
+      {
+        "checks": {
+          "A": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "B": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.125,
+            "mean_absolute_error": 0.0001934833562700078,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "C": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          }
+        },
+        "seed": 1
+      },
+      {
+        "checks": {
+          "A": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "B": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.125,
+            "mean_absolute_error": 0.00019738668925128877,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "C": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          }
+        },
+        "seed": 2
+      }
+    ],
+    "tolerances": {
+      "atol": 0.01,
+      "rtol": 0.01
+    }
+  },
+  "created_at_utc": "2026-10-20T18:06:28.711167+00:00",
+  "diagnostic_script_sha256": "8a5f433337732a361eea944b7cf12609b6d9fb56caf34137afe706006fd9a4f6",
+  "environment": {
+    "compute_capability": "8.9",
+    "cuda_runtime": "12.8",
+    "gpu": "NVIDIA GeForce RTX 4060 Ti",
+    "python": "3.13.11",
+    "sm_count": 34,
+    "torch": "2.11.0+cu128",
+    "triton": "3.6.0"
+  },
+  "geometry": {
+    "conventional_ctas": 16,
+    "reduction_ctas": 64,
+    "scratch_bytes": 524288,
+    "split_partial_ctas": 32
+  },
+  "git_head": "588cb01106283933c18d551a785770577dfe936c",
+  "graph_profile": {
+    "A": {
+      "complete_operations": 100,
+      "cuda_graph_launch_calls": 1,
+      "kernel_nodes_observed": 100,
+      "kernel_sequence": [
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel",
+        "fc1_kernel"
+      ]
+    },
+    "B": {
+      "complete_operations": 100,
+      "cuda_graph_launch_calls": 1,
+      "kernel_nodes_observed": 200,
+      "kernel_sequence": [
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials",
+        "split_k_partial",
+        "reduce_partials"
+      ]
+    },
+    "C": {
+      "complete_operations": 100,
+      "cuda_graph_launch_calls": 1,
+      "kernel_nodes_observed": 100,
+      "kernel_sequence": [
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+        "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)"
+      ],
+      "kernels_per_operation": 1
+    }
+  },
+  "graph_setup_ms": {
+    "A": 1.031114,
+    "B": 2.429613,
+    "C": 13.526097
+  },
+  "graph_trace_sha256": {
+    "A": "2fad286718ea3716e28b3d2fd28959f24c7f50d450e12a8db24f6315c5f89ae6",
+    "B": "e50eef4969c1d05337f268c4acd7f5dc908f24fd276fba951d884a9218f84628",
+    "C": "f5a8719de515d2dc2a03815c5935ef61552ba3525179543b624ee6ff8676e012"
+  },
+  "host_clock_preflight": {
+    "median_raw_minus_perf_ms": -0.000542000000002929,
+    "median_raw_over_perf": 0.9999730418390159,
+    "read_span_bound_ms": 0.007444,
+    "rule": "all five differences have one sign and exceed the largest paired read span",
+    "samples": [
+      {
+        "monotonic_raw_ms": 20.087083,
+        "perf_counter_ms": 20.089179,
+        "raw_minus_perf_ms": -0.002096000000001652,
+        "raw_over_perf": 0.9998956652235513,
+        "read_span_bound_ms": 0.007444
+      },
+      {
+        "monotonic_raw_ms": 20.104687,
+        "perf_counter_ms": 20.105229,
+        "raw_minus_perf_ms": -0.000542000000002929,
+        "raw_over_perf": 0.9999730418390159,
+        "read_span_bound_ms": 0.004549
+      },
+      {
+        "monotonic_raw_ms": 20.119805,
+        "perf_counter_ms": 20.120289,
+        "raw_minus_perf_ms": -0.000484000000000151,
+        "raw_over_perf": 0.9999759446795222,
+        "read_span_bound_ms": 0.004759
+      },
+      {
+        "monotonic_raw_ms": 20.104827,
+        "perf_counter_ms": 20.105179,
+        "raw_minus_perf_ms": -0.00035199999999946385,
+        "raw_over_perf": 0.9999824920733111,
+        "read_span_bound_ms": 0.004458
+      },
+      {
+        "monotonic_raw_ms": 20.160823,
+        "perf_counter_ms": 20.161386,
+        "raw_minus_perf_ms": -0.0005629999999996471,
+        "raw_over_perf": 0.9999720753325193,
+        "read_span_bound_ms": 0.005931
+      }
+    ],
+    "status": "NO_RESOLVED_DIFFERENCE"
+  },
+  "k": 4096,
+  "m": 32,
+  "mode": "cuda_graph",
+  "n": 2048,
+  "operations_per_replay": 100,
+  "pairs": {
+    "AB": {
+      "aa_rounds": [
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.071167945861816,
+              "cuda_event_elapsed_ms_per_operation": 0.06071167945861816,
+              "cuda_event_minus_host_wall_ms_per_block": -0.050430054138183245,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.049841054138183516,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.054734,
+              "host_wall_ms_per_block": 6.121598,
+              "monotonic_raw_ms_per_block": 6.121009
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.170176029205322,
+              "cuda_event_elapsed_ms_per_operation": 0.06170176029205322,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04739497079467814,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04694597079467755,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.059353,
+              "host_wall_ms_per_block": 6.217571,
+              "monotonic_raw_ms_per_block": 6.217122
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.040383815765381,
+              "cuda_event_elapsed_ms_per_operation": 0.06040383815765381,
+              "cuda_event_minus_host_wall_ms_per_block": -0.12270318423461912,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.12067218423461945,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.097155,
+              "host_wall_ms_per_block": 6.163087,
+              "monotonic_raw_ms_per_block": 6.161056
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.0199360847473145,
+              "cuda_event_elapsed_ms_per_operation": 0.06019936084747315,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06037291525268529,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05980491525268583,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.06281,
+              "host_wall_ms_per_block": 6.080309,
+              "monotonic_raw_ms_per_block": 6.079741
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.035679817199707,
+              "cuda_event_elapsed_ms_per_operation": 0.06035679817199707,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05340618280029297,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05206618280029307,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.069492,
+              "host_wall_ms_per_block": 6.089086,
+              "monotonic_raw_ms_per_block": 6.087746
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.11737585067749,
+              "cuda_event_elapsed_ms_per_operation": 0.0611737585067749,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06415714932250971,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06376714932250938,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.08388,
+              "host_wall_ms_per_block": 6.181533,
+              "monotonic_raw_ms_per_block": 6.181143
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.1233601570129395,
+              "cuda_event_elapsed_ms_per_operation": 0.061233601570129394,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0500868429870609,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04964784298706082,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.065896,
+              "host_wall_ms_per_block": 6.173447,
+              "monotonic_raw_ms_per_block": 6.173008
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.103871822357178,
+              "cuda_event_elapsed_ms_per_operation": 0.06103871822357178,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04388717764282202,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04311717764282186,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.0472,
+              "host_wall_ms_per_block": 6.147759,
+              "monotonic_raw_ms_per_block": 6.146989
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.210464000701904,
+              "cuda_event_elapsed_ms_per_operation": 0.06210464000701904,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05306399929809569,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05217499929809577,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.053371,
+              "host_wall_ms_per_block": 6.263528,
+              "monotonic_raw_ms_per_block": 6.262639
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.067327976226807,
+              "cuda_event_elapsed_ms_per_operation": 0.060673279762268065,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08999802377319366,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08853802377319298,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.10517,
+              "host_wall_ms_per_block": 6.157326,
+              "monotonic_raw_ms_per_block": 6.155866
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.815616130828857,
+              "cuda_event_elapsed_ms_per_operation": 0.05815616130828857,
+              "cuda_event_minus_host_wall_ms_per_block": -0.051918869171142745,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.051610869171142326,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.065916,
+              "host_wall_ms_per_block": 5.867535,
+              "monotonic_raw_ms_per_block": 5.867227
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.016128063201904,
+              "cuda_event_elapsed_ms_per_operation": 0.060161280632019046,
+              "cuda_event_minus_host_wall_ms_per_block": -0.37148693679809597,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.3706369367980953,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.089931,
+              "host_wall_ms_per_block": 6.387615,
+              "monotonic_raw_ms_per_block": 6.386765
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.671296119689941,
+              "cuda_event_elapsed_ms_per_operation": 0.05671296119689941,
+              "cuda_event_minus_host_wall_ms_per_block": -0.03812688031005873,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.03785988031005871,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.045035,
+              "host_wall_ms_per_block": 5.709423,
+              "monotonic_raw_ms_per_block": 5.709156
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.880320072174072,
+              "cuda_event_elapsed_ms_per_operation": 0.05880320072174072,
+              "cuda_event_minus_host_wall_ms_per_block": -0.041697927825927295,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04137992782592814,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.036339,
+              "host_wall_ms_per_block": 5.922018,
+              "monotonic_raw_ms_per_block": 5.9217
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.038976192474365,
+              "cuda_event_elapsed_ms_per_operation": 0.06038976192474365,
+              "cuda_event_minus_host_wall_ms_per_block": -0.11354080752563434,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.11285180752563484,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.058652,
+              "host_wall_ms_per_block": 6.152517,
+              "monotonic_raw_ms_per_block": 6.151828
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.6381120681762695,
+              "cuda_event_elapsed_ms_per_operation": 0.056381120681762695,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04463093182373079,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.044042931823730314,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.035107,
+              "host_wall_ms_per_block": 5.682743,
+              "monotonic_raw_ms_per_block": 5.682155
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 8
+        }
+      ],
+      "measurement_sequence": [
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 8
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 8
+        }
+      ],
+      "physical_labels": [
+        "A",
+        "B"
+      ],
+      "rounds": [
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.944479942321777,
+              "cuda_event_elapsed_ms_per_operation": 0.05944479942321777,
+              "cuda_event_minus_host_wall_ms_per_block": -0.2110940576782223,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.2100730576782226,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.082968,
+              "host_wall_ms_per_block": 6.155574,
+              "monotonic_raw_ms_per_block": 6.154553
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.6603519916534424,
+              "cuda_event_elapsed_ms_per_operation": 0.036603519916534426,
+              "cuda_event_minus_host_wall_ms_per_block": -0.11305400834655766,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.11276600834655781,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.166307,
+              "host_wall_ms_per_block": 3.773406,
+              "monotonic_raw_ms_per_block": 3.773118
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.28707218170166,
+              "cuda_event_elapsed_ms_per_operation": 0.0628707218170166,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07882281829833993,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07815081829834014,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.112645,
+              "host_wall_ms_per_block": 6.365895,
+              "monotonic_raw_ms_per_block": 6.365223
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.4938879013061523,
+              "cuda_event_elapsed_ms_per_operation": 0.03493887901306152,
+              "cuda_event_minus_host_wall_ms_per_block": -0.1175500986938478,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.11644109869384778,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.160746,
+              "host_wall_ms_per_block": 3.611438,
+              "monotonic_raw_ms_per_block": 3.610329
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.107744216918945,
+              "cuda_event_elapsed_ms_per_operation": 0.06107744216918945,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06251678308105468,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06220778308105501,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.082888,
+              "host_wall_ms_per_block": 6.170261,
+              "monotonic_raw_ms_per_block": 6.169952
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.9263360500335693,
+              "cuda_event_elapsed_ms_per_operation": 0.02926336050033569,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04641494996643081,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0461409499664307,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.08924,
+              "host_wall_ms_per_block": 2.972751,
+              "monotonic_raw_ms_per_block": 2.972477
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.082304000854492,
+              "cuda_event_elapsed_ms_per_operation": 0.060823040008544924,
+              "cuda_event_minus_host_wall_ms_per_block": -0.060524999145507685,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06013599914550749,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.093519,
+              "host_wall_ms_per_block": 6.142829,
+              "monotonic_raw_ms_per_block": 6.14244
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.4160959720611572,
+              "cuda_event_elapsed_ms_per_operation": 0.034160959720611575,
+              "cuda_event_minus_host_wall_ms_per_block": -0.056648027938842827,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0557900279388428,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.072678,
+              "host_wall_ms_per_block": 3.472744,
+              "monotonic_raw_ms_per_block": 3.471886
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.239583969116211,
+              "cuda_event_elapsed_ms_per_operation": 0.06239583969116211,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07018303088378897,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0695330308837887,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.090523,
+              "host_wall_ms_per_block": 6.309767,
+              "monotonic_raw_ms_per_block": 6.309117
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.1848320960998535,
+              "cuda_event_elapsed_ms_per_operation": 0.03184832096099854,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0708169039001465,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06944090390014646,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.103216,
+              "host_wall_ms_per_block": 3.255649,
+              "monotonic_raw_ms_per_block": 3.254273
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.665919780731201,
+              "cuda_event_elapsed_ms_per_operation": 0.05665919780731201,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04561821926879883,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04525121926879905,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.052731,
+              "host_wall_ms_per_block": 5.711538,
+              "monotonic_raw_ms_per_block": 5.711171
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.9290881156921387,
+              "cuda_event_elapsed_ms_per_operation": 0.029290881156921387,
+              "cuda_event_minus_host_wall_ms_per_block": -0.04282188430786116,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04227688430786136,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.07329,
+              "host_wall_ms_per_block": 2.97191,
+              "monotonic_raw_ms_per_block": 2.971365
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.639808177947998,
+              "cuda_event_elapsed_ms_per_operation": 0.05639808177947998,
+              "cuda_event_minus_host_wall_ms_per_block": -0.044016822052001636,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04375982205200213,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.041099,
+              "host_wall_ms_per_block": 5.683825,
+              "monotonic_raw_ms_per_block": 5.683568
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.9300479888916016,
+              "cuda_event_elapsed_ms_per_operation": 0.029300479888916015,
+              "cuda_event_minus_host_wall_ms_per_block": -0.03692301110839846,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.03668901110839862,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.062409,
+              "host_wall_ms_per_block": 2.966971,
+              "monotonic_raw_ms_per_block": 2.966737
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.619135856628418,
+              "cuda_event_elapsed_ms_per_operation": 0.05619135856628418,
+              "cuda_event_minus_host_wall_ms_per_block": -0.046774143371582255,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04593714337158161,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.043102,
+              "host_wall_ms_per_block": 5.66591,
+              "monotonic_raw_ms_per_block": 5.665073
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.926111936569214,
+              "cuda_event_elapsed_ms_per_operation": 0.02926111936569214,
+              "cuda_event_minus_host_wall_ms_per_block": -0.060176063430786186,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05992106343078607,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.084071,
+              "host_wall_ms_per_block": 2.986288,
+              "monotonic_raw_ms_per_block": 2.986033
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 8
+        }
+      ],
+      "unranked_timing_controls": {
+        "A": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 6.01804780960083,
+          "cuda_event_elapsed_ms_per_operation": 0.0601804780960083,
+          "cuda_event_minus_host_wall_ms_per_block": -0.06441519039916965,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.06399719039916985,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.090482,
+          "host_wall_ms_per_block": 6.082463,
+          "monotonic_raw_ms_per_block": 6.082045
+        },
+        "B": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 2.9381120204925537,
+          "cuda_event_elapsed_ms_per_operation": 0.02938112020492554,
+          "cuda_event_minus_host_wall_ms_per_block": -0.040930979507446175,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.040606979507446184,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.074792,
+          "host_wall_ms_per_block": 2.979043,
+          "monotonic_raw_ms_per_block": 2.978719
+        }
+      }
+    },
+    "AC": {
+      "aa_rounds": [
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.0531840324401855,
+              "cuda_event_elapsed_ms_per_operation": 0.060531840324401856,
+              "cuda_event_minus_host_wall_ms_per_block": -0.14913796755981412,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.1478769675598146,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.081385,
+              "host_wall_ms_per_block": 6.202322,
+              "monotonic_raw_ms_per_block": 6.201061
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.94320011138916,
+              "cuda_event_elapsed_ms_per_operation": 0.0594320011138916,
+              "cuda_event_minus_host_wall_ms_per_block": -0.17554088861083983,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.1741498886108399,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.106112,
+              "host_wall_ms_per_block": 6.118741,
+              "monotonic_raw_ms_per_block": 6.11735
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.104608058929443,
+              "cuda_event_elapsed_ms_per_operation": 0.061046080589294435,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07200394107055708,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07150594107055674,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.106112,
+              "host_wall_ms_per_block": 6.176612,
+              "monotonic_raw_ms_per_block": 6.176114
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.310848236083984,
+              "cuda_event_elapsed_ms_per_operation": 0.06310848236083984,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05524776391601538,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05398676391601587,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.106042,
+              "host_wall_ms_per_block": 6.366096,
+              "monotonic_raw_ms_per_block": 6.364835
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.027423858642578,
+              "cuda_event_elapsed_ms_per_operation": 0.060274238586425784,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05845714135742153,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05714614135742213,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.05266,
+              "host_wall_ms_per_block": 6.085881,
+              "monotonic_raw_ms_per_block": 6.08457
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.524735927581787,
+              "cuda_event_elapsed_ms_per_operation": 0.06524735927581787,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0846920724182132,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08412007241821318,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.102425,
+              "host_wall_ms_per_block": 6.609428,
+              "monotonic_raw_ms_per_block": 6.608856
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.356800079345703,
+              "cuda_event_elapsed_ms_per_operation": 0.06356800079345704,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05681492065429694,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05568292065429681,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.050556,
+              "host_wall_ms_per_block": 6.413615,
+              "monotonic_raw_ms_per_block": 6.412483
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.180191993713379,
+              "cuda_event_elapsed_ms_per_operation": 0.06180191993713379,
+              "cuda_event_minus_host_wall_ms_per_block": -0.042749006286620705,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.04240000628662077,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.061958,
+              "host_wall_ms_per_block": 6.222941,
+              "monotonic_raw_ms_per_block": 6.222592
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.092063903808594,
+              "cuda_event_elapsed_ms_per_operation": 0.060920639038085936,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09129909619140619,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09047009619140667,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.08416,
+              "host_wall_ms_per_block": 6.183363,
+              "monotonic_raw_ms_per_block": 6.182534
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.957376003265381,
+              "cuda_event_elapsed_ms_per_operation": 0.05957376003265381,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0890489967346193,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08771899673461903,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.119608,
+              "host_wall_ms_per_block": 6.046425,
+              "monotonic_raw_ms_per_block": 6.045095
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.171360015869141,
+              "cuda_event_elapsed_ms_per_operation": 0.06171360015869141,
+              "cuda_event_minus_host_wall_ms_per_block": -0.10512298413085919,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.10414298413085898,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.138754,
+              "host_wall_ms_per_block": 6.276483,
+              "monotonic_raw_ms_per_block": 6.275503
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.178912162780762,
+              "cuda_event_elapsed_ms_per_operation": 0.061789121627807614,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0970498372192381,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09527783721923822,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.116762,
+              "host_wall_ms_per_block": 6.275962,
+              "monotonic_raw_ms_per_block": 6.27419
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.171872138977051,
+              "cuda_event_elapsed_ms_per_operation": 0.061718721389770505,
+              "cuda_event_minus_host_wall_ms_per_block": -0.16162086102294904,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.1610798610229489,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.098327,
+              "host_wall_ms_per_block": 6.333493,
+              "monotonic_raw_ms_per_block": 6.332952
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.298624038696289,
+              "cuda_event_elapsed_ms_per_operation": 0.06298624038696289,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07122696130371065,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06936496130371061,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.064272,
+              "host_wall_ms_per_block": 6.369851,
+              "monotonic_raw_ms_per_block": 6.367989
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.204800128936768,
+              "cuda_event_elapsed_ms_per_operation": 0.062048001289367674,
+              "cuda_event_minus_host_wall_ms_per_block": -0.11158987106323259,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.11089887106323282,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.312605,
+              "host_wall_ms_per_block": 6.31639,
+              "monotonic_raw_ms_per_block": 6.315699
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.281856060028076,
+              "cuda_event_elapsed_ms_per_operation": 0.06281856060028077,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08016693997192359,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07916693997192414,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.045887,
+              "host_wall_ms_per_block": 6.362023,
+              "monotonic_raw_ms_per_block": 6.361023
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 8
+        }
+      ],
+      "measurement_sequence": [
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 8
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 8
+        }
+      ],
+      "physical_labels": [
+        "A",
+        "C"
+      ],
+      "rounds": [
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.3137922286987305,
+              "cuda_event_elapsed_ms_per_operation": 0.06313792228698731,
+              "cuda_event_minus_host_wall_ms_per_block": -0.10914077130126909,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.1081587713012695,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.150126,
+              "host_wall_ms_per_block": 6.422933,
+              "monotonic_raw_ms_per_block": 6.421951
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.10262393951416,
+              "cuda_event_elapsed_ms_per_operation": 0.021026239395141602,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09568306048583963,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09527106048583978,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.143333,
+              "host_wall_ms_per_block": 2.198307,
+              "monotonic_raw_ms_per_block": 2.197895
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 5.9251837730407715,
+              "cuda_event_elapsed_ms_per_operation": 0.059251837730407715,
+              "cuda_event_minus_host_wall_ms_per_block": -0.14717022695922832,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.14681322695922816,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.064623,
+              "host_wall_ms_per_block": 6.072354,
+              "monotonic_raw_ms_per_block": 6.071997
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.446784019470215,
+              "cuda_event_elapsed_ms_per_operation": 0.024467840194702148,
+              "cuda_event_minus_host_wall_ms_per_block": -0.054118980529785254,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05373698052978515,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.068401,
+              "host_wall_ms_per_block": 2.500903,
+              "monotonic_raw_ms_per_block": 2.500521
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.056064128875732,
+              "cuda_event_elapsed_ms_per_operation": 0.06056064128875732,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06323887112426796,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06217987112426737,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.074361,
+              "host_wall_ms_per_block": 6.119303,
+              "monotonic_raw_ms_per_block": 6.118244
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.0742080211639404,
+              "cuda_event_elapsed_ms_per_operation": 0.020742080211639403,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06232097883605947,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06201097883605966,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.093748,
+              "host_wall_ms_per_block": 2.136529,
+              "monotonic_raw_ms_per_block": 2.136219
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.222752094268799,
+              "cuda_event_elapsed_ms_per_operation": 0.06222752094268799,
+              "cuda_event_minus_host_wall_ms_per_block": -0.1444339057312014,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.14352290573120108,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.091574,
+              "host_wall_ms_per_block": 6.367186,
+              "monotonic_raw_ms_per_block": 6.366275
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.354624032974243,
+              "cuda_event_elapsed_ms_per_operation": 0.02354624032974243,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0915039670257567,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09074196702575676,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.135157,
+              "host_wall_ms_per_block": 2.446128,
+              "monotonic_raw_ms_per_block": 2.445366
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.276927947998047,
+              "cuda_event_elapsed_ms_per_operation": 0.06276927947998047,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08548105200195355,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08336805200195307,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.129527,
+              "host_wall_ms_per_block": 6.362409,
+              "monotonic_raw_ms_per_block": 6.360296
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.308864116668701,
+              "cuda_event_elapsed_ms_per_operation": 0.02308864116668701,
+              "cuda_event_minus_host_wall_ms_per_block": -0.1203028833312989,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.11849788333129885,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.169332,
+              "host_wall_ms_per_block": 2.429167,
+              "monotonic_raw_ms_per_block": 2.427362
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.0917439460754395,
+              "cuda_event_elapsed_ms_per_operation": 0.0609174394607544,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09789405392456096,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09676305392456097,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.126762,
+              "host_wall_ms_per_block": 6.189638,
+              "monotonic_raw_ms_per_block": 6.188507
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.7522881031036377,
+              "cuda_event_elapsed_ms_per_operation": 0.027522881031036377,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09460389689636228,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09292689689636235,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.114358,
+              "host_wall_ms_per_block": 2.846892,
+              "monotonic_raw_ms_per_block": 2.845215
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.06163215637207,
+              "cuda_event_elapsed_ms_per_operation": 0.0606163215637207,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08906184362792935,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08811184362792979,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.118836,
+              "host_wall_ms_per_block": 6.150694,
+              "monotonic_raw_ms_per_block": 6.149744
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.0665600299835205,
+              "cuda_event_elapsed_ms_per_operation": 0.020665600299835205,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05418897001647949,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.053917970016479355,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.079561,
+              "host_wall_ms_per_block": 2.120749,
+              "monotonic_raw_ms_per_block": 2.120478
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 6.3400959968566895,
+              "cuda_event_elapsed_ms_per_operation": 0.0634009599685669,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05723900314331054,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05648900314331051,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.114758,
+              "host_wall_ms_per_block": 6.397335,
+              "monotonic_raw_ms_per_block": 6.396585
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.5676798820495605,
+              "cuda_event_elapsed_ms_per_operation": 0.025676798820495606,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08744711795043925,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0867231179504393,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.128665,
+              "host_wall_ms_per_block": 2.655127,
+              "monotonic_raw_ms_per_block": 2.654403
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 8
+        }
+      ],
+      "unranked_timing_controls": {
+        "A": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 6.160639762878418,
+          "cuda_event_elapsed_ms_per_operation": 0.06160639762878418,
+          "cuda_event_minus_host_wall_ms_per_block": -0.04474823712158216,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.04356723712158228,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.055105,
+          "host_wall_ms_per_block": 6.205388,
+          "monotonic_raw_ms_per_block": 6.204207
+        },
+        "B": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 2.3949759006500244,
+          "cuda_event_elapsed_ms_per_operation": 0.023949759006500246,
+          "cuda_event_minus_host_wall_ms_per_block": -0.07776409934997552,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.07719109934997537,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.095582,
+          "host_wall_ms_per_block": 2.47274,
+          "monotonic_raw_ms_per_block": 2.472167
+        }
+      }
+    },
+    "BC": {
+      "aa_rounds": [
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.451807975769043,
+              "cuda_event_elapsed_ms_per_operation": 0.03451807975769043,
+              "cuda_event_minus_host_wall_ms_per_block": -0.14334902423095697,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.14125902423095704,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.230639,
+              "host_wall_ms_per_block": 3.595157,
+              "monotonic_raw_ms_per_block": 3.593067
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.973855972290039,
+              "cuda_event_elapsed_ms_per_operation": 0.02973855972290039,
+              "cuda_event_minus_host_wall_ms_per_block": -0.14616702770996115,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.14410802770996112,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.290484,
+              "host_wall_ms_per_block": 3.120023,
+              "monotonic_raw_ms_per_block": 3.117964
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.433311939239502,
+              "cuda_event_elapsed_ms_per_operation": 0.03433311939239502,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08939706076049792,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08822906076049808,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.122724,
+              "host_wall_ms_per_block": 3.522709,
+              "monotonic_raw_ms_per_block": 3.521541
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 4.044447898864746,
+              "cuda_event_elapsed_ms_per_operation": 0.04044447898864746,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09012610113525366,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08921510113525422,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.14196,
+              "host_wall_ms_per_block": 4.134574,
+              "monotonic_raw_ms_per_block": 4.133663
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.0436480045318604,
+              "cuda_event_elapsed_ms_per_operation": 0.030436480045318605,
+              "cuda_event_minus_host_wall_ms_per_block": -0.12392499546813962,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.12242799546813954,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.248223,
+              "host_wall_ms_per_block": 3.167573,
+              "monotonic_raw_ms_per_block": 3.166076
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.8500161170959473,
+              "cuda_event_elapsed_ms_per_operation": 0.038500161170959474,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09165988290405291,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09063988290405289,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.138794,
+              "host_wall_ms_per_block": 3.941676,
+              "monotonic_raw_ms_per_block": 3.940656
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.590847969055176,
+              "cuda_event_elapsed_ms_per_operation": 0.035908479690551755,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07015903094482434,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0691300309448244,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.182352,
+              "host_wall_ms_per_block": 3.661007,
+              "monotonic_raw_ms_per_block": 3.659978
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.9747519493103027,
+              "cuda_event_elapsed_ms_per_operation": 0.029747519493103027,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05325505068969738,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05241905068969732,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.094319,
+              "host_wall_ms_per_block": 3.028007,
+              "monotonic_raw_ms_per_block": 3.027171
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.932352066040039,
+              "cuda_event_elapsed_ms_per_operation": 0.02932352066040039,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07735993395996088,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07647393395996094,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.114047,
+              "host_wall_ms_per_block": 3.009712,
+              "monotonic_raw_ms_per_block": 3.008826
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.8672640323638916,
+              "cuda_event_elapsed_ms_per_operation": 0.028672640323638917,
+              "cuda_event_minus_host_wall_ms_per_block": -0.34162696763610834,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.3406299676361084,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.100932,
+              "host_wall_ms_per_block": 3.208891,
+              "monotonic_raw_ms_per_block": 3.207894
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.961695909500122,
+              "cuda_event_elapsed_ms_per_operation": 0.02961695909500122,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0640970904998781,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0636920904998779,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.116422,
+              "host_wall_ms_per_block": 3.025793,
+              "monotonic_raw_ms_per_block": 3.025388
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.343264102935791,
+              "cuda_event_elapsed_ms_per_operation": 0.03343264102935791,
+              "cuda_event_minus_host_wall_ms_per_block": -0.052031897064209076,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05097489706420877,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.093568,
+              "host_wall_ms_per_block": 3.395296,
+              "monotonic_raw_ms_per_block": 3.394239
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.372159957885742,
+              "cuda_event_elapsed_ms_per_operation": 0.033721599578857425,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09611504211425803,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09475704211425784,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.130589,
+              "host_wall_ms_per_block": 3.468275,
+              "monotonic_raw_ms_per_block": 3.466917
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.9646079540252686,
+              "cuda_event_elapsed_ms_per_operation": 0.029646079540252685,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07555204597473164,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07520704597473138,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.107996,
+              "host_wall_ms_per_block": 3.04016,
+              "monotonic_raw_ms_per_block": 3.039815
+            }
+          },
+          "order": [
+            "X",
+            "Y"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "X": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.188704013824463,
+              "cuda_event_elapsed_ms_per_operation": 0.03188704013824463,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09629298617553728,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09595598617553724,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.149575,
+              "host_wall_ms_per_block": 3.284997,
+              "monotonic_raw_ms_per_block": 3.28466
+            },
+            "Y": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.9326720237731934,
+              "cuda_event_elapsed_ms_per_operation": 0.039326720237731934,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06762197622680688,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0658199762268068,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.078119,
+              "host_wall_ms_per_block": 4.000294,
+              "monotonic_raw_ms_per_block": 3.998492
+            }
+          },
+          "order": [
+            "Y",
+            "X"
+          ],
+          "round": 8
+        }
+      ],
+      "measurement_sequence": [
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 1
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 2
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 3
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 4
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 5
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 6
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "X",
+            "Y"
+          ],
+          "phase": "aa",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "A",
+            "B"
+          ],
+          "phase": "ab",
+          "round": 7
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "Y",
+            "X"
+          ],
+          "phase": "aa",
+          "round": 8
+        },
+        {
+          "iterations_per_block": 100,
+          "order": [
+            "B",
+            "A"
+          ],
+          "phase": "ab",
+          "round": 8
+        }
+      ],
+      "physical_labels": [
+        "B",
+        "C"
+      ],
+      "rounds": [
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.086496114730835,
+              "cuda_event_elapsed_ms_per_operation": 0.03086496114730835,
+              "cuda_event_minus_host_wall_ms_per_block": -0.1787868852691652,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.17768988526916507,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.158131,
+              "host_wall_ms_per_block": 3.265283,
+              "monotonic_raw_ms_per_block": 3.264186
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.068063974380493,
+              "cuda_event_elapsed_ms_per_operation": 0.02068063974380493,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0764050256195068,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07544302561950689,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.096273,
+              "host_wall_ms_per_block": 2.144469,
+              "monotonic_raw_ms_per_block": 2.143507
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 1
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.5383360385894775,
+              "cuda_event_elapsed_ms_per_operation": 0.03538336038589478,
+              "cuda_event_minus_host_wall_ms_per_block": -0.08859096141052225,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.08692096141052241,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.150456,
+              "host_wall_ms_per_block": 3.626927,
+              "monotonic_raw_ms_per_block": 3.625257
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.0728321075439453,
+              "cuda_event_elapsed_ms_per_operation": 0.020728321075439454,
+              "cuda_event_minus_host_wall_ms_per_block": -0.09770089245605451,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.09708089245605489,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.125859,
+              "host_wall_ms_per_block": 2.170533,
+              "monotonic_raw_ms_per_block": 2.169913
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 2
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.923232078552246,
+              "cuda_event_elapsed_ms_per_operation": 0.029232320785522462,
+              "cuda_event_minus_host_wall_ms_per_block": -0.10520992144775398,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.10409492144775401,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.145226,
+              "host_wall_ms_per_block": 3.028442,
+              "monotonic_raw_ms_per_block": 3.027327
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.385312080383301,
+              "cuda_event_elapsed_ms_per_operation": 0.02385312080383301,
+              "cuda_event_minus_host_wall_ms_per_block": -0.13452691961669938,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.13411491961669908,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.134726,
+              "host_wall_ms_per_block": 2.519839,
+              "monotonic_raw_ms_per_block": 2.519427
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 3
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.9799039363861084,
+              "cuda_event_elapsed_ms_per_operation": 0.03979903936386108,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07025006361389163,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06902806361389136,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.117143,
+              "host_wall_ms_per_block": 4.050154,
+              "monotonic_raw_ms_per_block": 4.048932
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.0737600326538086,
+              "cuda_event_elapsed_ms_per_operation": 0.020737600326538087,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07497196734619127,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.0738799673461914,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.101934,
+              "host_wall_ms_per_block": 2.148732,
+              "monotonic_raw_ms_per_block": 2.14764
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 4
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.3658881187438965,
+              "cuda_event_elapsed_ms_per_operation": 0.03365888118743896,
+              "cuda_event_minus_host_wall_ms_per_block": -0.0771088812561036,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.07619188125610332,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.146138,
+              "host_wall_ms_per_block": 3.442997,
+              "monotonic_raw_ms_per_block": 3.44208
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.069024085998535,
+              "cuda_event_elapsed_ms_per_operation": 0.020690240859985352,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06400791400146488,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06354791400146498,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.117975,
+              "host_wall_ms_per_block": 2.133032,
+              "monotonic_raw_ms_per_block": 2.132572
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 5
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.5021440982818604,
+              "cuda_event_elapsed_ms_per_operation": 0.035021440982818605,
+              "cuda_event_minus_host_wall_ms_per_block": -0.07129090171813957,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06939090171813955,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.12078,
+              "host_wall_ms_per_block": 3.573435,
+              "monotonic_raw_ms_per_block": 3.571535
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.068351984024048,
+              "cuda_event_elapsed_ms_per_operation": 0.02068351984024048,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05778701597595193,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.05698601597595232,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.098607,
+              "host_wall_ms_per_block": 2.126139,
+              "monotonic_raw_ms_per_block": 2.125338
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 6
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.943711996078491,
+              "cuda_event_elapsed_ms_per_operation": 0.02943711996078491,
+              "cuda_event_minus_host_wall_ms_per_block": -0.05347600392150875,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.052521003921508935,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.059553,
+              "host_wall_ms_per_block": 2.997188,
+              "monotonic_raw_ms_per_block": 2.996233
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 2.291327953338623,
+              "cuda_event_elapsed_ms_per_operation": 0.02291327953338623,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06813504666137682,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06782504666137701,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.091794,
+              "host_wall_ms_per_block": 2.359463,
+              "monotonic_raw_ms_per_block": 2.359153
+            }
+          },
+          "order": [
+            "A",
+            "B"
+          ],
+          "round": 7
+        },
+        {
+          "measurements": {
+            "A": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.0090880393981934,
+              "cuda_event_elapsed_ms_per_operation": 0.030090880393981934,
+              "cuda_event_minus_host_wall_ms_per_block": -0.06052296060180673,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.06015796060180678,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.164738,
+              "host_wall_ms_per_block": 3.069611,
+              "monotonic_raw_ms_per_block": 3.069246
+            },
+            "B": {
+              "complete_operations_per_block": 100,
+              "cuda_event_elapsed_ms_per_block": 3.095423936843872,
+              "cuda_event_elapsed_ms_per_operation": 0.030954239368438722,
+              "cuda_event_minus_host_wall_ms_per_block": -0.054024063156127955,
+              "cuda_event_minus_monotonic_raw_ms_per_block": -0.053488063156128085,
+              "host_submission_calls_per_block": 1,
+              "host_submission_ms_per_block": 0.064944,
+              "host_wall_ms_per_block": 3.149448,
+              "monotonic_raw_ms_per_block": 3.148912
+            }
+          },
+          "order": [
+            "B",
+            "A"
+          ],
+          "round": 8
+        }
+      ],
+      "unranked_timing_controls": {
+        "A": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 3.5076799392700195,
+          "cuda_event_elapsed_ms_per_operation": 0.0350767993927002,
+          "cuda_event_minus_host_wall_ms_per_block": -0.35512706072998057,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.3519130607299803,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.454976,
+          "host_wall_ms_per_block": 3.862807,
+          "monotonic_raw_ms_per_block": 3.859593
+        },
+        "B": {
+          "complete_operations_per_block": 100,
+          "cuda_event_elapsed_ms_per_block": 2.0949759483337402,
+          "cuda_event_elapsed_ms_per_operation": 0.020949759483337403,
+          "cuda_event_minus_host_wall_ms_per_block": -0.13620405166625993,
+          "cuda_event_minus_monotonic_raw_ms_per_block": -0.13215605166625988,
+          "host_submission_calls_per_block": 1,
+          "host_submission_ms_per_block": 0.167248,
+          "host_wall_ms_per_block": 2.23118,
+          "monotonic_raw_ms_per_block": 2.227132
+        }
+      }
+    }
+  },
+  "phase_order": [
+    "BC",
+    "AC",
+    "AB"
+  ],
+  "prior_script_sha256": "f64fae49517514ac42a87efdbcbdbf7d22c78d30eef9bd9470c91a5ec45a3b99",
+  "rounds": 8,
+  "schema_version": 1,
+  "semantics": {
+    "A": "fixed-address complete conventional GEMM; one kernel per operation",
+    "B": "fixed-address complete Split-2; partial plus reduction each operation; reusable scratch",
+    "C": "fixed-address torch.mm out= graph; matched replay semantics",
+    "capture_and_profiler_excluded_from_timing": true,
+    "graph_replays_per_measured_block": 1
+  },
+  "session": 2,
+  "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+  "warmups_per_graph": 30
+}

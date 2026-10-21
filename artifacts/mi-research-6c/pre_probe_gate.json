@@ -1,0 +1,29 @@
+{
+  "analysis_sha256": "b4f23808753504666d186650d73b89954d49f0ee738634ba6b8f99974a799c2f",
+  "bounded_memory": {
+    "explicit_product_scratch_bytes": 0,
+    "input_fp16_bytes": 36864,
+    "optimistic_fp32_values_per_thread_at_128_threads": 116,
+    "optimistic_live_fp32_tile_elements_per_cta": 14848,
+    "output_fp16_bytes": 18432
+  },
+  "created_at_utc": "2026-10-20T21:42:05.169790+00:00",
+  "dag_and_reordering_passed": true,
+  "decision": "PASS_FOR_ONE_COMPILATION_AND_CORRECTNESS_PROBE",
+  "exact_math_passed": true,
+  "hypothesis": "One CTA can own the corresponding 16x16 tile of all nine outputs, reuse the 55-gate circuit locally, run all 23 dots, and eliminate explicit rank-product scratch and 23 separate product launches. Compilation and correctness are unknown.",
+  "independent_validation": "Frozen generated source hash and exact matrix-block interpreter precede GPU; numerical gate will use FP32-rounded FP16 with unchanged atol=rtol=0.01 on seeds 0/1/2 and zero/identity/cancellation.",
+  "output_ownership": "Four 2x2 programs; each writes disjoint 16x16 tiles in all nine output blocks; all accumulation is local FP32, deterministic, with one FP16 store per output tile.",
+  "performance_claim": "NONE",
+  "probe_source_sha256": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+  "resource_hypothesis": {
+    "comparison_laderman_staged_launches": 24,
+    "comparison_laderman_staged_scratch_bytes": 94208,
+    "configured_ctas": 4,
+    "dots_per_cta": 23,
+    "one_launch_if_compiled": true,
+    "risk": "Only four CTAs and 23 tf32x3 dots per CTA; compiler layout duplication, register pressure, shared memory or spills can invalidate the optimistic live-value estimate."
+  },
+  "selected": "perminov_55_liveness_single_launch",
+  "stage": "PRE_GPU_COMPILATION"
+}

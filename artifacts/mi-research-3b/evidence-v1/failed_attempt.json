@@ -1,0 +1,8 @@
+{
+  "status": "DIAGNOSTIC_SCRIPT_ERROR",
+  "stage": "first_shape_graph_setup",
+  "cause": "The diagnostic's split graph closure captured scratch=None before a reusable buffer was allocated.",
+  "effect": "Triton compilation stopped before graph capture and before any study result was written.",
+  "correction": "Construct the graph wrappers after allocating scratch; kernel source and numerical tolerance unchanged.",
+  "timing_collected": false
+}

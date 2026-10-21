@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "after_session": 1,
+  "before_session": 2,
+  "reason": "Nsight Systems 2026.1.3 generated no report for session 1 with --capture-range=nvtx. A CPU-only smoke test reproduced that failure with the same NVTX range. A full-process NVTX smoke trace contained the range, and a CUDA profiler API smoke test generated a report.",
+  "change": "Session 2 uses --capture-range=cudaProfilerApi and calls cudaProfilerStart/Stop around the same single MI6F_TRACE range and its two predeclared measured blocks.",
+  "unchanged": "Workload, kernels, graph topology, correctness checks, warmups, block count, numerical tolerances, slow thresholds, and hard bounds.",
+  "session1_trace_status": "No Nsight report generated; CUDA-event and host measurements retained."
+}

@@ -1,0 +1,52 @@
+{
+  "benchmark": {
+    "iterations": 100,
+    "mode": "preallocated",
+    "rounds": 8,
+    "warmups": 30
+  },
+  "correctness": {
+    "atol": 0.01,
+    "rtol": 0.01
+  },
+  "kernels": {
+    "A": {
+      "implementation": "triton_fc1",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      }
+    },
+    "B": {
+      "implementation": "triton_source",
+      "parameters": {
+        "block_k": 32,
+        "block_m": 64,
+        "block_n": 128,
+        "group_size_m": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "source": {
+        "entry_point": "matmul_into",
+        "interface_version": "matmul_into_v1",
+        "original_path": "/home/daniel/projects/matmul-inspector/examples/kernels/mi_research_2_split2.py",
+        "path": "sources/B.py",
+        "sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9"
+      }
+    }
+  },
+  "schema_version": 3,
+  "seed": 0,
+  "timeout_seconds": 180,
+  "workload": {
+    "dtype": "float16",
+    "k": 4096,
+    "m": 32,
+    "n": 2048
+  }
+}

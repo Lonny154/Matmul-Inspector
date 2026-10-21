@@ -1,0 +1,3189 @@
+{
+  "schema": "tensor_game_hardware_cost_benchmark.v1",
+  "configuration": {
+    "target_set": [
+      "initial",
+      "strassen_after_1",
+      "strassen_after_2",
+      "strassen_after_3",
+      "strassen_after_4",
+      "strassen_after_5",
+      "strassen_after_6"
+    ],
+    "target_definition": "initial 2x2 multiplication tensor and six exact Strassen-prefix residuals",
+    "seed": null,
+    "seed_note": "candidate generation is deterministic and consumes no RNG",
+    "pair_budget": 128,
+    "return_limit": 12,
+    "repetitions": 20,
+    "order": "alternated by repetition",
+    "timer": "time.perf_counter_ns"
+  },
+  "host": {
+    "python": "3.13.11",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "summaries": {
+    "baseline": {
+      "min_ms": 194.100991,
+      "median_ms": 212.134574,
+      "mean_ms": 207.80962805,
+      "max_ms": 236.0682,
+      "stdev_ms": 10.119310609656864
+    },
+    "cost_analysis": {
+      "min_ms": 197.477189,
+      "median_ms": 212.5174815,
+      "mean_ms": 210.6633825,
+      "max_ms": 238.965774,
+      "stdev_ms": 9.792581119337589
+    }
+  },
+  "overhead": {
+    "mean_ms": 2.853754450000025,
+    "mean_ratio": 1.0137325420230934
+  },
+  "search_outcomes": "not run; instrumentation does not change candidate selection",
+  "observations": {
+    "baseline": [
+      {
+        "target_id": "initial",
+        "residual_squared_norm": 8,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 8,
+        "returned_candidates": 8,
+        "returned_action_ids": [
+          "03972d992c00c6d136a683aa504669afb81e3311b34da72d0efde9e06c2c819b",
+          "24327d149cb4b27884db94ae8996a2021b237a12f038988eb666c8ac383611a6",
+          "26479625646abf9de216ac7befb610bc9a625f0c5c281b08239db642f9fcdf66",
+          "daa0a32577dc6f6b835f4db2ec8fecd6e5d9f5d0c0a95150249e89f657fb88fa",
+          "528dead2750d49ceac75d15e3f41f15428f847978d7d4b0f9595336c8cbc01cd",
+          "22afbc32f10834c5a8d6cbac014462594359e580d9c20e6ec3c2091bb1d0e0dd",
+          "e8e4eee95dc696ba2fa04c526837bf57ad9d8f1556480711726e249c5138d278",
+          "13ce13e109c697eb5dd8c99d734b41b1d3defa099325a0b66eea1f38d62a2120"
+        ],
+        "returned_scores": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      {
+        "target_id": "strassen_after_1",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 5,
+        "returned_candidates": 5,
+        "returned_action_ids": [
+          "196c403a493343a6d9d8ae08dd4a6596edc9f1b68639775cf72a51c3cb9e9a30",
+          "189ffadf40e2a51c221305a2d02bde2e4ba89fff7869f3cb9a2cd712b3c7f59a",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+          "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3"
+        ],
+        "returned_scores": [
+          8,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      {
+        "target_id": "strassen_after_2",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 9,
+        "returned_candidates": 9,
+        "returned_action_ids": [
+          "4eba026d18479e9823722005836291aa64e5382c93ff86b08b77bc0004887b37",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "eac941596cafe8cbc52ff83a9765e598898afc99e5530915c0e7b9813c2d01b0",
+          "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3",
+          "6540bd78c09ea1965eecc81b46cbfac6bb627d9830dc3379252801688309c775",
+          "1c570b89f2b9b7b05938f808b8b33bc1e215f0b3599e0fa59804e0057c849350"
+        ],
+        "returned_scores": [
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      {
+        "target_id": "strassen_after_3",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 16,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "65c2bfb256341d0681172c4451c0494be828e4b57753b063b0d8676b0084ed8e",
+          "1a8a9b909efb73ea1efcafc0bcb557467fe1140b042d3f0b5fb0cbd81320899c",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "4eba026d18479e9823722005836291aa64e5382c93ff86b08b77bc0004887b37",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503",
+          "3a56b8f10921d8ea6102c7fc6127edd7b66045ead83750168dbc248be88d7047",
+          "5ad7cad100ceac02de4eda29927668b10b4d6043c35784bc6760e6cfa30c0007"
+        ],
+        "returned_scores": [
+          8,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      {
+        "target_id": "strassen_after_4",
+        "residual_squared_norm": 10,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 21,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "65c2bfb256341d0681172c4451c0494be828e4b57753b063b0d8676b0084ed8e",
+          "1a8a9b909efb73ea1efcafc0bcb557467fe1140b042d3f0b5fb0cbd81320899c",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "d2e494384765a745652ea714f0eca498dd34616fa1c41cddd77e1e0d8e0f314d",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "6b93a446df0e6258e1dc587fd709fa61701ce03528467f1ac7f8857d65e34d03",
+          "33f259fc2591a463c09364317583880de6b717d1e231a7ae366aec34430ea3bb",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503"
+        ],
+        "returned_scores": [
+          6,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "target_id": "strassen_after_5",
+        "residual_squared_norm": 8,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 26,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+          "88e71cc2d266e8ffce531b08372442a8ff886a147accac40a0f5ac57e9155b3f",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "6b93a446df0e6258e1dc587fd709fa61701ce03528467f1ac7f8857d65e34d03",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503",
+          "3a56b8f10921d8ea6102c7fc6127edd7b66045ead83750168dbc248be88d7047",
+          "bc187059394618573b1aba10c9d2cfd3445d9a43777dadca57c911f79585c754",
+          "a2b586c2a195325dc4ea63f156fd5bc43de72b12fef8563b0f0e6b8f44a1ed04"
+        ],
+        "returned_scores": [
+          4,
+          4,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      {
+        "target_id": "strassen_after_6",
+        "residual_squared_norm": 4,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 13,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+          "88e71cc2d266e8ffce531b08372442a8ff886a147accac40a0f5ac57e9155b3f",
+          "8d80f7ce50a38b9fa2ceca0c4321d393da963f0b54d7a3e0387dc82335f827f6",
+          "32f3d83daf47a08077105f31b8866df0b13c1078196842d4c481424b5857fc1d",
+          "d12a9ff6ef1ed1e8041d428169162f04a348a709849ae7fbf0a548c532943fc5",
+          "b6dd579adea9baaeba21138d37f847c8672d04b7e502e72cdb47ab50e09cb46f",
+          "dc2a4daf4ed24bd6dc99c364f86aff6ea93bf44b5111bd6e66a4b93cd80ede22",
+          "bdde9e4128261dcfbfca9983b07026501ed3ec1a899273e7f18c18e8ee40f71e",
+          "ec2592ee4876eaba1583c42616c5c8ae587e7c4df9536ec4a0d39589781ef925",
+          "3005db52dbbb95420be6f14edf56f4932a7eb72f667ad03fdf4de9a77386a077",
+          "56e930b1feb88c9a3c2ecce22a5433640dcd6d214fb923cb5224ee714659ce61",
+          "7c1f2a3bba79b5a5c7758a5d6ecfe5dcfd5e1d4e419c09931a056107abf38329"
+        ],
+        "returned_scores": [
+          0,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    ],
+    "cost_analysis": [
+      {
+        "target_id": "initial",
+        "residual_squared_norm": 8,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 8,
+        "returned_candidates": 8,
+        "returned_action_ids": [
+          "03972d992c00c6d136a683aa504669afb81e3311b34da72d0efde9e06c2c819b",
+          "24327d149cb4b27884db94ae8996a2021b237a12f038988eb666c8ac383611a6",
+          "26479625646abf9de216ac7befb610bc9a625f0c5c281b08239db642f9fcdf66",
+          "daa0a32577dc6f6b835f4db2ec8fecd6e5d9f5d0c0a95150249e89f657fb88fa",
+          "528dead2750d49ceac75d15e3f41f15428f847978d7d4b0f9595336c8cbc01cd",
+          "22afbc32f10834c5a8d6cbac014462594359e580d9c20e6ec3c2091bb1d0e0dd",
+          "e8e4eee95dc696ba2fa04c526837bf57ad9d8f1556480711726e249c5138d278",
+          "13ce13e109c697eb5dd8c99d734b41b1d3defa099325a0b66eea1f38d62a2120"
+        ],
+        "returned_scores": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "analyzed_candidates": 8,
+        "pareto_frontier_size": 8,
+        "pareto_candidates": [
+          {
+            "action_id": "03972d992c00c6d136a683aa504669afb81e3311b34da72d0efde9e06c2c819b",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "24327d149cb4b27884db94ae8996a2021b237a12f038988eb666c8ac383611a6",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "26479625646abf9de216ac7befb610bc9a625f0c5c281b08239db642f9fcdf66",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "daa0a32577dc6f6b835f4db2ec8fecd6e5d9f5d0c0a95150249e89f657fb88fa",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "528dead2750d49ceac75d15e3f41f15428f847978d7d4b0f9595336c8cbc01cd",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "22afbc32f10834c5a8d6cbac014462594359e580d9c20e6ec3c2091bb1d0e0dd",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "e8e4eee95dc696ba2fa04c526837bf57ad9d8f1556480711726e249c5138d278",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "13ce13e109c697eb5dd8c99d734b41b1d3defa099325a0b66eea1f38d62a2120",
+            "score": 7,
+            "residual_reduction": 1,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_1",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 5,
+        "returned_candidates": 5,
+        "returned_action_ids": [
+          "196c403a493343a6d9d8ae08dd4a6596edc9f1b68639775cf72a51c3cb9e9a30",
+          "189ffadf40e2a51c221305a2d02bde2e4ba89fff7869f3cb9a2cd712b3c7f59a",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+          "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3"
+        ],
+        "returned_scores": [
+          8,
+          10,
+          10,
+          10,
+          10
+        ],
+        "analyzed_candidates": 5,
+        "pareto_frontier_size": 5,
+        "pareto_candidates": [
+          {
+            "action_id": "196c403a493343a6d9d8ae08dd4a6596edc9f1b68639775cf72a51c3cb9e9a30",
+            "score": 8,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 2,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "189ffadf40e2a51c221305a2d02bde2e4ba89fff7869f3cb9a2cd712b3c7f59a",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_2",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 9,
+        "returned_candidates": 9,
+        "returned_action_ids": [
+          "4eba026d18479e9823722005836291aa64e5382c93ff86b08b77bc0004887b37",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "eac941596cafe8cbc52ff83a9765e598898afc99e5530915c0e7b9813c2d01b0",
+          "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3",
+          "6540bd78c09ea1965eecc81b46cbfac6bb627d9830dc3379252801688309c775",
+          "1c570b89f2b9b7b05938f808b8b33bc1e215f0b3599e0fa59804e0057c849350"
+        ],
+        "returned_scores": [
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "analyzed_candidates": 9,
+        "pareto_frontier_size": 4,
+        "pareto_candidates": [
+          {
+            "action_id": "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "168565be2f7a8c1be6dba039f7b3244aabcd1df8e39e75d0ff8d2dec1e7f5474",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "1c570b89f2b9b7b05938f808b8b33bc1e215f0b3599e0fa59804e0057c849350",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_3",
+        "residual_squared_norm": 12,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 16,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "65c2bfb256341d0681172c4451c0494be828e4b57753b063b0d8676b0084ed8e",
+          "1a8a9b909efb73ea1efcafc0bcb557467fe1140b042d3f0b5fb0cbd81320899c",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "4eba026d18479e9823722005836291aa64e5382c93ff86b08b77bc0004887b37",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503",
+          "3a56b8f10921d8ea6102c7fc6127edd7b66045ead83750168dbc248be88d7047",
+          "5ad7cad100ceac02de4eda29927668b10b4d6043c35784bc6760e6cfa30c0007"
+        ],
+        "returned_scores": [
+          8,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "analyzed_candidates": 16,
+        "pareto_frontier_size": 5,
+        "pareto_candidates": [
+          {
+            "action_id": "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+            "score": 8,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "1a8a9b909efb73ea1efcafc0bcb557467fe1140b042d3f0b5fb0cbd81320899c",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "817b7c483a9405f8eaf95587ca1f8d80465531262bea30d42bb9aa0988730ee3",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "1c570b89f2b9b7b05938f808b8b33bc1e215f0b3599e0fa59804e0057c849350",
+            "score": 10,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_4",
+        "residual_squared_norm": 10,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 21,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "65c2bfb256341d0681172c4451c0494be828e4b57753b063b0d8676b0084ed8e",
+          "1a8a9b909efb73ea1efcafc0bcb557467fe1140b042d3f0b5fb0cbd81320899c",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "d2e494384765a745652ea714f0eca498dd34616fa1c41cddd77e1e0d8e0f314d",
+          "39158e13c2d703b6bd7fbe732662e0a73dc24bad8c78a8abf233bffaa8f44a0f",
+          "6b93a446df0e6258e1dc587fd709fa61701ce03528467f1ac7f8857d65e34d03",
+          "33f259fc2591a463c09364317583880de6b717d1e231a7ae366aec34430ea3bb",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503"
+        ],
+        "returned_scores": [
+          6,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "analyzed_candidates": 21,
+        "pareto_frontier_size": 2,
+        "pareto_candidates": [
+          {
+            "action_id": "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+            "score": 6,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "33f259fc2591a463c09364317583880de6b717d1e231a7ae366aec34430ea3bb",
+            "score": 8,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "preparation_additions": 0,
+              "output_accumulation_additions": 2,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_5",
+        "residual_squared_norm": 8,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 26,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+          "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+          "88e71cc2d266e8ffce531b08372442a8ff886a147accac40a0f5ac57e9155b3f",
+          "4945013afb301e53329d947a5198c27a2c50cdfc28e96e734f1d08ad0f27e96c",
+          "6b93a446df0e6258e1dc587fd709fa61701ce03528467f1ac7f8857d65e34d03",
+          "e0593d17bef949805723b1a5ade9d11978bedd57c1f5a921b4fa65683ac85238",
+          "b9e31bd0446858f49c47a247ab7cf5b938399432880dae7aa9cb2af27d101fed",
+          "5753b43907b77396741da58721fca28b24d03ed320095e56a23b301ff1667a2d",
+          "7194198ecd718841bf4e617e15e72c93b82a0f5d05cf05896b447466ce424503",
+          "3a56b8f10921d8ea6102c7fc6127edd7b66045ead83750168dbc248be88d7047",
+          "bc187059394618573b1aba10c9d2cfd3445d9a43777dadca57c911f79585c754",
+          "a2b586c2a195325dc4ea63f156fd5bc43de72b12fef8563b0f0e6b8f44a1ed04"
+        ],
+        "returned_scores": [
+          4,
+          4,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "analyzed_candidates": 26,
+        "pareto_frontier_size": 10,
+        "pareto_candidates": [
+          {
+            "action_id": "d2cac33081a517ad6acc3c9d611c39d34dc924495efe4258e6c2afae9766b0dc",
+            "score": 4,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+            "score": 4,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "6b93a446df0e6258e1dc587fd709fa61701ce03528467f1ac7f8857d65e34d03",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "bc187059394618573b1aba10c9d2cfd3445d9a43777dadca57c911f79585c754",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "a2b586c2a195325dc4ea63f156fd5bc43de72b12fef8563b0f0e6b8f44a1ed04",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "d12a9ff6ef1ed1e8041d428169162f04a348a709849ae7fbf0a548c532943fc5",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "3005db52dbbb95420be6f14edf56f4932a7eb72f667ad03fdf4de9a77386a077",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "56e930b1feb88c9a3c2ecce22a5433640dcd6d214fb923cb5224ee714659ce61",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "ab8235a6ad72128df9345b92f69fbcaafb13dbeb2869c482be1b1b434d1ac647",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "b2052518e7249d50e1dcf3a79753c431b2313f56df49c6c408c7e7d02109f6d2",
+            "score": 6,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      },
+      {
+        "target_id": "strassen_after_6",
+        "residual_squared_norm": 4,
+        "enumerated_uv_pairs": 6400,
+        "fully_evaluated_pairs": 128,
+        "unique_legal_candidates": 13,
+        "returned_candidates": 12,
+        "returned_action_ids": [
+          "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+          "88e71cc2d266e8ffce531b08372442a8ff886a147accac40a0f5ac57e9155b3f",
+          "8d80f7ce50a38b9fa2ceca0c4321d393da963f0b54d7a3e0387dc82335f827f6",
+          "32f3d83daf47a08077105f31b8866df0b13c1078196842d4c481424b5857fc1d",
+          "d12a9ff6ef1ed1e8041d428169162f04a348a709849ae7fbf0a548c532943fc5",
+          "b6dd579adea9baaeba21138d37f847c8672d04b7e502e72cdb47ab50e09cb46f",
+          "dc2a4daf4ed24bd6dc99c364f86aff6ea93bf44b5111bd6e66a4b93cd80ede22",
+          "bdde9e4128261dcfbfca9983b07026501ed3ec1a899273e7f18c18e8ee40f71e",
+          "ec2592ee4876eaba1583c42616c5c8ae587e7c4df9536ec4a0d39589781ef925",
+          "3005db52dbbb95420be6f14edf56f4932a7eb72f667ad03fdf4de9a77386a077",
+          "56e930b1feb88c9a3c2ecce22a5433640dcd6d214fb923cb5224ee714659ce61",
+          "7c1f2a3bba79b5a5c7758a5d6ecfe5dcfd5e1d4e419c09931a056107abf38329"
+        ],
+        "returned_scores": [
+          0,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "analyzed_candidates": 13,
+        "pareto_frontier_size": 5,
+        "pareto_candidates": [
+          {
+            "action_id": "f76dd7418ab130c71cabb16e3e6f9afbb8b0f46c2489cb7caabf2992d4b99ca0",
+            "score": 0,
+            "residual_reduction": 4,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 2,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "d12a9ff6ef1ed1e8041d428169162f04a348a709849ae7fbf0a548c532943fc5",
+            "score": 2,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "3005db52dbbb95420be6f14edf56f4932a7eb72f667ad03fdf4de9a77386a077",
+            "score": 2,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "56e930b1feb88c9a3c2ecce22a5433640dcd6d214fb923cb5224ee714659ce61",
+            "score": 2,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 1,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 0,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          },
+          {
+            "action_id": "b2052518e7249d50e1dcf3a79753c431b2313f56df49c6c408c7e7d02109f6d2",
+            "score": 2,
+            "residual_reduction": 2,
+            "cost": {
+              "u": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "v": {
+                "length": 4,
+                "nonzeros": 2,
+                "zeros": 2,
+                "additions": 1,
+                "negative_coefficients": 2,
+                "unit_coefficients": 2,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 2,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              },
+              "w": {
+                "length": 4,
+                "nonzeros": 1,
+                "zeros": 3,
+                "additions": 0,
+                "negative_coefficients": 1,
+                "unit_coefficients": 1,
+                "nonunit_coefficients": 0,
+                "coefficient_l1": 1,
+                "max_abs_coefficient": 1,
+                "magnitude_histogram": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "preparation_additions": 1,
+              "output_accumulation_additions": 1,
+              "coefficient_scalings": 0,
+              "temporary_scalars": 3
+            },
+            "pareto_optimal": true
+          }
+        ]
+      }
+    ]
+  },
+  "raw_timings": [
+    {
+      "repetition": 0,
+      "mode": "baseline",
+      "elapsed_ms": 236.0682
+    },
+    {
+      "repetition": 0,
+      "mode": "cost_analysis",
+      "elapsed_ms": 238.965774
+    },
+    {
+      "repetition": 1,
+      "mode": "cost_analysis",
+      "elapsed_ms": 202.729555
+    },
+    {
+      "repetition": 1,
+      "mode": "baseline",
+      "elapsed_ms": 197.849909
+    },
+    {
+      "repetition": 2,
+      "mode": "baseline",
+      "elapsed_ms": 201.42547
+    },
+    {
+      "repetition": 2,
+      "mode": "cost_analysis",
+      "elapsed_ms": 205.834474
+    },
+    {
+      "repetition": 3,
+      "mode": "cost_analysis",
+      "elapsed_ms": 201.705778
+    },
+    {
+      "repetition": 3,
+      "mode": "baseline",
+      "elapsed_ms": 198.286481
+    },
+    {
+      "repetition": 4,
+      "mode": "baseline",
+      "elapsed_ms": 197.620326
+    },
+    {
+      "repetition": 4,
+      "mode": "cost_analysis",
+      "elapsed_ms": 200.395211
+    },
+    {
+      "repetition": 5,
+      "mode": "cost_analysis",
+      "elapsed_ms": 200.105303
+    },
+    {
+      "repetition": 5,
+      "mode": "baseline",
+      "elapsed_ms": 198.930574
+    },
+    {
+      "repetition": 6,
+      "mode": "baseline",
+      "elapsed_ms": 197.954618
+    },
+    {
+      "repetition": 6,
+      "mode": "cost_analysis",
+      "elapsed_ms": 200.473115
+    },
+    {
+      "repetition": 7,
+      "mode": "cost_analysis",
+      "elapsed_ms": 201.049224
+    },
+    {
+      "repetition": 7,
+      "mode": "baseline",
+      "elapsed_ms": 204.105164
+    },
+    {
+      "repetition": 8,
+      "mode": "baseline",
+      "elapsed_ms": 196.91428
+    },
+    {
+      "repetition": 8,
+      "mode": "cost_analysis",
+      "elapsed_ms": 210.788971
+    },
+    {
+      "repetition": 9,
+      "mode": "cost_analysis",
+      "elapsed_ms": 216.527052
+    },
+    {
+      "repetition": 9,
+      "mode": "baseline",
+      "elapsed_ms": 212.743832
+    },
+    {
+      "repetition": 10,
+      "mode": "baseline",
+      "elapsed_ms": 212.647046
+    },
+    {
+      "repetition": 10,
+      "mode": "cost_analysis",
+      "elapsed_ms": 214.245992
+    },
+    {
+      "repetition": 11,
+      "mode": "cost_analysis",
+      "elapsed_ms": 218.617222
+    },
+    {
+      "repetition": 11,
+      "mode": "baseline",
+      "elapsed_ms": 213.420385
+    },
+    {
+      "repetition": 12,
+      "mode": "baseline",
+      "elapsed_ms": 215.968506
+    },
+    {
+      "repetition": 12,
+      "mode": "cost_analysis",
+      "elapsed_ms": 216.368631
+    },
+    {
+      "repetition": 13,
+      "mode": "cost_analysis",
+      "elapsed_ms": 215.91598
+    },
+    {
+      "repetition": 13,
+      "mode": "baseline",
+      "elapsed_ms": 213.401321
+    },
+    {
+      "repetition": 14,
+      "mode": "baseline",
+      "elapsed_ms": 212.06211
+    },
+    {
+      "repetition": 14,
+      "mode": "cost_analysis",
+      "elapsed_ms": 216.219988
+    },
+    {
+      "repetition": 15,
+      "mode": "cost_analysis",
+      "elapsed_ms": 214.622384
+    },
+    {
+      "repetition": 15,
+      "mode": "baseline",
+      "elapsed_ms": 215.249836
+    },
+    {
+      "repetition": 16,
+      "mode": "baseline",
+      "elapsed_ms": 212.306899
+    },
+    {
+      "repetition": 16,
+      "mode": "cost_analysis",
+      "elapsed_ms": 214.853687
+    },
+    {
+      "repetition": 17,
+      "mode": "cost_analysis",
+      "elapsed_ms": 216.343579
+    },
+    {
+      "repetition": 17,
+      "mode": "baseline",
+      "elapsed_ms": 212.207038
+    },
+    {
+      "repetition": 18,
+      "mode": "baseline",
+      "elapsed_ms": 212.929575
+    },
+    {
+      "repetition": 18,
+      "mode": "cost_analysis",
+      "elapsed_ms": 210.028541
+    },
+    {
+      "repetition": 19,
+      "mode": "cost_analysis",
+      "elapsed_ms": 197.477189
+    },
+    {
+      "repetition": 19,
+      "mode": "baseline",
+      "elapsed_ms": 194.100991
+    }
+  ]
+}

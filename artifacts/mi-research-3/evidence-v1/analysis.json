@@ -1,0 +1,586 @@
+{
+  "failed_correctness_attempts": {
+    "m256-s1": {
+      "failure": {
+        "message": "numerical correctness failed for seed 0",
+        "type": "RuntimeError"
+      }
+    },
+    "m256-s1-validation": {
+      "correctness_failure": {
+        "checks": {
+          "A": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.25,
+            "mean_absolute_error": 0.011554603464901447,
+            "passed": false,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "B": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.25,
+            "mean_absolute_error": 0.01155349612236023,
+            "passed": false,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "C": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          }
+        },
+        "m": 256,
+        "seed": 0,
+        "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+        "tolerances": {
+          "atol": 0.01,
+          "rtol": 0.01
+        }
+      },
+      "failure": {
+        "message": "numerical correctness failed for seed 0",
+        "type": "RuntimeError"
+      }
+    },
+    "m512-s1": {
+      "correctness_failure": {
+        "checks": {
+          "A": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.25,
+            "mean_absolute_error": 0.006355249788612127,
+            "passed": false,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "B": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.25,
+            "mean_absolute_error": 0.006354490295052528,
+            "passed": false,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          },
+          "C": {
+            "candidate_nonfinite_count": 0,
+            "dtype_match": true,
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "passed": true,
+            "reference_nonfinite_count": 0,
+            "shape_match": true
+          }
+        },
+        "m": 512,
+        "seed": 0,
+        "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+        "tolerances": {
+          "atol": 0.01,
+          "rtol": 0.01
+        }
+      },
+      "failure": {
+        "message": "numerical correctness failed for seed 0",
+        "type": "RuntimeError"
+      }
+    }
+  },
+  "interpretation": {
+    "crossover": "not established",
+    "m128_ab": "INCONCLUSIVE in both independent sessions",
+    "m256_m512": "A and B rejected by unchanged cuBLAS numerical gate; no ranking",
+    "m32_ab": "B_FASTER in both independent sessions",
+    "selector_justified": false
+  },
+  "planned_shapes": [
+    32,
+    128,
+    256,
+    512
+  ],
+  "schema_version": 1,
+  "successful_sessions": {
+    "m128-s1": {
+      "clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "conditional_ab_capture_amortization": {
+        "extra_B_setup_ms": -14.610180999999999,
+        "median_A_minus_B_us_per_complete_operation": -0.5761599540710449,
+        "note": "Only an arithmetic estimate for this 100-operation capture; capture order and first-capture effects are confounded.",
+        "operations_to_amortize_positive_extra_setup": null
+      },
+      "geometry": {
+        "conventional_ctas": 32,
+        "reduction_ctas": 256,
+        "scratch_bytes": 2097152,
+        "split_partial_ctas": 64
+      },
+      "graph_kernel_nodes": {
+        "A": 100,
+        "B": 200,
+        "C": 100
+      },
+      "graph_setup_ms": {
+        "A": 17.17729,
+        "B": 2.567109,
+        "C": 1.201603
+      },
+      "pairs": {
+        "AB": {
+          "aa_max_absolute_gap_us": 6.378240585327148,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "A": 59.48064088821411,
+            "B": 60.056800842285156
+          },
+          "event_range_us": {
+            "A": [
+              58.516478538513184,
+              65.08992195129395
+            ],
+            "B": [
+              58.980159759521484,
+              62.8326416015625
+            ]
+          },
+          "paired_left_minus_right_median_us": -0.9505629539489739,
+          "paired_left_minus_right_range_us": [
+            -3.790082931518564,
+            5.031681060791014
+          ],
+          "physical_labels": [
+            "A",
+            "B"
+          ],
+          "right_faster_rounds": 3,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "AC": {
+          "aa_max_absolute_gap_us": 10.501761436462402,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "A": 61.65424108505249,
+            "C": 54.69856023788452
+          },
+          "event_range_us": {
+            "A": [
+              53.51168155670166,
+              63.03872108459473
+            ],
+            "C": [
+              50.40832042694092,
+              59.81344223022461
+            ]
+          },
+          "paired_left_minus_right_median_us": 6.981120109558103,
+          "paired_left_minus_right_range_us": [
+            -6.2896013259887695,
+            10.954561233520502
+          ],
+          "physical_labels": [
+            "A",
+            "C"
+          ],
+          "right_faster_rounds": 6,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "BC": {
+          "aa_max_absolute_gap_us": 3.718080520629883,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "B": 59.134721755981445,
+            "C": 57.6798415184021
+          },
+          "event_range_us": {
+            "B": [
+              58.88063907623291,
+              61.21920108795166
+            ],
+            "C": [
+              56.009278297424316,
+              59.054718017578125
+            ]
+          },
+          "paired_left_minus_right_median_us": 1.7123198509216286,
+          "paired_left_minus_right_range_us": [
+            -0.17407894134521817,
+            3.8419198989868146
+          ],
+          "physical_labels": [
+            "B",
+            "C"
+          ],
+          "right_faster_rounds": 7,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      }
+    },
+    "m128-s2": {
+      "clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "conditional_ab_capture_amortization": {
+        "extra_B_setup_ms": 1.0728769999999999,
+        "median_A_minus_B_us_per_complete_operation": -0.3001594543457031,
+        "note": "Only an arithmetic estimate for this 100-operation capture; capture order and first-capture effects are confounded.",
+        "operations_to_amortize_positive_extra_setup": null
+      },
+      "geometry": {
+        "conventional_ctas": 32,
+        "reduction_ctas": 256,
+        "scratch_bytes": 2097152,
+        "split_partial_ctas": 64
+      },
+      "graph_kernel_nodes": {
+        "A": 100,
+        "B": 200,
+        "C": 100
+      },
+      "graph_setup_ms": {
+        "A": 1.627445,
+        "B": 2.700322,
+        "C": 15.418654
+      },
+      "pairs": {
+        "AB": {
+          "aa_max_absolute_gap_us": 4.862399101257324,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "A": 57.589921951293945,
+            "B": 57.89008140563965
+          },
+          "event_range_us": {
+            "A": [
+              56.37119770050049,
+              61.98592185974121
+            ],
+            "B": [
+              55.298237800598145,
+              62.3795223236084
+            ]
+          },
+          "paired_left_minus_right_median_us": -0.3574419021606448,
+          "paired_left_minus_right_range_us": [
+            -5.052161216735837,
+            4.017601013183588
+          ],
+          "physical_labels": [
+            "A",
+            "B"
+          ],
+          "right_faster_rounds": 3,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "AC": {
+          "aa_max_absolute_gap_us": 11.321282386779785,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "A": 57.19696044921875,
+            "C": 50.974881649017334
+          },
+          "event_range_us": {
+            "A": [
+              55.4307222366333,
+              68.10272216796875
+            ],
+            "C": [
+              50.258240699768066,
+              52.358078956604004
+            ]
+          },
+          "paired_left_minus_right_median_us": 6.336960792541504,
+          "paired_left_minus_right_range_us": [
+            3.3692836761474583,
+            17.22527980804444
+          ],
+          "physical_labels": [
+            "A",
+            "C"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "BC": {
+          "aa_max_absolute_gap_us": 6.387839317321777,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "B": 56.14112138748169,
+            "C": 56.721439361572266
+          },
+          "event_range_us": {
+            "B": [
+              55.3056001663208,
+              84.70368385314941
+            ],
+            "C": [
+              50.29024124145508,
+              59.625282287597656
+            ]
+          },
+          "paired_left_minus_right_median_us": 2.5836801528930677,
+          "paired_left_minus_right_range_us": [
+            -3.486399650573728,
+            28.38016510009766
+          ],
+          "physical_labels": [
+            "B",
+            "C"
+          ],
+          "right_faster_rounds": 5,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      }
+    },
+    "m32-s1": {
+      "clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "conditional_ab_capture_amortization": {
+        "extra_B_setup_ms": -25.845550000000003,
+        "median_A_minus_B_us_per_complete_operation": 31.491838693618774,
+        "note": "Only an arithmetic estimate for this 100-operation capture; capture order and first-capture effects are confounded.",
+        "operations_to_amortize_positive_extra_setup": null
+      },
+      "geometry": {
+        "conventional_ctas": 16,
+        "reduction_ctas": 64,
+        "scratch_bytes": 524288,
+        "split_partial_ctas": 32
+      },
+      "graph_kernel_nodes": {
+        "A": 100,
+        "B": 200,
+        "C": 100
+      },
+      "graph_setup_ms": {
+        "A": 30.897794,
+        "B": 5.052244,
+        "C": 1.848879
+      },
+      "pairs": {
+        "AB": {
+          "aa_max_absolute_gap_us": 3.866877555847168,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "A": 61.76255941390991,
+            "B": 30.270720720291138
+          },
+          "event_range_us": {
+            "A": [
+              59.741759300231934,
+              64.86239910125732
+            ],
+            "B": [
+              28.7391996383667,
+              35.42752027511597
+            ]
+          },
+          "paired_left_minus_right_median_us": 30.949440002441406,
+          "paired_left_minus_right_range_us": [
+            24.314239025115967,
+            35.06591796875
+          ],
+          "physical_labels": [
+            "A",
+            "B"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": []
+        },
+        "AC": {
+          "aa_max_absolute_gap_us": 9.6943998336792,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "A": 61.78815841674805,
+            "C": 20.88655948638916
+          },
+          "event_range_us": {
+            "A": [
+              55.484161376953125,
+              65.29119968414307
+            ],
+            "C": [
+              20.61568021774292,
+              27.451839447021484
+            ]
+          },
+          "paired_left_minus_right_median_us": 38.875999450683594,
+          "paired_left_minus_right_range_us": [
+            30.749120712280273,
+            44.477438926696784
+          ],
+          "physical_labels": [
+            "A",
+            "C"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": []
+        },
+        "BC": {
+          "aa_max_absolute_gap_us": 7.833278179168701,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "B": 31.488800048828125,
+            "C": 21.191519498825073
+          },
+          "event_range_us": {
+            "B": [
+              29.196479320526123,
+              35.16063928604126
+            ],
+            "C": [
+              20.715200901031494,
+              27.425920963287354
+            ]
+          },
+          "paired_left_minus_right_median_us": 10.22719979286194,
+          "paired_left_minus_right_range_us": [
+            2.256641387939455,
+            14.4051194190979
+          ],
+          "physical_labels": [
+            "B",
+            "C"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      }
+    },
+    "m32-s2": {
+      "clock_preflight": "NO_RESOLVED_DIFFERENCE",
+      "conditional_ab_capture_amortization": {
+        "extra_B_setup_ms": 1.3984989999999997,
+        "median_A_minus_B_us_per_complete_operation": 29.559519290924072,
+        "note": "Only an arithmetic estimate for this 100-operation capture; capture order and first-capture effects are confounded.",
+        "operations_to_amortize_positive_extra_setup": 48
+      },
+      "geometry": {
+        "conventional_ctas": 16,
+        "reduction_ctas": 64,
+        "scratch_bytes": 524288,
+        "split_partial_ctas": 32
+      },
+      "graph_kernel_nodes": {
+        "A": 100,
+        "B": 200,
+        "C": 100
+      },
+      "graph_setup_ms": {
+        "A": 1.031114,
+        "B": 2.429613,
+        "C": 13.526097
+      },
+      "pairs": {
+        "AB": {
+          "aa_max_absolute_gap_us": 4.008641242980957,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "A": 60.13391971588135,
+            "B": 30.574400424957275
+          },
+          "event_range_us": {
+            "A": [
+              56.19135856628418,
+              62.870721817016594
+            ],
+            "B": [
+              29.26111936569214,
+              36.603519916534424
+            ]
+          },
+          "paired_left_minus_right_median_us": 27.232959270477295,
+          "paired_left_minus_right_range_us": [
+            22.841279506683346,
+            31.81408166885376
+          ],
+          "physical_labels": [
+            "A",
+            "B"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": []
+        },
+        "AC": {
+          "aa_max_absolute_gap_us": 4.97312068939209,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "A": 61.57248020172119,
+            "C": 23.31744074821472
+          },
+          "event_range_us": {
+            "A": [
+              59.251837730407715,
+              63.4009599685669
+            ],
+            "C": [
+              20.665600299835205,
+              27.522881031036377
+            ]
+          },
+          "paired_left_minus_right_median_us": 39.18095946311951,
+          "paired_left_minus_right_range_us": [
+            33.39455842971802,
+            42.1116828918457
+          ],
+          "physical_labels": [
+            "A",
+            "C"
+          ],
+          "right_faster_rounds": 8,
+          "warnings": []
+        },
+        "BC": {
+          "aa_max_absolute_gap_us": 8.06368112564087,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "B": 32.26192116737366,
+            "C": 20.73296070098877
+          },
+          "event_range_us": {
+            "B": [
+              29.23232078552246,
+              39.799039363861084
+            ],
+            "C": [
+              20.68063974380493,
+              30.95423936843872
+            ]
+          },
+          "paired_left_minus_right_median_us": 11.576480865478514,
+          "paired_left_minus_right_range_us": [
+            -0.8633589744567877,
+            19.061439037322994
+          ],
+          "physical_labels": [
+            "B",
+            "C"
+          ],
+          "right_faster_rounds": 7,
+          "warnings": [
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      }
+    }
+  }
+}

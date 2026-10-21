@@ -1,0 +1,46 @@
+{
+  "clocks": {
+    "clock_monotonic_raw": {
+      "clock_id": 4,
+      "resolution_seconds": 1e-09,
+      "supported": true
+    },
+    "perf_counter": {
+      "adjustable": false,
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "resolution_seconds": 1e-09
+    }
+  },
+  "competing_compute_process_check_before_import": {
+    "command": "nvidia-smi --query-compute-apps=pid,process_name,used_gpu_memory --format=csv,noheader,nounits",
+    "processes": [],
+    "returncode": 0,
+    "stderr": ""
+  },
+  "created_at_utc": "2026-10-19T21:43:16.768518+00:00",
+  "cuda_runtime": "12.8",
+  "gpu": {
+    "compute_capability": "8.9",
+    "device_index": 0,
+    "name": "NVIDIA GeForce RTX 4060 Ti",
+    "total_memory_bytes": 17175150592
+  },
+  "gpu_query": {
+    "command": "nvidia-smi --query-gpu=name,driver_version,utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits",
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "NVIDIA GeForce RTX 4060 Ti, 616.92, 39, 761, 16380, 46"
+  },
+  "kernel_release": "6.18.54.1-microsoft-standard-WSL2",
+  "os": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.13.11",
+  "pytorch": "2.11.0+cu128",
+  "source_branch": "feat/mi-timing-1",
+  "source_revision": "1afc7c659784eeeb467621965d004c5958a3249d",
+  "triton": "3.6.0",
+  "wsl": {
+    "detected": true,
+    "interop_environment_present": true
+  }
+}

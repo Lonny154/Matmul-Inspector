@@ -1,0 +1,94 @@
+{
+  "cuda_event_ms": {
+    "A": {
+      "cv": 0.050956602213260004,
+      "max_ms": 0.07552000045776368,
+      "median_absolute_deviation_ms": 0.0023190402984619163,
+      "median_ms": 0.07237423896789551,
+      "min_ms": 0.06463488101959229,
+      "stdev_ms": 0.0036524489931648125
+    },
+    "B": {
+      "cv": 0.0671144072335477,
+      "max_ms": 0.0776684808731079,
+      "median_absolute_deviation_ms": 0.00308511972427368,
+      "median_ms": 0.06905647993087768,
+      "min_ms": 0.06549536228179932,
+      "stdev_ms": 0.004765085366480728
+    }
+  },
+  "decision": "INCONCLUSIVE",
+  "host_wall_ms": {
+    "A": {
+      "cv": 0.051242269278290536,
+      "max_ms": 0.07071107,
+      "median_absolute_deviation_ms": 0.0023644700000000005,
+      "median_ms": 0.06576708,
+      "min_ms": 0.06050306,
+      "stdev_ms": 0.003373642791018762
+    },
+    "B": {
+      "cv": 0.06963844451971131,
+      "max_ms": 0.07083578,
+      "median_absolute_deviation_ms": 0.002909920000000007,
+      "median_ms": 0.062958335,
+      "min_ms": 0.05962804,
+      "stdev_ms": 0.004508963498210894
+    }
+  },
+  "paired_A_minus_B_ms": [
+    0.004751677513122554,
+    0.006844482421875006,
+    6.976127624511164e-05,
+    0.0022233581542968756,
+    -0.0075564813613891585,
+    -0.007548480033874511,
+    0.007501759529113777,
+    -0.0008604812622070301
+  ],
+  "paired_difference_ms": {
+    "cv": null,
+    "max_ms": 0.007501759529113777,
+    "median_absolute_deviation_ms": 0.0046515202522277865,
+    "median_ms": 0.0011465597152709936,
+    "min_ms": -0.0075564813613891585,
+    "stdev_ms": 0.005877204334618126
+  },
+  "paired_host_A_minus_B_ms": [
+    0.007335510000000003,
+    0.006215510000000007,
+    -9.388000000000452e-05,
+    0.0021031000000000036,
+    -0.006913589999999997,
+    -0.007522719999999997,
+    0.0067123600000000005,
+    0.0008750199999999972
+  ],
+  "paired_signs": {
+    "A_faster": 3,
+    "B_faster": 5,
+    "ties": 0
+  },
+  "ranking_supported": false,
+  "reason": "CUDA-event time exceeded synchronized host wall in a round or control",
+  "rounds": 8,
+  "speedup_A_over_B": null,
+  "timing_basis": "paired eager CUDA-event milliseconds per operation",
+  "timing_boundary_discrepancy": true,
+  "timing_boundary_ms": {
+    "A": {
+      "round_event_minus_wall_range": [
+        0.3478049338989262,
+        0.676796766052246
+      ],
+      "unranked_event_minus_wall": 0.6463702278442387
+    },
+    "B": {
+      "round_event_minus_wall_range": [
+        0.5867322281799314,
+        0.6832700873107909
+      ],
+      "unranked_event_minus_wall": 0.6343862253417969
+    }
+  }
+}

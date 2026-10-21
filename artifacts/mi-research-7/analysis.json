@@ -1,0 +1,1088 @@
+{
+  "base_commit": "d095aa9939316414c8122ec5fa09a40839e10c60",
+  "classification": "B \u2014 Valid comparison without a supported advantage",
+  "decisions": {
+    "cuda_graph": {
+      "C": [
+        "B_FASTER",
+        "B_FASTER"
+      ],
+      "T": [
+        "B_FASTER",
+        "B_FASTER"
+      ]
+    },
+    "eager": {
+      "C": [
+        "INCONCLUSIVE",
+        "INCONCLUSIVE"
+      ],
+      "T": [
+        "INCONCLUSIVE",
+        "INCONCLUSIVE"
+      ]
+    }
+  },
+  "eager_graph_rankings_separate": true,
+  "interpretation": "Both graph comparisons support the conventional baseline in two fresh sessions; eager comparisons are inconclusive under the unchanged rule. Compiler resources and four configured Perminov CTAs do not by themselves establish the cause.",
+  "protocol_sha256": "c722f61b851faa31a1983f79057018b3e654bcc092fe35508da4dbc4b3874e98",
+  "schema_version": 1,
+  "sessions": {
+    "cuda_graph-s1": {
+      "capture_or_initialization_order": [
+        "P",
+        "T",
+        "C"
+      ],
+      "capture_setup_ms": {
+        "C": 0.689383,
+        "P": 16.256848,
+        "T": 0.443273
+      },
+      "compiler": {
+        "P": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "kernel_name": "_fused",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "sass_status": "UNAVAILABLE"
+        },
+        "T": {
+          "ir_sha256": {
+            "llir": "a9be6e0654d0de5843797db604936913632eed884a5b6fa3ef07a9d0d74fbe11",
+            "ttgir": "1c01dd713502dc26f2eee0f9207e3594d1a5b4dec3b7a32e4f1936bbbe7a25e6",
+            "ttir": "82621081528745fb37677f15355492a05442f158483cae3b233556b61671b489"
+          },
+          "kernel_name": "fc1_kernel",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 44,
+            "n_spills": 0,
+            "num_stages": 3,
+            "num_warps": 4,
+            "shared": 8192
+          },
+          "ptx_sha256": "c01a512535494eb8972a2166efdaec5a0763ac26e7054977ce43018fc649c086",
+          "sass_status": "UNAVAILABLE"
+        }
+      },
+      "correctness_passed": true,
+      "first_call_ms": {
+        "C": 226.115194,
+        "P": 248.769964,
+        "T": 2.343651
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "02023b48c8ada80350cfbd965c0ced77ba94a38292048826d419cfe7c1b86c01",
+      "pair_order": [
+        "T",
+        "C"
+      ],
+      "pairs": {
+        "C": {
+          "aa_max_absolute_gap_us": 0.2048000693321228,
+          "baseline_faster_rounds": 8,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "C": 1.8511999398469925,
+            "P": 15.767199546098709
+          },
+          "event_us_per_operation": {
+            "C": [
+              1.8511999398469925,
+              1.8511999398469925,
+              1.8527999520301819,
+              1.8527999520301819,
+              1.8543999642133713,
+              1.849599927663803,
+              1.8464000895619392,
+              1.8479999154806137
+            ],
+            "P": [
+              15.751999616622925,
+              15.809600055217743,
+              15.74240028858185,
+              15.769599378108976,
+              15.76479971408844,
+              15.785600244998932,
+              15.745599567890167,
+              15.769599378108976
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            13.900799676775932,
+            13.95840011537075,
+            13.889600336551668,
+            13.916799426078795,
+            13.910399749875069,
+            13.936000317335129,
+            13.899199478328228,
+            13.921599462628363
+          ],
+          "paired_host_ms": [
+            0.013985700000000002,
+            0.0141059,
+            0.01347395,
+            0.013533450000000002,
+            0.013949749999999999,
+            0.013497450000000001,
+            0.0142129,
+            0.013762649999999998
+          ],
+          "paired_mad_us": 0.013600010424852371,
+          "paired_median_us": 13.913599587976933,
+          "paired_raw_ms": [
+            0.014000099999999998,
+            0.01412135,
+            0.013489099999999999,
+            0.013546750000000001,
+            0.013963550000000002,
+            0.01351615,
+            0.0142295,
+            0.013780200000000001
+          ],
+          "perminov_faster_rounds": 0,
+          "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE"
+          ]
+        },
+        "T": {
+          "aa_max_absolute_gap_us": 1.1199995875358582,
+          "baseline_faster_rounds": 8,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "P": 15.780800580978395,
+            "T": 1.4072000049054623
+          },
+          "event_us_per_operation": {
+            "P": [
+              15.971200168132784,
+              16.038399934768677,
+              15.718400478363037,
+              15.774400532245638,
+              15.747199952602386,
+              15.787200629711153,
+              15.758399665355682,
+              15.800000727176668
+            ],
+            "T": [
+              2.6176000013947487,
+              1.6944000497460365,
+              1.3952000066637993,
+              1.3919999822974205,
+              1.4192000031471252,
+              1.627199910581112,
+              1.39359999448061,
+              1.3919999822974205
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            13.353600166738035,
+            14.34399988502264,
+            14.323200471699238,
+            14.382400549948217,
+            14.327999949455261,
+            14.160000719130041,
+            14.364799670875072,
+            14.408000744879248
+          ],
+          "paired_host_ms": [
+            0.013723099999999998,
+            0.014406,
+            0.014678650000000001,
+            0.01417485,
+            0.014088350000000001,
+            0.01428095,
+            0.014954299999999997,
+            0.014466099999999999
+          ],
+          "paired_mad_us": 0.03760019317269414,
+          "paired_median_us": 14.33599991723895,
+          "paired_raw_ms": [
+            0.0137391,
+            0.0144239,
+            0.0146939,
+            0.014190000000000003,
+            0.0141038,
+            0.0142967,
+            0.01497045,
+            0.01448255
+          ],
+          "perminov_faster_rounds": 0,
+          "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE"
+          ]
+        }
+      },
+      "precision_policy": {
+        "active_allow_fp16_reduced_precision_reduction": false,
+        "active_allow_tf32": false,
+        "active_float32_matmul_precision": "highest",
+        "original": {
+          "allow_fp16_reduced_precision_reduction": true,
+          "allow_tf32": false,
+          "float32_matmul_precision": "highest"
+        },
+        "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+        "restored": true
+      },
+      "topology": {
+        "C": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": null,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+          "grid": [
+            12,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "P": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 4,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "T": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 9,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "fc1_kernel",
+          "grid": [
+            9,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        }
+      }
+    },
+    "cuda_graph-s2": {
+      "capture_or_initialization_order": [
+        "C",
+        "T",
+        "P"
+      ],
+      "capture_setup_ms": {
+        "C": 13.198853,
+        "P": 0.303423,
+        "T": 0.432062
+      },
+      "compiler": {
+        "P": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "kernel_name": "_fused",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "sass_status": "UNAVAILABLE"
+        },
+        "T": {
+          "ir_sha256": {
+            "llir": "a9be6e0654d0de5843797db604936913632eed884a5b6fa3ef07a9d0d74fbe11",
+            "ttgir": "1c01dd713502dc26f2eee0f9207e3594d1a5b4dec3b7a32e4f1936bbbe7a25e6",
+            "ttir": "82621081528745fb37677f15355492a05442f158483cae3b233556b61671b489"
+          },
+          "kernel_name": "fc1_kernel",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 44,
+            "n_spills": 0,
+            "num_stages": 3,
+            "num_warps": 4,
+            "shared": 8192
+          },
+          "ptx_sha256": "c01a512535494eb8972a2166efdaec5a0763ac26e7054977ce43018fc649c086",
+          "sass_status": "UNAVAILABLE"
+        }
+      },
+      "correctness_passed": true,
+      "first_call_ms": {
+        "C": 179.303428,
+        "P": 10.943767,
+        "T": 218.571448
+      },
+      "host_clock_preflight_status": "NO_RESOLVED_DIFFERENCE",
+      "manifest_sha256": "ff38ee8a17978504e4f6813c9382061c4dd7ef14c1f9b1ac2d54e25668a35932",
+      "pair_order": [
+        "C",
+        "T"
+      ],
+      "pairs": {
+        "C": {
+          "aa_max_absolute_gap_us": 0.22559911012649536,
+          "baseline_faster_rounds": 8,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "C": 1.8448000773787498,
+            "P": 15.667200088500977
+          },
+          "event_us_per_operation": {
+            "C": [
+              1.8432000651955605,
+              2.3600000888109207,
+              1.8592000007629395,
+              1.8448000773787498,
+              1.8448000773787498,
+              1.8527999520301819,
+              1.841600053012371,
+              1.8448000773787498
+            ],
+            "P": [
+              15.665599703788759,
+              15.689599514007568,
+              15.644800662994385,
+              15.676799416542053,
+              15.63200056552887,
+              15.700800716876982,
+              15.63200056552887,
+              15.668800473213194
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            13.822399638593199,
+            13.329599425196648,
+            13.785600662231445,
+            13.831999339163303,
+            13.78720048815012,
+            13.8480007648468,
+            13.790400512516499,
+            13.824000395834444
+          ],
+          "paired_host_ms": [
+            0.01391535,
+            0.0129696,
+            0.013959850000000001,
+            0.0149753,
+            0.01416125,
+            0.01359875,
+            0.013617749999999998,
+            0.0138357
+          ],
+          "paired_mad_us": 0.01999950036406517,
+          "paired_median_us": 13.806400075554848,
+          "paired_raw_ms": [
+            0.0139119,
+            0.0129666,
+            0.013957500000000001,
+            0.014972949999999999,
+            0.01415845,
+            0.013596800000000001,
+            0.0136159,
+            0.013834250000000001
+          ],
+          "perminov_faster_rounds": 0,
+          "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+          "warnings": []
+        },
+        "T": {
+          "aa_max_absolute_gap_us": 1.4239996671676636,
+          "baseline_faster_rounds": 8,
+          "decision": "B_FASTER",
+          "event_median_us": {
+            "P": 15.663199871778488,
+            "T": 1.3944000005722046
+          },
+          "event_us_per_operation": {
+            "P": [
+              15.654399991035461,
+              15.702399611473083,
+              15.630400180816649,
+              15.671999752521517,
+              15.644800662994385,
+              16.76959991455078,
+              15.649600327014921,
+              17.337599396705627
+            ],
+            "T": [
+              2.223999984562397,
+              1.3952000066637993,
+              1.39359999448061,
+              1.3887999579310417,
+              1.3919999822974205,
+              1.390399970114231,
+              3.054399974644184,
+              3.481600061058998
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            13.430400006473064,
+            14.307199604809284,
+            14.236800186336039,
+            14.283199794590475,
+            14.252800680696964,
+            15.37919994443655,
+            12.595200352370737,
+            13.85599933564663
+          ],
+          "paired_host_ms": [
+            0.0137525,
+            0.014270950000000001,
+            0.01421035,
+            0.0142454,
+            0.014294049999999999,
+            0.014824050000000002,
+            0.016355849999999998,
+            0.0130297
+          ],
+          "paired_mad_us": 0.22560013458132744,
+          "paired_median_us": 14.244800433516502,
+          "paired_raw_ms": [
+            0.0137526,
+            0.01426805,
+            0.014208450000000001,
+            0.014244000000000001,
+            0.014291100000000001,
+            0.014825650000000001,
+            0.01634155,
+            0.01303225
+          ],
+          "perminov_faster_rounds": 0,
+          "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+          "warnings": []
+        }
+      },
+      "precision_policy": {
+        "active_allow_fp16_reduced_precision_reduction": false,
+        "active_allow_tf32": false,
+        "active_float32_matmul_precision": "highest",
+        "original": {
+          "allow_fp16_reduced_precision_reduction": true,
+          "allow_tf32": false,
+          "float32_matmul_precision": "highest"
+        },
+        "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+        "restored": true
+      },
+      "topology": {
+        "C": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": null,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+          "grid": [
+            12,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "P": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 4,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "T": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 9,
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "fc1_kernel",
+          "grid": [
+            9,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        }
+      }
+    },
+    "eager-s1": {
+      "capture_or_initialization_order": [
+        "P",
+        "T",
+        "C"
+      ],
+      "capture_setup_ms": {},
+      "compiler": {
+        "P": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "kernel_name": "_fused",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "sass_status": "UNAVAILABLE"
+        },
+        "T": {
+          "ir_sha256": {
+            "llir": "a9be6e0654d0de5843797db604936913632eed884a5b6fa3ef07a9d0d74fbe11",
+            "ttgir": "1c01dd713502dc26f2eee0f9207e3594d1a5b4dec3b7a32e4f1936bbbe7a25e6",
+            "ttir": "82621081528745fb37677f15355492a05442f158483cae3b233556b61671b489"
+          },
+          "kernel_name": "fc1_kernel",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 44,
+            "n_spills": 0,
+            "num_stages": 3,
+            "num_warps": 4,
+            "shared": 8192
+          },
+          "ptx_sha256": "c01a512535494eb8972a2166efdaec5a0763ac26e7054977ce43018fc649c086",
+          "sass_status": "UNAVAILABLE"
+        }
+      },
+      "correctness_passed": true,
+      "first_call_ms": {
+        "C": 222.212123,
+        "P": 380.59555,
+        "T": 78.984447
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "c1d33675f4db3f4236a30f224b7f022938bbef81e30a67b8dc60a9b7f064bb33",
+      "pair_order": [
+        "T",
+        "C"
+      ],
+      "pairs": {
+        "C": {
+          "aa_max_absolute_gap_us": 3.76800000667572,
+          "baseline_faster_rounds": 1,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "C": 32.527999579906464,
+            "P": 26.980800926685333
+          },
+          "event_us_per_operation": {
+            "C": [
+              30.579200387001038,
+              33.68160128593445,
+              32.9584002494812,
+              32.31520056724548,
+              31.564798951148983,
+              32.740798592567444,
+              12.836800515651703,
+              32.787200808525085
+            ],
+            "P": [
+              23.72319996356964,
+              27.347201108932495,
+              28.035199642181396,
+              26.61440074443817,
+              29.03040051460266,
+              28.996801376342773,
+              17.448000609874725,
+              23.01120012998581
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            -6.8560004234313965,
+            -6.334400177001953,
+            -4.923200607299805,
+            -5.700799822807312,
+            -2.534398436546322,
+            -3.7439972162246704,
+            4.6112000942230225,
+            -9.776000678539276
+          ],
+          "paired_host_ms": [
+            -0.006652399999999996,
+            -0.006843549999999997,
+            -0.004797550000000001,
+            -0.006076050000000003,
+            -0.00250535,
+            -0.003846099999999998,
+            0.0044745500000000025,
+            -0.009792299999999997
+          ],
+          "paired_mad_us": 1.556001603603363,
+          "paired_median_us": -5.312000215053558,
+          "paired_raw_ms": [
+            -0.006662649999999997,
+            -0.006852000000000002,
+            -0.004804150000000002,
+            -0.006089649999999997,
+            -0.002511250000000004,
+            -0.0038556500000000047,
+            0.004482249999999998,
+            -0.009806600000000002
+          ],
+          "perminov_faster_rounds": 7,
+          "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE",
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "T": {
+          "aa_max_absolute_gap_us": 7.318401336669922,
+          "baseline_faster_rounds": 0,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "P": 27.633599936962128,
+            "T": 37.8151997923851
+          },
+          "event_us_per_operation": {
+            "P": [
+              25.521600246429443,
+              35.15520095825195,
+              32.417601346969604,
+              22.85439968109131,
+              26.2719988822937,
+              29.53920066356659,
+              26.931199431419373,
+              28.336000442504883
+            ],
+            "T": [
+              37.94879913330078,
+              37.90560066699982,
+              38.019201159477234,
+              34.29119884967804,
+              37.724798917770386,
+              39.798399806022644,
+              37.26879954338074,
+              37.49279975891113
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            -12.427198886871338,
+            -2.7503997087478638,
+            -5.601599812507629,
+            -11.436799168586731,
+            -11.452800035476685,
+            -10.259199142456055,
+            -10.337600111961365,
+            -9.15679931640625
+          ],
+          "paired_host_ms": [
+            -0.012609800000000001,
+            -0.002710450000000003,
+            -0.005300399999999997,
+            -0.011739700000000006,
+            -0.011191799999999995,
+            -0.0102661,
+            -0.010352149999999997,
+            -0.009143749999999999
+          ],
+          "paired_mad_us": 1.1480003595352173,
+          "paired_median_us": -10.29839962720871,
+          "paired_raw_ms": [
+            -0.012622899999999998,
+            -0.00271015,
+            -0.005310599999999999,
+            -0.011752300000000002,
+            -0.011205799999999998,
+            -0.01028055,
+            -0.010360649999999999,
+            -0.009153899999999998
+          ],
+          "perminov_faster_rounds": 8,
+          "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE",
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      },
+      "precision_policy": {
+        "active_allow_fp16_reduced_precision_reduction": false,
+        "active_allow_tf32": false,
+        "active_float32_matmul_precision": "highest",
+        "original": {
+          "allow_fp16_reduced_precision_reduction": true,
+          "allow_tf32": false,
+          "float32_matmul_precision": "highest"
+        },
+        "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+        "restored": true
+      },
+      "topology": {
+        "C": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": null,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+          "grid": [
+            12,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        },
+        "P": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 4,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        },
+        "T": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 9,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "fc1_kernel",
+          "grid": [
+            9,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        }
+      }
+    },
+    "eager-s2": {
+      "capture_or_initialization_order": [
+        "C",
+        "T",
+        "P"
+      ],
+      "capture_setup_ms": {},
+      "compiler": {
+        "P": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "kernel_name": "_fused",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "sass_status": "UNAVAILABLE"
+        },
+        "T": {
+          "ir_sha256": {
+            "llir": "a9be6e0654d0de5843797db604936913632eed884a5b6fa3ef07a9d0d74fbe11",
+            "ttgir": "1c01dd713502dc26f2eee0f9207e3594d1a5b4dec3b7a32e4f1936bbbe7a25e6",
+            "ttir": "82621081528745fb37677f15355492a05442f158483cae3b233556b61671b489"
+          },
+          "kernel_name": "fc1_kernel",
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 44,
+            "n_spills": 0,
+            "num_stages": 3,
+            "num_warps": 4,
+            "shared": 8192
+          },
+          "ptx_sha256": "c01a512535494eb8972a2166efdaec5a0763ac26e7054977ce43018fc649c086",
+          "sass_status": "UNAVAILABLE"
+        }
+      },
+      "correctness_passed": true,
+      "first_call_ms": {
+        "C": 180.338135,
+        "P": 13.420672,
+        "T": 290.487612
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "a9ae4828d94322086ae3855dc0d19cb574d0fd7f6d215edaeaa22ee0d3504d72",
+      "pair_order": [
+        "C",
+        "T"
+      ],
+      "pairs": {
+        "C": {
+          "aa_max_absolute_gap_us": 6.348799169063568,
+          "baseline_faster_rounds": 0,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "C": 32.7007994055748,
+            "P": 27.634400129318237
+          },
+          "event_us_per_operation": {
+            "C": [
+              34.00479853153229,
+              32.60959982872009,
+              33.638399839401245,
+              29.676800966262817,
+              32.19679892063141,
+              32.791998982429504,
+              32.14240074157715,
+              33.00960063934326
+            ],
+            "P": [
+              28.723201155662537,
+              28.497600555419922,
+              27.091199159622192,
+              26.107200980186462,
+              26.37600004673004,
+              26.897600293159485,
+              28.177601099014282,
+              30.01439869403839
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            -5.281597375869751,
+            -4.111999273300171,
+            -6.547200679779053,
+            -3.569599986076355,
+            -5.820798873901367,
+            -5.8943986892700195,
+            -3.964799642562866,
+            -2.9952019453048706
+          ],
+          "paired_host_ms": [
+            -0.005259649999999998,
+            -0.004163300000000002,
+            -0.006882649999999997,
+            -0.0034953,
+            -0.005858299999999997,
+            -0.005885700000000001,
+            -0.004503250000000007,
+            -0.0027288999999999994
+          ],
+          "paired_mad_us": 1.125599443912506,
+          "paired_median_us": -4.696798324584961,
+          "paired_raw_ms": [
+            -0.005279549999999999,
+            -0.004175899999999999,
+            -0.0069066000000000015,
+            -0.003508149999999999,
+            -0.0058806499999999986,
+            -0.0059052000000000045,
+            -0.004518049999999996,
+            -0.0027322000000000015
+          ],
+          "perminov_faster_rounds": 8,
+          "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE",
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        },
+        "T": {
+          "aa_max_absolute_gap_us": 8.710400760173798,
+          "baseline_faster_rounds": 7,
+          "decision": "INCONCLUSIVE",
+          "event_median_us": {
+            "P": 21.354400366544724,
+            "T": 13.013599812984467
+          },
+          "event_us_per_operation": {
+            "P": [
+              27.958399057388306,
+              39.851200580596924,
+              22.654399275779724,
+              21.065600216388702,
+              20.292800664901733,
+              21.643200516700745,
+              20.91359943151474,
+              20.891200006008148
+            ],
+            "T": [
+              38.30400109291077,
+              37.77439892292023,
+              13.099199533462524,
+              12.928000092506409,
+              12.518399953842163,
+              12.92639970779419,
+              12.71039992570877,
+              13.902400434017181
+            ]
+          },
+          "paired_P_minus_baseline_us": [
+            -10.345602035522461,
+            2.0768016576766968,
+            9.5551997423172,
+            8.137600123882294,
+            7.77440071105957,
+            8.716800808906555,
+            8.20319950580597,
+            6.988799571990967
+          ],
+          "paired_host_ms": [
+            -0.01014135,
+            0.002591650000000001,
+            0.0098018,
+            0.0078772,
+            0.0076805,
+            0.0085527,
+            0.0083021,
+            0.006910700000000002
+          ],
+          "paired_mad_us": 0.8640006184577942,
+          "paired_median_us": 7.956000417470932,
+          "paired_raw_ms": [
+            -0.01017635,
+            0.0025944000000000023,
+            0.009831200000000002,
+            0.007895999999999997,
+            0.007704649999999999,
+            0.00857975,
+            0.008328300000000002,
+            0.006932150000000001
+          ],
+          "perminov_faster_rounds": 1,
+          "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+          "warnings": [
+            "HOST_CLOCK_RATE_DIFFERENCE",
+            "AB_WITHIN_AA_VARIABILITY"
+          ]
+        }
+      },
+      "precision_policy": {
+        "active_allow_fp16_reduced_precision_reduction": false,
+        "active_allow_tf32": false,
+        "active_float32_matmul_precision": "highest",
+        "original": {
+          "allow_fp16_reduced_precision_reduction": true,
+          "allow_tf32": false,
+          "float32_matmul_precision": "highest"
+        },
+        "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+        "restored": true
+      },
+      "topology": {
+        "C": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": null,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+          "grid": [
+            12,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        },
+        "P": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 4,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        },
+        "T": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "configured_ctas": 9,
+          "cuda_graph_launch_calls": 0,
+          "first_kernel_name": "fc1_kernel",
+          "grid": [
+            9,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 1
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "P": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+    "T": "a88226c46f335a9768f15b52eb275abf6066bfb57b1f7e012faa937a51768552"
+  }
+}

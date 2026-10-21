@@ -1,0 +1,26 @@
+{
+  "balanced_complete_order": true,
+  "calls_per_block": 100,
+  "corrected_script_sha256": "0e6c9af79fe50549d21e78da28dd9be96ad2a4f5db74da80ed1ccdcc723365d7",
+  "exploratory_snapshot_sha256": {
+    "s1": "c326d0d4161264dc797a3497e32cae383c91fd29d9a36d6476f33f5b00431d2a",
+    "s2": "c326d0d4161264dc797a3497e32cae383c91fd29d9a36d6476f33f5b00431d2a"
+  },
+  "only_intended_code_difference": "Reuse wrapper mirrors original matmul_into except saved FP32 scratch replaces per-call torch.empty",
+  "purpose": "Controlled scratch reuse correction for exploratory diagnostic wrapper confound",
+  "retain_exploratory_sessions": [
+    "s1",
+    "s2"
+  ],
+  "reversed_outer_group_order": true,
+  "rounds_per_session": 8,
+  "schema_version": 1,
+  "sessions": [
+    "controlled-s1",
+    "controlled-s2"
+  ],
+  "source_sha256": "0b9144b81eed225c671518a1d7067f115865c32437ee66fe2db1b51309aa59e9",
+  "spec_sha256": "628938726125c8a9ef53de3c36e03d01c9741b576f0d74d47823395f0a5dcfbf",
+  "stop_rule": "Stop after exactly two controlled fresh-process sessions; retain all rounds.",
+  "warmups_per_function": 30
+}

@@ -1,0 +1,262 @@
+{
+  "a_faster_rounds": 2,
+  "aa_differences_us": [
+    1.054400205612177,
+    -7.203203439712522,
+    -0.12159943580627997,
+    0.00639557838440219,
+    0.5183994770050077,
+    -0.08160471916198592,
+    0.4671990871429402,
+    1.6991972923278835
+  ],
+  "aa_max_absolute_gap_us": 7.203203439712522,
+  "b_faster_rounds": 6,
+  "correctness_passed": true,
+  "decision": {
+    "aa_control": {
+      "kernel": "A",
+      "max_absolute_difference_ms": 0.007203203439712524,
+      "paired_X_minus_Y_ms": [
+        0.0010544002056121827,
+        -0.007203203439712524,
+        -0.00012159943580627441,
+        6.395578384399414e-06,
+        0.0005183994770050048,
+        -8.16047191619873e-05,
+        0.00046719908714294435,
+        0.0016991972923278808
+      ],
+      "paired_difference_ms": {
+        "cv": null,
+        "max_ms": 0.0016991972923278808,
+        "median_absolute_deviation_ms": 0.0003383994102478027,
+        "median_ms": 0.00023679733276367189,
+        "min_ms": -0.007203203439712524,
+        "stdev_ms": 0.0027958764024796916
+      },
+      "rounds": 8
+    },
+    "ab_exceeds_aa_variability": false,
+    "cuda_event_ms": {
+      "A": {
+        "cv": 0.012920162867708937,
+        "max_ms": 0.060843199491500854,
+        "median_absolute_deviation_ms": 0.00037280023097991874,
+        "median_ms": 0.059921601414680475,
+        "min_ms": 0.05824959874153137,
+        "stdev_ms": 0.0007731813068095878
+      },
+      "B": {
+        "cv": 0.013948949004398121,
+        "max_ms": 0.06058719754219055,
+        "median_absolute_deviation_ms": 0.00047920048236846716,
+        "median_ms": 0.05905280113220215,
+        "min_ms": 0.058457601070404056,
+        "stdev_ms": 0.0008266035601823468
+      }
+    },
+    "decision": "INCONCLUSIVE",
+    "decision_schema_version": 3,
+    "host_clock_preflight": {
+      "median_raw_minus_perf_ms": -0.0017029999999991219,
+      "median_raw_over_perf": 0.9999152048507407,
+      "read_span_bound_ms": 0.006853,
+      "rule": "all five differences have one sign and exceed the largest paired read span",
+      "samples": [
+        {
+          "monotonic_raw_ms": 20.096942,
+          "perf_counter_ms": 20.099747,
+          "raw_minus_perf_ms": -0.002805000000002167,
+          "raw_over_perf": 0.9998604460046188,
+          "read_span_bound_ms": 0.006853
+        },
+        {
+          "monotonic_raw_ms": 20.0908,
+          "perf_counter_ms": 20.092603,
+          "raw_minus_perf_ms": -0.0018029999999988888,
+          "raw_over_perf": 0.9999102654842681,
+          "read_span_bound_ms": 0.002835
+        },
+        {
+          "monotonic_raw_ms": 20.076382,
+          "perf_counter_ms": 20.077954,
+          "raw_minus_perf_ms": -0.0015719999999994627,
+          "raw_over_perf": 0.9999217051697599,
+          "read_span_bound_ms": 0.003025
+        },
+        {
+          "monotonic_raw_ms": 20.081993,
+          "perf_counter_ms": 20.083696,
+          "raw_minus_perf_ms": -0.0017029999999991219,
+          "raw_over_perf": 0.9999152048507407,
+          "read_span_bound_ms": 0.003036
+        },
+        {
+          "monotonic_raw_ms": 20.073167,
+          "perf_counter_ms": 20.074718,
+          "raw_minus_perf_ms": -0.001550999999999192,
+          "raw_over_perf": 0.9999227386407122,
+          "read_span_bound_ms": 0.002404
+        }
+      ],
+      "status": "NO_RESOLVED_DIFFERENCE"
+    },
+    "host_wall_ms": {
+      "A": {
+        "cv": 0.010381453876615635,
+        "max_ms": 0.0629913,
+        "median_absolute_deviation_ms": 0.0003963000000000057,
+        "median_ms": 0.06174157500000001,
+        "min_ms": 0.060877150000000005,
+        "stdev_ms": 0.0006423182647018863
+      },
+      "B": {
+        "cv": 0.014716913423416493,
+        "max_ms": 0.062376100000000004,
+        "median_absolute_deviation_ms": 0.0006765999999999994,
+        "median_ms": 0.061012899999999995,
+        "min_ms": 0.06001395,
+        "stdev_ms": 0.0008995657221830904
+      }
+    },
+    "monotonic_raw_ms": {
+      "A": {
+        "cv": 0.010371049152371832,
+        "max_ms": 0.06297665,
+        "median_absolute_deviation_ms": 0.00039602500000000124,
+        "median_ms": 0.06172854999999999,
+        "min_ms": 0.06086465,
+        "stdev_ms": 0.0006415346271344189
+      },
+      "B": {
+        "cv": 0.014721422007242508,
+        "max_ms": 0.0623605,
+        "median_absolute_deviation_ms": 0.000676275000000004,
+        "median_ms": 0.0609989,
+        "min_ms": 0.0599955,
+        "stdev_ms": 0.0008996221424804252
+      }
+    },
+    "paired_A_minus_B_ms": [
+      0.00025600194931030273,
+      -0.0001967966556549114,
+      0.001039999723434444,
+      0.0007568001747131348,
+      0.0009808003902435289,
+      -0.00020800232887268483,
+      0.0012575984001159668,
+      0.0007839977741241413
+    ],
+    "paired_difference_ms": {
+      "cv": null,
+      "max_ms": 0.0012575984001159668,
+      "median_absolute_deviation_ms": 0.0003784000873565674,
+      "median_ms": 0.0007703989744186381,
+      "min_ms": -0.00020800232887268483,
+      "stdev_ms": 0.0005648607438491637
+    },
+    "paired_host_A_minus_B_ms": [
+      0.0006151999999999963,
+      5.999999999999062e-06,
+      0.0007890500000000064,
+      0.0006563000000000055,
+      0.0010570500000000038,
+      0.0008101500000000025,
+      0.0016301999999999914,
+      0.00041274999999999645
+    ],
+    "paired_raw_A_minus_B_ms": [
+      0.0006161500000000042,
+      6.499999999998174e-06,
+      0.0007895499999999944,
+      0.0006568000000000019,
+      0.0010580000000000034,
+      0.0008110500000000021,
+      0.0016356000000000038,
+      0.0004142499999999938
+    ],
+    "paired_signs": {
+      "A_faster": 2,
+      "B_faster": 6,
+      "ties": 0
+    },
+    "ranking_supported": false,
+    "raw_boundary_discrepancy": false,
+    "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+    "rounds": 8,
+    "speedup_A_over_B": null,
+    "timing_basis": "one fixed-address CUDA Graph replay of 20 complete staged GEMMs per block",
+    "timing_boundary_discrepancy": false,
+    "timing_boundary_ms": {
+      "A": {
+        "round_event_minus_wall_range": [
+          -0.0525510251693726,
+          -0.03442798124694835
+        ],
+        "unranked_event_minus_wall": -0.2518270158843994
+      },
+      "B": {
+        "round_event_minus_wall_range": [
+          -0.0468299474029541,
+          -0.030583026603698826
+        ],
+        "unranked_event_minus_wall": -0.06693999085998525
+      }
+    },
+    "warnings": [
+      "AB_WITHIN_AA_VARIABILITY"
+    ]
+  },
+  "event_us": {
+    "A": {
+      "cv": 0.012920162867708938,
+      "mad_us": 0.37280023097991943,
+      "max_us": 60.843199491500854,
+      "median_us": 59.92160141468048,
+      "min_us": 58.24959874153137,
+      "rounds_us": [
+        60.843199491500854,
+        60.19200086593628,
+        60.42720079421997,
+        59.95680093765259,
+        59.886401891708374,
+        58.24959874153137,
+        59.74239706993103,
+        59.44640040397644
+      ]
+    },
+    "B": {
+      "cv": 0.013948949004398123,
+      "mad_us": 0.47920048236846924,
+      "max_us": 60.58719754219055,
+      "median_us": 59.05280113220215,
+      "min_us": 58.45760107040405,
+      "rounds_us": [
+        60.58719754219055,
+        60.38879752159119,
+        59.38720107078552,
+        59.20000076293945,
+        58.905601501464844,
+        58.45760107040405,
+        58.48479866981506,
+        58.662402629852295
+      ]
+    }
+  },
+  "paired_A_minus_B_us": [
+    0.25600194931030273,
+    -0.19679665565490723,
+    1.0399997234344482,
+    0.7568001747131348,
+    0.9808003902435303,
+    -0.20800232887268066,
+    1.2575984001159668,
+    0.7839977741241455
+  ],
+  "paired_mad_us": 0.3784000873565674,
+  "paired_median_us": 0.7703989744186401,
+  "schema_version": 1,
+  "session": 1,
+  "topology_passed": true
+}

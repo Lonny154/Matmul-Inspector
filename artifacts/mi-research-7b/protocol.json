@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "base_commit": "0b6c741f92073b20ec9009ef808704225e47826c",
+  "mapping_plan_sha256": "78c04dac51ec1a09f2166bf1226dc53e3de935934714567239f72f6ad5c1b987",
+  "source_sha256": {
+    "A": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+    "B": "10b94103a2dbf3d1649d1e3d79560d45830eeb5d960161905d69a6d5947db418"
+  },
+  "size": 96,
+  "dtype": "float16",
+  "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+  "tolerance": {"atol": 0.01, "rtol": 0.01},
+  "correctness_cases": ["seed-0", "seed-1", "seed-2", "zero", "identity", "cancellation"],
+  "graph_operations_per_replay": 20,
+  "warmups": 10,
+  "primary_sessions": 2,
+  "paired_rounds_per_session": 8,
+  "order": "A then B for session 1; B then A for session 2; balanced pair order per experiment_pair",
+  "aa_controls": "existing experiment_pair A/A before each paired round",
+  "decision_rule": "unchanged experiment_pair.summarize_clock_aware",
+  "topology_gate": "one physical launch per operation, A grid [2,2,1], B grid [2,2,9], block [128,1,1]",
+  "conditional_cublas": "Only if B_FASTER in both primary sessions: one fresh paired eight-round graph session, B versus C, with matched fixed-address inputs/outputs and A/A controls",
+  "hard_bounds": "one primary mapping, at most one minimal correctness/resource adjustment, no timing if compiler/correctness/topology gate fails"
+}

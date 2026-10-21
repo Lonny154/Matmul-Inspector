@@ -1,0 +1,102 @@
+{
+  "algebraic_finding": "No rank-one root slice combinations exist. Rank-two row/column directions improve held-out pair and action coverage at size 128 but produce no exact rank-7 discovery under matched MITM budgets.",
+  "coverage_by_pool_size": [
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 1,
+      "pool": "residual_ranked",
+      "pool_size": 20,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 3,
+      "pool": "residual_ranked",
+      "pool_size": 64,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 5,
+      "pool": "residual_ranked",
+      "pool_size": 128,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 1,
+      "pool": "structural_diverse",
+      "pool_size": 20,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 2,
+      "pool": "structural_diverse",
+      "pool_size": 64,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 3,
+      "pool": "structural_diverse",
+      "pool_size": 128,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 0,
+      "pool": "algebraic_only",
+      "pool_size": 20,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 3,
+      "pool": "algebraic_only",
+      "pool_size": 64,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 1,
+      "pair_recall": 6,
+      "pool": "algebraic_only",
+      "pool_size": 128,
+      "tensor_equivalence_recall": 1
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 1,
+      "pool": "hybrid_algebraic_residual",
+      "pool_size": 20,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 3,
+      "pool": "hybrid_algebraic_residual",
+      "pool_size": 64,
+      "tensor_equivalence_recall": 0
+    },
+    {
+      "complete_action_recall": 0,
+      "pair_recall": 5,
+      "pool": "hybrid_algebraic_residual",
+      "pool_size": 128,
+      "tensor_equivalence_recall": 0
+    }
+  ],
+  "mitm_exact_discoveries": {
+    "algebraic_only": 0,
+    "hybrid_algebraic_residual": 0,
+    "residual_ranked": 0,
+    "structural_diverse": 0
+  },
+  "schema": "tensor_game_algebraic_pools_summary.v1",
+  "structural_signatures_at_128": {
+    "algebraic_only": 19,
+    "hybrid_algebraic_residual": 13,
+    "residual_ranked": 13,
+    "structural_diverse": 59
+  }
+}

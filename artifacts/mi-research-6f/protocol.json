@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "base_commit": "5c914467985028a38e297cdb0c5d93186d75e35f",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti",
+  "size": 96,
+  "dtype": "float16 input and output",
+  "reference": "torch.matmul(left.float(), right.float()).half()",
+  "tolerance": {"atol": 0.01, "rtol": 0.01},
+  "primary_algorithm": "unchanged staged Laderman rank-23",
+  "reference_algorithm": "unchanged fused Perminov-55 from 6D/6E retained evidence; not executed in this attribution capture",
+  "complete_operations_per_graph": 20,
+  "eager_warmups": 10,
+  "graph_warmups": 10,
+  "sessions": [
+    {"session": 1, "trace_granularity": "graph", "measured_blocks": 12,
+     "node_level_captures": 0},
+    {"session": 2, "trace_granularity": "node", "measured_blocks": 2,
+     "node_level_captures": 2}
+  ],
+  "nsight": {
+    "trace": "cuda,nvtx",
+    "cuda_graph_trace": "graph:host-only in session 1; node:host-only in session 2",
+    "capture_range": "one NVTX MI6F_TRACE range covering only measured blocks",
+    "sample": "none",
+    "cpuctxsw": "none"
+  },
+  "historical_unprofiled_normal_upper_us_per_operation": 65.0,
+  "historical_unprofiled_slow_lower_us_per_operation": 80.0,
+  "profiled_relative_anomaly_ratio": 1.35,
+  "profiled_relative_baseline": "median of the first four graph-level blocks in session 1 only",
+  "classification_notes": "The 65/80 us bands derive from 6D/6E staged observations and are descriptive only under profiling. A graph-level relative anomaly requires at least 1.35 times the fixed first-four median. Node-level captures are interpreted within their own traced session. A slow unprofiled block is not inferred from a profiled event value alone.",
+  "limits": "Maximum two fresh processes, twelve measured blocks per session, two node-level traced blocks per session. No waiting or repeated capture to force a slow block."
+}

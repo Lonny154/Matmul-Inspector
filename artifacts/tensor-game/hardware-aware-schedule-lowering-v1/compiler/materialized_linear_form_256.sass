@@ -1,0 +1,64 @@
+.headerflags	@"EF_CUDA_TEXMODE_UNIFIED EF_CUDA_64BIT_ADDRESS EF_CUDA_SM89 EF_CUDA_VIRTUAL_SM(EF_CUDA_SM89)"
+	.elftype	@"ET_EXEC"
+
+
+//--------------------- .text._materialize_form_kernel --------------------------
+	.section	.text._materialize_form_kernel,"ax",@progbits
+	.sectioninfo	@"SHI_REGISTERS=13"
+	.align	128
+        .global         _materialize_form_kernel
+        .type           _materialize_form_kernel,@function
+        .size           _materialize_form_kernel,(.L_x_1 - _materialize_form_kernel)
+        .other          _materialize_form_kernel,@"STO_CUDA_ENTRY STV_DEFAULT"
+_materialize_form_kernel:
+.text._materialize_form_kernel:
+        /*0000*/                   IMAD.MOV.U32 R1, RZ, RZ, c[0x0][0x28] ;
+        /*0010*/                   S2R R0, SR_TID.X ;
+        /*0020*/                   MOV R9, 0x2 ;
+        /*0030*/                   ULDC.64 UR4, c[0x0][0x118] ;
+        /*0040*/                   S2R R5, SR_CTAID.X ;
+        /*0050*/                   IMAD.SHL.U32 R0, R0, 0x2, RZ ;
+        /*0060*/                   SHF.R.S32.HI R3, RZ, 0x17, R5 ;
+        /*0070*/                   LOP3.LUT R0, R0, 0xfe, RZ, 0xc0, !PT ;
+        /*0080*/                   SGXT R3, R3, 0x1 ;
+        /*0090*/                   LEA R0, R5, R0, 0x8 ;
+        /*00a0*/                   LEA.HI R3, R3, R0, RZ, 0x7 ;
+        /*00b0*/                   ISETP.GE.AND P0, PT, R0, 0x4000, PT ;
+        /*00c0*/                   LOP3.LUT R5, R3.reuse, 0xffffff80, RZ, 0xc0, !PT ;
+        /*00d0*/                   IMAD.SHL.U32 R2, R3, 0x2, RZ ;
+        /*00e0*/                   IMAD.IADD R7, R0, 0x1, -R5 ;
+        /*00f0*/                   LOP3.LUT R4, R2, 0xffffff00, RZ, 0xc0, !PT ;
+        /*0100*/                   IMAD.WIDE R2, R4, R9, c[0x0][0x160] ;
+        /*0110*/                   IMAD.WIDE R4, R4, R9, c[0x0][0x170] ;
+        /*0120*/                   IMAD.WIDE R2, R7, 0x2, R2 ;
+        /*0130*/                   IMAD.WIDE R4, R7, 0x2, R4 ;
+        /*0140*/                   CS2R R6, SRZ ;
+        /*0150*/              @!P0 LDG.E R6, [R2.64] ;
+        /*0160*/              @!P0 LDG.E R7, [R4.64] ;
+        /*0170*/                   HADD2.F32 R8, -RZ, R6.reuse.H0_H0 ;
+        /*0180*/                   HADD2.F32 R6, -RZ, R6.H1_H1 ;
+        /*0190*/                   HADD2.F32 R9, -RZ, R7.reuse.H0_H0 ;
+        /*01a0*/                   FADD R8, RZ, -R8 ;
+        /*01b0*/                   HADD2.F32 R10, -RZ, R7.H1_H1 ;
+        /*01c0*/                   FADD R7, RZ, -R6 ;
+        /*01d0*/                   LEA R6, P1, R0, c[0x0][0x180], 0x1 ;
+        /*01e0*/                   FADD R8, R8, -R9 ;
+        /*01f0*/                   FADD R9, R7, -R10 ;
+        /*0200*/                   LEA.HI.X.SX32 R7, R0, c[0x0][0x184], 0x1, P1 ;
+        /*0210*/                   F2FP.F16.F32.PACK_AB R9, R9, R8 ;
+        /*0220*/               @P0 EXIT ;
+        /*0230*/                   STG.E [R6.64], R9 ;
+        /*0240*/                   EXIT ;
+.L_x_0:
+        /*0250*/                   BRA `(.L_x_0);
+        /*0260*/                   NOP;
+        /*0270*/                   NOP;
+        /*0280*/                   NOP;
+        /*0290*/                   NOP;
+        /*02a0*/                   NOP;
+        /*02b0*/                   NOP;
+        /*02c0*/                   NOP;
+        /*02d0*/                   NOP;
+        /*02e0*/                   NOP;
+        /*02f0*/                   NOP;
+.L_x_1:

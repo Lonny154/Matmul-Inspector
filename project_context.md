@@ -1,245 +1,83 @@
 # Matmul Inspector — Project Context
 
-**Last context update:** October 10, 2026  
-**Repository:** https://github.com/Lonny154/Matmul-Inspector  
-**Purpose:** Persistent technical context for future ChatGPT Project conversations. This file summarizes historical work; check Git, current hardware, and saved benchmark artifacts for live state.
+**Context updated:** October 21, 2026
+**Repository:** https://github.com/Lonny154/Matmul-Inspector
+**Verified boundary:** Local Git ancestry, committed case studies, selected offline evidence replays, and GitHub branch state were checked on October 21. This integration branch includes research through MI-Research-8 at `c2b8de73981662193284f231c8dd67b5fa1cbdae`. It excludes the separately committed MI-Research-9 study.
 
-## 1. Project mission
+## Mission and product direction
 
-Matmul Inspector is a hands-on research and developer-tooling project for understanding how numerical kernels map to GPU and AI-accelerator hardware. The work emphasizes **correctness, reproducible measurement, compiler output, memory behavior, and instruction-level explanations** rather than unverified speedup claims.
+Matmul Inspector is an open-source, evidence-first low-level kernel engineering toolkit and research instrument. Its primary product purpose is to automate tedious workflows: kernel correctness validation, controlled paired benchmarking, PTX/SASS/compiler inspection, profiler evidence capture, experiment provenance, failure recording, and reproducible comparisons.
 
-Main technical tracks:
+The intended AI integration is **external-agent-compatible tooling**. Codex, Claude Code, or other agents can propose and implement kernels; Matmul Inspector provides deterministic experiment contracts, resource and correctness gates, machine-readable evidence, and replay. The internal bounded Schedule Agent was a useful research track but is not the primary product or a substitute for a capable coding agent.
 
-- NVIDIA CUDA and PTX kernel construction and inspection.
-- Triton GEMM implementation, autotuning, and comparison with PyTorch/cuBLAS.
-- A miniature Transformer workload to connect individual kernels with end-to-end throughput.
-- AWS Trainium1 Neuron Kernel Interface (NKI) GEMM implementation, precision and tiling sweeps, hardware profiling, and compiler IR analysis.
-- Adjacent numerical computing experiments, including Thomas and parallel cyclic reduction (PCR) tridiagonal solvers.
+Research is a second use of the tool: evaluate hardware-aware execution strategies and exact alternative matrix-multiplication decompositions. Mathematical rank, addition counts, source dots, compiler IR, static PTX, final machine instructions, numerical error, device latency, and physical memory traffic are separate evidence layers. A lower arithmetic count or compiler resource count does not by itself imply a faster kernel. No independent novel matrix-multiplication algorithm has yet been claimed.
 
-Longer-term aims include packaging Matmul Inspector for `pip`, automating PTX/MLIR and profiler-artifact comparisons, and developing the expertise to contribute meaningfully to FlashAttention, FlashInfer, and vLLM.
+## Baseline platforms and release
 
-## 2. Development environments
+- Primary GPU: NVIDIA RTX 4060 Ti (SM 8.9), 34 SMs, under Ubuntu/WSL2. CUDA/Triton hardware paths remain optional where possible; CPU-only analysis must remain functional.
+- AWS Trainium1 NKI (`trn1.2xlarge`) work established tiled GEMM, hardware profiling, BF16/tile-width sensitivity, and negative logical K-blocking results. See the [NKI case study](docs/trainium1_nki_gemm_case_study.md).
+- Tagged release `matmul-inspector==0.3.0` provides saved PTX, SASS, NKI, and unified artifact inspection on Python 3.10–3.13. Research branch workflows are not automatically part of that released package. See the [release notes](docs/release_notes_0_3_0.md).
+- Existing Transformer FC1 workload: FP16, M=512, K=768, N=3072. Earlier Triton/cublas differences were small and should not be treated as stable universal speedups.
 
-### NVIDIA workstation
+## Completed tracks: schedule search, agent feasibility, and product workflows
 
-- **GPU:** NVIDIA RTX 4060 Ti, Ada architecture, compute capability SM 8.9.
-- **Tools used:** CUDA C++, `nvcc`, PTX/CUBIN output, PyTorch, Triton, Nsight Systems (`nsys`), Nsight Compute (`ncu`), and NVTX instrumentation.
-- **Repository on local Linux/WSL:** Previously used `~/projects/matmul-inspector`; verify current location and branch before editing.
+### Tensor Game / hardware-aware schedule foundation
 
-### AWS Trainium
+- Exact conventional rank-8 and Strassen rank-7 references, MCTS/learning, bounded residual search, algebraic pools, exact reconstruction, feasibility pruning, and MITM diagnostics exist. Earlier learning/search approaches did not independently discover a new rank-7 algorithm. See the [Tensor Game research history](TENSOR_GAME_RESEARCH.md).
+- [HA-Schedule-9](docs/hardware_aware_general_lowering_ir.md) supplied bounded general schedule-lowering IR and structural lowerability for 156 retained schedule-size records; 132/156 passed the established GPU numerical correctness gate, while 24 large-size Strassen cases did not.
+- [HA-Schedule-10](docs/ha_schedule_10_calibration_reselection.md) demonstrated real GPU evidence changing deterministic Batch 2 selection relative to a frozen no-update control. This is evidence-driven reselection, not a demonstrated faster Batch 2.
+- The [bounded Schedule Agent](docs/schedule_agent_prototype.md) completed two GPU batches using replayed proposals (Decision B). [Live-1](docs/schedule_agent_live_1.md) completed two model-driven GPU batches, but did not establish evidence-grounded reasoning or a performance win. [Live-2](docs/schedule_agent_live_2.md) had 0/3 valid matched model decision pairs because of duplicate hash proposals; its negative evidence is retained. Further internal model-agent development is deferred in favor of external-agent tooling.
 
-- **Instance:** EC2 `trn1.2xlarge`, Trainium1; a prior `neuron-ls` check showed one Neuron device with two NeuronCores, with experiments generally restricted to **one core**.
-- **Working directory:** `~/Matmul-Inspector` on the EC2 Ubuntu instance.
-- **Virtual environment:**
+### Matmul Inspector developer workflow
 
-  ```bash
-  source /opt/aws_neuronx_venv_pytorch_inference_vllm_0_24_0_1_1_0/bin/activate
-  ```
+- [MI-Workflow-1](docs/mi_workflow_1.md): baseline/candidate correctness, repeated CUDA-event benchmarking, compiler artifacts, self-contained report and hashed evidence bundle. The initial FC1 comparison was inconclusive.
+- [MI-Workflow-2](docs/mi_workflow_2.md): paired Triton configuration A/B comparisons with raw paired differences, uncertainties, and integrated evidence. Stage-count comparison remained inconclusive.
+- [MI-Workflow-3](docs/mi_workflow_3.md): explicit opt-in trusted local Python/Triton source via `--allow-trusted-local-source`; no registry edit. Callable contract: `matmul_into(a, b, out, parameters)`. This is **not a sandbox**: local source executes with process privileges, so secrets should be removed from the environment before running unfamiliar kernels.
+- [MI-Dogfood-1/2](docs/mi_dogfood_2.md): Codex used the tool to evaluate local kernel variants without modifying benchmark internals. Correctness and evidence handling were useful; none of the small FC1 variants established a repeatable advantage.
+- [MI-Timing-1/2](docs/mi_timing_2.md): WSL2 host clock discrepancy: `CLOCK_MONOTONIC_RAW` approximately 1.0545× Python `perf_counter`, while matched CUDA-event and RAW intervals agreed closely. Three-clock diagnostics and A/A controls were integrated. This does **not** invalidate CUDA-event paired measurements automatically; A/A and session variability still limit small-performance claims.
+- [MI-Timing-3](docs/mi_timing_3.md): A/A-before vs. A/A-after warm-state investigation was inconclusive; the default A/A-before policy was unchanged.
 
-- **NKI API as observed October 10:** `nki.jit` exists; `nki.benchmark`, `nki.baremetal`, and `nki.profile` are **not** attributes on the installed top-level `nki` module. Don't assume older examples work.
-- **Compilation artifact workflow:** Set `NKI_ARTIFACTS_DIR` before running an `@nki.jit` kernel to capture `kernel.neff`, `module.mlir`, compiler logs, and other artifacts.
-- **Measurement tools:** `neuron-bench exec`, Neuron Explorer (`capture`, `view`), and Perfetto for trace visualization. On hardware, ensure `NKI_SIMULATOR` is unset.
+## Completed hardware research
 
-## 3. CUDA / Triton / Transformer track
+### Split-K and numerical reference policy — MI-Research-1–3C
 
-### Transformer workload
+- FC1 tiling, warps, and grouped-output investigations did not establish repeatable performance improvements beyond A/A variability.
+- Split-2 on low-output-parallelism GEMM (M=32, K=4096, N=2048, FP16) exposed 32 partial GEMM CTAs instead of 16 conventional output CTAs, with a deterministic reduction. Eager comparisons suffered recurring slow blocks.
+- Under fixed-address CUDA Graph replay, Split-2 achieved supported advantages over conventional Triton at M=32 in repeated sessions; comparisons at M=128 were inconclusive, and higher M lacked supported crossover evidence.
+- [MI-Research-3B](docs/mi_research_3b.md) found that default PyTorch/cuBLAS FP16 reduced-precision reduction behavior caused a large-M reference mismatch. Explicit FP32-rounded reference policy enabled the previously blocked numerical checks without relaxing the original tolerances. Historical failures remain intact.
+- [MI-Research-3C](docs/mi_research_3c.md) established no reproducible Split-K crossover or automatic shape selector. Execution mode and precision policy must always be recorded.
 
-A miniature Transformer benchmark was created around a representative workload:
+### Single-kernel Strassen and algebraic representation — MI-Research-4–5
 
-| Parameter | Value |
-|---|---:|
-| Batch | 1 |
-| Sequence length | 512 |
-| Hidden size | 768 |
-| Attention heads | 12 |
-| MLP intermediate size | 3072 |
-| Data type | FP16 |
+- [Fused one-level Strassen](docs/mi_research_4.md) (rank 7) passed correctness and one-launch topology validation at N=64 and N=128 with no explicit product scratch. Neither size established a speedup.
+- [Matched fused rank-8 versus Strassen rank-7](docs/mi_research_4b.md) at N=128: 8 vs. 7 TTIR dot operations; 192 vs. 168 static PTX MMA instructions. Two paired sessions were inconclusive.
+- [Scaling to N=256 and N=512](docs/mi_research_4c.md) was compiler-feasible, numerically correct, and reported no spills. A rank-7 lead at N=512 met the decision rule in one session but not the second; no reproducible advantage over rank-8 or optimized GEMM was established.
+- [Strassen-equivalent algebraic variants](docs/mi_research_5.md) and schedule reorders altered compiler register use (e.g. 157 to 148 registers/thread) without supported timing improvements. Rank-7 representation search was not expanded.
 
-Historical baseline from October 7:
+### Larger 3×3 tensors, Laderman, and Perminov — MI-Research-6–8
 
-- Mean block latency approximately **0.2663 ms** (a separate `nsys`-instrumented run measured about **0.2976 ms**).
-- Approximately **3,754.85 blocks/s** and **1,922,485 tokens/s** under the reported benchmark's accounting. These are synthetic benchmark throughput figures, **not** model-serving generation rates.
-- NVTX profiling identified `qkv_projection` as approximately **89.9% of the summed NVTX-range time** in one report. This is a range-accounting observation; do not automatically interpret it as 89.9% of nonoverlapping wall time.
-- Nsight Compute was also used to target the `mlp_fc1` cuBLAS kernel.
+- [MI-Research-6](docs/mi_research_6.md): conventional 3×3 (27 products) and known Laderman (23 products) exactly reconstructed all 729 tensor coefficients and passed matrix-valued block tests. At N=96, GPU-verified staged operations used 28 and 24 physical kernels, respectively, with FP32 product scratch; eager timing was inconclusive.
+- [MI-Research-6B](docs/mi_research_6b.md): fixed-address CUDA Graph replay passed correctness for both staged algorithms. Laderman's small paired leads were inconclusive due to A/A variability.
+- The [published paper](https://arxiv.org/abs/2607.28676) and [certificate](https://github.com/trylogical/cn122_add55) give an optimized 55-addition straight-line circuit for Perminov's existing rank-23 `cr58_cn122` factorization, **not** classical Laderman. The 55- and 58-addition circuits have identical rank-23 factor maps. Whole-circuit DAG depth was 15 vs. 12. Both were independently verified exactly.
+- [MI-Research-6C](docs/mi_research_6c.md): fused 55-addition Perminov compiled as one physical GPU launch at N=96, passed six correctness cases twice, and used no explicit HBM product scratch. Original output-owned mapping used 4 CTAs, 23 source dots/CTA, 255 compiler-reported registers/thread; subsequent inspection reported `n_spills=422`. This established hardware feasibility, not speedup.
+- [MI-Research-6D–6F](docs/mi_research_6f.md): fused Perminov was much faster than **staged Laderman** in observed graph medians. 6D had inconclusive paired decisions due to A/A variability; two fresh 6E sessions returned `B_FASTER` under the unchanged rule. The source of unusually slow staged blocks remained unresolved after focused tracing. This result does not isolate addition-circuit effects or imply conventional GEMM competitiveness.
+- [MI-Research-7](docs/mi_research_7.md): matched CUDA Graph comparisons at N=96 established that fixed conventional Triton (~1.4 µs) and cuBLAS (~1.85 µs) beat the original fused Perminov (~15.7 µs) in two sessions. Eager comparisons were inconclusive. The Triton reference was one fixed, correctly implemented tile configuration, not a globally autotuned baseline.
+- [MI-Research-7B](docs/mi_research_7b.md): remapping Perminov from 4 to 36 CTAs reduced graph median latency from ~15.7–16.3 to ~9.6–10.0 µs, passing the paired rule twice, despite 2.78× more source-level dots. Compiler `n_spills` fell from 422 to 166. cuBLAS remained faster (~2.53 vs. ~10.05 µs) in a triggered matched comparison.
+- [MI-Research-7C](docs/mi_research_7c.md): Nsight Compute observed 4/34 vs. 34/34 SM usage; executed local loads 9,632 vs. 4,000 and tensor-pipe instructions 8,832 vs. 24,576. Achieved occupancy on active SMs remained ~8–9% and measured DRAM reads increased. Wider SM coverage and reduced local-load activity are plausible contributors, but their causal latency contributions are not isolated.
+- [MI-Research-8](docs/mi_research_8.md): matched 55-addition and 58-addition Perminov circuits on the same 36-CTA output-owned mapping passed exact and GPU checks. Whole-circuit addition count was **not** predictive of output-sliced work: 55-addition induced 704 gate instances and 256 dot instances across the grid, versus 568 and 232 for 58-addition. The 58-addition kernel also emitted fewer static arithmetic/MMA instructions and fewer compiler-reported spills (100 vs. 166). Both paired timing decisions were inconclusive. No GPU speedup is claimed.
 
-### FC1 GEMM optimization
+## Integration boundary and next work
 
-Isolated FC1 shape: **M=512, K=768, N=3072**, FP16. A Triton GEMM was benchmarked against PyTorch/cuBLAS, with tile shape, number of warps, pipeline stages, and grouping varied.
+- The GitHub-published feature checkpoint is `feat/mi-research-3c` at `f2d6607653d04972bbc04757bd0ac5bf1864af6d`. The MI-Research-4–8 commits descend from it. This branch is the through-8 integration candidate; branch publication or a PR does not mean these commits have merged into `main` or shipped in a package release.
+- `origin/main` was `5df8f5ba3d76b9acc2e6af2b5c2e584ed21f5543` when checked on October 21. GitHub reported no open PR before this integration work. Recheck remote state and CI before a merge.
+- At the MI-Research-8 checkpoint, **MI-Research-9 — Output-Slice-Aware Algebraic Cost Analysis** was the next planned CPU-only study. It was subsequently completed and committed locally as `f90fdbaf52377d7b634cb14692b234c5268196a7` on a separate branch. It is deliberately outside this through-8 integration candidate. Do not describe it as unfinished or already published.
+- Review the full research PR, retained artifacts, CI, and release boundaries before any merge. Further internal model-agent or backend work needs a specific evidence-backed reason.
+- The pre-existing uncommitted `AGENTS.md` edit and unrelated untracked files are outside this integration. Preserve them.
 
-Selected historical observations:
+## Maintenance rules
 
-- Initial cuBLAS / PyTorch: about **0.0639 ms**, ~37.8 TFLOP/s.
-- Initial Triton: about **0.0664 ms**, ~36.36 TFLOP/s; correctness matched the tested reference.
-- One tile/stage sweep measured a **64×128×32** configuration at roughly **0.059087 ms**, ~40.89 TFLOP/s, compared with a ~0.0639 ms reference from a separate measurement setting.
-- **Interleaved final comparison** (more suitable for a fair claim): PyTorch median **0.059892 ms**, Triton `64×128_g1` median **0.059697 ms**; roughly **0.3% lower latency**, a difference small enough to warrant caution. Other tested Triton configurations were close. Correctness passed with reported max absolute error 0.0 in that test.
-- A controlled QKV/FC2 autotuning study was added through `scripts/transformer_projection_autotune.py`, testing 72 configurations per projection, validating against PyTorch, alternating CUDA-event measurements, and writing CSV/JSON summaries. Refer to the actual artifacts for final projection-specific gains rather than inventing percentages.
-
-**Important:** Kernel-level changes must be separately measured in the end-to-end Transformer workload before claiming token-throughput improvement.
-
-### PTX / machine-code investigation
-
-- CUDA source was compiled with `nvcc -O3 -arch=sm_89 -ptx` and `-cubin`, producing PTX and CUBIN for inspection.
-- Explored PTX labels, predicates, branching, address calculations, and the relationship between high-level GEMM, PTX, and Tensor Core execution.
-- Potential future Matmul Inspector feature: automated PTX inspection, static instruction categories, register/shared-memory-related analysis when available, and diffs across kernel variants. Avoid conflating PTX with final SASS machine instructions.
-
-## 4. AWS Trainium1 / NKI track
-
-### Basic kernel architecture
-
-The tiled GEMM accepts `a_t` in transposed shape `[K, M]` and `b` in shape `[K, N]`, producing an FP32 output `[M, N]`. It uses:
-
-- HBM/shared HBM for tensors and output.
-- SBUF tiles for operands, loaded via `nisa.dma_copy`.
-- `nisa.nc_matmul` with a stationary A tile and moving B tile.
-- FP32 accumulation in PSUM using `accumulate=(ki > 0)`.
-- `nisa.tensor_copy` from PSUM to SBUF and DMA to HBM for output.
-
-The established N=512 kernel uses `TM=128`, `TN=512`, `TK=128`. Preserve original kernels as benchmarks rather than overwriting them. NKI source is not a sufficient proxy for actual machine behavior: compare NEFF, MLIR, hardware instruction statistics, and measured latency.
-
-### Correctness and early experiments
-
-- Initial 16×16 NKI GEMM passed correctness (max absolute error around `1.43e-06`).
-- Tiled 512×512 GEMM ran correctly on physical Trainium1.
-- BF16 input with FP32 PSUM accumulation and FP32 output passed tests against the BF16-rounded-input reference. An earlier 512×512 test reported max kernel/reference error `2.4795532e-05` and mean `1.9467248e-06`.
-- Distinguish **kernel error versus BF16-rounded inputs** from **precision loss versus original FP32 inputs**.
-
-### Explicit A-tile reuse experiment — completed
-
-**Hypothesis:** Preloading A tiles across adjacent output N tiles could reduce redundant transfers or improve scheduling, using the original 128×128×128 geometry.
-
-**Finding:** The revised kernel passed correctness but reported the same **40 µs NeuronCore p50** as the original at reporting precision. Host-visible runtime p50 was **94 µs versus 92 µs**, insufficient to establish a gain or regression. Compiler `dma_stats.txt` and `instruction_stats.txt` matched (including 128 MATMUL, 128 LDWEIGHTS, 16 COPY, 22 EVENT_SEMAPHORE). NEFF hashes and MLIR source differed. **Do not repeat this experiment without a new mechanism or better measurement.**
-
-### BF16 precision and output-tile geometry — completed October 9
-
-Controlled **512×512** GEMM study with `TM=128`, `TK=128`, and `TN=128/256/512`. One NeuronCore, `neuron-bench exec`, 20 warmups, 200 work iterations, five randomized rounds for the four primary configurations.
-
-| Input type | TM×TN×TK | Mean run-level NeuronCore p50 |
-|---|---|---:|
-| FP32 | 128×128×128 | 40.2 µs |
-| BF16 | 128×128×128 | 38 µs |
-| FP32 | 128×512×128 | 28 µs |
-| BF16 | 128×512×128 | **25 µs** |
-
-An initial BF16 `TN=256` run measured 29 µs median NeuronCore latency.
-
-**Strongest result:** FP32 `TN=128` to BF16 `TN=512`: **1.608× speedup**, **37.8% lower latency**, and calculated effective arithmetic throughput **~10.74 TFLOP/s** (`2 × 512³ / 25 µs`). The figure is an arithmetic-throughput estimate, not hardware peak-utilization measurement.
-
-**Interpretation:** Widening the output N tile was a larger performance lever than changing precision alone on this exact workload. The optimum is not established for other matrix sizes or hardware.
-
-Selected Neuron Explorer results for 512×512:
-
-| Metric | BF16 N=128 | BF16 N=512 | FP32 N=512 |
-|---|---:|---:|---:|
-| MATMUL instructions | 64 | 16 | 32 |
-| Tensor Engine active time | 7.79 µs | 5.85 µs | 14.37 µs |
-| DMA active time | 22.68 µs | 14.91 µs | 17.47 µs |
-| GPSIMD active time | 23.12 µs | 3.96 µs | 9.43 µs |
-| HBM reads | 1 MiB | 1 MiB | 2 MiB |
-| HBM writes | 1 MiB | 1 MiB | 1 MiB |
-| Profile total execution time | 31.60 µs | 17.81 µs | 21.46 µs |
-
-**Caveat:** Engine-active windows can overlap and must **not** be added together to estimate wall-clock kernel time. Profiler `total_exec_time` and `neuron-bench` NeuronCore latency are distinct measurement windows. Zero run-level SD at whole-microsecond resolution does not imply zero timing variability.
-
-### 1024×1024 precision comparison — profiling completed, analysis ongoing
-
-The 1024 scripts call the shared tiled kernel with `TN=512`; FP32 and BF16 variants supply different input types. Instruction breakdown:
-
-| Hardware opcode | FP32 | BF16 |
-|---|---:|---:|
-| MATMUL | 256 | 128 |
-| LDWEIGHTS | 256 | 80 |
-| EVENT_SEMAPHORE | 37 | 36 |
-| COPY | 16 | 16 |
-| UNKNOWN(0xd4) | 106 | 112 |
-
-These are **instruction counts, not time or bytes**. The `UNKNOWN(0xd4)` opcode remains unidentified. Files include:
-
-- `scripts/nki_matmul_fp32_1024_n512.py`
-- `scripts/nki_matmul_bf16_1024_n512.py`
-- `artifacts/nki-fp32_1024_n512/sg00/instruction_stats.txt`
-- `artifacts/nki-bf16_1024_n512/sg00/instruction_stats.txt`
-
-### Logical K-blocking experiment — completed October 10
-
-**Hypothesis:** Grouping K iterations might improve scheduling or accumulation overhead without changing physical TK.
-
-**Comparison:** BF16 1024×1024 GEMM, `TM=128`, `TN=512`, `TK=128`:
-
-- Baseline: eight consecutive physical K iterations per output tile.
-- Candidate: four logical groups, two physical K iterations per group.
-- `scripts/nki_k_blocking_experiment.py` and `scripts/nki_k_blocking_sweep.py`.
-- Correctness: **PASS** vs FP32 matmul of BF16-rounded operands (`rtol=1e-3`, `atol=1e-3`); max absolute error **5.340576e-05**, mean **3.5062462e-06**.
-- Controlled benchmark: five randomized rounds, 20 warmups and 200 work iterations per run, one core; **93 µs NeuronCore p50 in all rounds for both variants**. Observed speedup **1.000×**, no detectable difference at reported timing resolution.
-- Both variants: **128 MATMUL, 80 LDWEIGHTS, 36 EVENT_SEMAPHORE, 16 COPY** and matching other opcode counts; `dma_stats.txt` files identical.
-- NEFF SHA-256 hashes **differed**, so artifacts are not byte-identical.
-- Initial `module.mlir` textual diff: **1,680 lines**. After stripping nested source-location metadata and normalizing function names, **normalized MLIR matched exactly (0 diff lines)**.
-
-**Conclusion:** The captured intermediate operations are equivalent after normalization, and no hardware latency benefit was demonstrated. Identical normalized MLIR and instruction counts **do not prove** final executable instruction streams or schedules are byte-identical.
-
-Relevant artifact locations:
-
-```text
-artifacts/nki-bf16_1024_n512/
-artifacts/nki-bf16_1024_kblocked/
-artifacts/nki-k-blocking-sweep-20261010T132953Z/
-```
-
-### Neuron Explorer / Perfetto investigation
-
-Hardware traces were previously explored in Perfetto (trace file reportedly named `profile.pftrace`), including DMA and Tensor Engine overlap, synchronization events, and instruction timing. Prior discussion mentioned a small DMA transfer and partial overlap with compute; **reopen the saved trace before treating exact timing/dependency claims as verified**. Observed overlap alone does not establish that a specific load lies on the kernel's critical path or causes stalls.
-
-**Next diagnostic goal:** Use timeline evidence to test whether matmul execution is blocked by DMA, synchronization, or another dependency, instead of proposing prefetching/double buffering without evidence.
-
-## 5. Repository and workflow state as of October 10
-
-- AWS branch was **`nki-bf16-optimization`** during the latest experiments.
-- An October 10 commit used the message **`Add Trainium BF16 optimization and K-blocking analysis`**.
-- A subsequent GitHub pull request view showed unresolved conflicts in **`.gitignore` and `README.md`**, with several failing CPU/CUDA checks and one passing CPU configuration. **Do not assume this PR is merged or CI is fixed**; inspect current GitHub status.
-- The repository also has/had branches including `main`, `nki-gemm`, `nki-tiled-gemm`, `transformer-workload`, and other optimization branches. Confirm availability and current tips with Git before checking out or merging.
-- Representative documentation: `docs/trainium1_nki_gemm_case_study.md`.
-- Store core source and concise documentation in Git; large compiler outputs, NEFFs, `.ntff`/`.pftrace` traces, and repeated benchmark JSON belong in artifacts or appropriate external storage unless intentionally versioned.
-
-Useful commands:
-
-```bash
-cd ~/Matmul-Inspector
-git status --short
-git branch --show-current
-git fetch origin
-```
-
-Do **not** change branches, merge, overwrite kernels, or stage ignored artifacts without confirming state and intent.
-
-## 6. Research backlog and suggested priorities
-
-1. **Resolve/review open PR and CI failures** (separate infrastructure/build issues from NKI changes).
-2. **Complete evidence-led Trainium timing investigation:** reopen existing Neuron Explorer/Perfetto traces and identify scheduling dependencies or true stalls before implementing DMA-overlap changes.
-3. **Scaling tests:** repeat controlled precision/tile comparisons at 1024×1024 and 2048×2048, tracking correctness and NeuronCore metrics. Do not presume the 512×512 winner stays optimal.
-4. **Inspector automation:** parse `neuron-bench` JSON/CSV, Neuron Explorer instruction/DMA statistics, and normalized MLIR; produce side-by-side evidence reports and flag source changes erased by compilation.
-5. **GPU track:** automate PTX inspection, continue Transformer projection measurements, and only claim end-to-end token gains when measured.
-6. **Packaging:** create/finish a Python package with a reproducible CLI, tests, sensible optional CUDA/Neuron extras, and `pip install` workflow.
-7. **Open source:** study and contribute to relevant issues or reviews in FlashAttention, FlashInfer, or vLLM.
-
-These are priorities to revisit, not assertions of work currently underway.
-
-## 7. Collaboration and evidence rules
-
-- Start new tasks by checking this context, relevant case-study Markdown, and live Git state. Don't ask to repeat completed experiments without a reason.
-- State **hypothesis → controlled change → correctness → measurement → compiler/profile inspection → conclusion**.
-- Report workload shape, data type, tile sizes, device/core count, compiler/SDK when available, repetitions, and measurement type.
-- Do not mix 512×512 and 1024×1024 latency results, nor host runtime with NeuronCore or profiler-window timings.
-- Preserve null results (explicit A reuse, K blocking) as valuable experimental outcomes.
-- Separate observed hardware facts from plausible explanations (operand reuse, synchronization, caching, and compiler canonicalization).
-- Use short, runnable terminal commands; label Python snippets meant for scripts distinctly from Bash commands.
-- Prefer one actionable experiment at a time, with clear checkpoints before destructive operations or prolonged EC2 usage.
-- Keep this file compact enough for future retrieval; detailed raw metrics should stay in experiment-specific case studies and artifacts.
-
-## 8. Context maintenance
-
-After each significant experiment, update:
-
-1. The authoritative repository code and test/benchmark outputs.
-2. The relevant experiment-specific Markdown case study.
-3. This context document's completed findings, current branch/PR state, and next decision.
-
-**This is a snapshot, not a live sync with GitHub or the EC2 instance.** Re-upload or refresh the file in the ChatGPT Project when it changes. Never infer that a prior branch, machine address, benchmark file, or PR status is still current.
+- Inspect `git status`, current branch/HEAD, remote refs, `AGENTS.md`, and CI before mutations.
+- Preserve mathematical correctness, source identity, numerical precision contracts, GPU mode, raw benchmarks, hashes, controls, negative findings, and unrelated files.
+- Label facts as user-reported, locally verified, or remote-verified when boundaries matter. Do not equate compilation, static cost, profiler counts, and runtime latency.
+- The primary product is an accessible, agent-compatible deterministic kernel experiment tool; keep the Python toolkit CPU-compatible and GPU features optional.
+- Never claim a mathematical discovery, kernel speedup, PR merge, push, or release without corresponding verified evidence.

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Matmul Inspector paired Triton FC1 comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workload", "seed", "correctness", "benchmark", "timeout_seconds", "kernels"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "workload": {
+      "type": "object", "additionalProperties": false,
+      "required": ["m", "n", "k", "dtype"],
+      "properties": {
+        "m": {"type": "integer", "minimum": 1, "maximum": 8192},
+        "n": {"type": "integer", "minimum": 1, "maximum": 8192},
+        "k": {"type": "integer", "minimum": 1, "maximum": 8192},
+        "dtype": {"const": "float16"}
+      }
+    },
+    "seed": {"type": "integer", "minimum": 0},
+    "correctness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["atol", "rtol"],
+      "properties": {"atol": {"type": "number", "minimum": 0}, "rtol": {"type": "number", "minimum": 0}}
+    },
+    "benchmark": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "warmups", "iterations", "rounds"],
+      "properties": {
+        "mode": {"const": "allocating"},
+        "warmups": {"type": "integer", "minimum": 1, "maximum": 100},
+        "iterations": {"type": "integer", "minimum": 1, "maximum": 500},
+        "rounds": {"type": "integer", "minimum": 5, "maximum": 20}
+      }
+    },
+    "timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 600},
+    "kernels": {
+      "type": "object", "additionalProperties": false,
+      "required": ["A", "B"],
+      "properties": {
+        "A": {"$ref": "#/$defs/kernel"},
+        "B": {"$ref": "#/$defs/kernel"}
+      }
+    }
+  },
+  "$defs": {
+    "kernel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["implementation", "parameters"],
+      "properties": {
+        "implementation": {"const": "triton_fc1"},
+        "parameters": {
+          "type": "object", "additionalProperties": false,
+          "required": ["block_m", "block_n", "block_k", "num_warps", "num_stages", "group_size_m"],
+          "properties": {
+            "block_m": {"type": "integer", "minimum": 1},
+            "block_n": {"type": "integer", "minimum": 1},
+            "block_k": {"type": "integer", "minimum": 1},
+            "num_warps": {"type": "integer", "minimum": 1},
+            "num_stages": {"type": "integer", "minimum": 1},
+            "group_size_m": {"type": "integer", "minimum": 1}
+          }
+        }
+      }
+    }
+  },
+  "$comment": "The Python validator also checks finite values, m*n <= 16777216, K divisibility and distinct A/B parameters."
+}

@@ -1,0 +1,29 @@
+{
+  "benchmark": {
+    "aa_rounds": 8,
+    "iterations_per_block": 100,
+    "mode": "preallocated",
+    "paired_rounds": 8,
+    "warmups_per_kernel": 30
+  },
+  "condition_order": [
+    "before",
+    "after",
+    "after",
+    "before"
+  ],
+  "interpretation": "Session is the comparison unit. No maximum A/A-gap significance rule. Preserve all attempts.",
+  "plan_recorded_local_date": "2026-10-20",
+  "session_ids": [
+    "s1-before",
+    "s2-after",
+    "s3-after",
+    "s4-before"
+  ],
+  "spec_path": "examples/mi_research_1_warps8.json",
+  "spec_sha256": "5707026a020429a86a35bb0f922bac2c743450c896c5550cdfbe87773cb434cc",
+  "study": "MI-Timing-3 A/A placement diagnostic",
+  "telemetry_query": "timestamp,clocks.gr,clocks.mem,temperature.gpu,power.draw,utilization.gpu",
+  "trusted_source_path": "examples/kernels/mi_research_1_fc1.py",
+  "trusted_source_sha256": "bccab8ab65314fb6dcb5b521146ff4d99dec88f112697f5b12e463385e9d52a9"
+}

@@ -1,0 +1,53 @@
+{
+  "candidate_source": "matmul_inspector/triton_fc1.py",
+  "candidate_source_sha256": "a88226c46f335a9768f15b52eb275abf6066bfb57b1f7e012faa937a51768552",
+  "command": [
+    "matmul-inspector-python",
+    "experiment",
+    "pair",
+    "--spec",
+    "examples/mi_research_1_warps8.json",
+    "--output",
+    "artifacts/mi-timing-3/evidence-v1/s2-after",
+    "--allow-trusted-local-source",
+    "--diagnostic-aa-placement",
+    "after"
+  ],
+  "diagnostic_aa_placement": "after",
+  "driver_version": "616.92",
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "python": "3.13.11",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "git": {
+    "commit": "e3bef96e1efc549f7b52eceb73535faae3c1c2cc",
+    "dirty": true
+  },
+  "measurement": "separate compile and warmup; A/A after each alternating A/B pair; CUDA-event, perf_counter, optional MONOTONIC_RAW clocks",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.13.11",
+  "source_identities": {
+    "A": {
+      "entry_point": "fc1_kernel",
+      "implementation": "triton_fc1",
+      "path": "candidate_source.py",
+      "sha256": "a88226c46f335a9768f15b52eb275abf6066bfb57b1f7e012faa937a51768552"
+    },
+    "B": {
+      "entry_point": "matmul_into",
+      "implementation": "triton_source",
+      "path": "sources/B.py",
+      "sha256": "bccab8ab65314fb6dcb5b521146ff4d99dec88f112697f5b12e463385e9d52a9"
+    }
+  },
+  "trusted_local_source_opt_in": true
+}

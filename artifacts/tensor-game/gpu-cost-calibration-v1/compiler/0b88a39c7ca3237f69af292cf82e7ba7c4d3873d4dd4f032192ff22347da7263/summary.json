@@ -1,0 +1,301 @@
+{
+  "schema": "tensor_game_candidate_compiler.v1",
+  "candidate_id": "0b88a39c7ca3237f69af292cf82e7ba7c4d3873d4dd4f032192ff22347da7263",
+  "family_id": "strassen",
+  "rank": 7,
+  "size": 1024,
+  "precision": "ieee",
+  "strategy": "fused_input",
+  "reconstruction": "fused",
+  "torch": "2.11.0+cu128",
+  "triton": "3.6.0",
+  "kernels": [
+    {
+      "cache_key": "AQESIV6G5QBLV3FRNPVMD5FFZACVUENZWBTTCVI6YTNLKI62LDFQ",
+      "kernel": "_fused_reconstruction_kernel",
+      "kind": "reconstruction",
+      "compiler_hash": "04092457c6ec02baecb16beac1f4a5c8055a11b9b06731551ec4dab523da58cb",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 0,
+      "registers_per_thread": 40,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "0c8e43f0578febfee365d79fa59046c69de2d8677cc84e2635f7ae9af77a625a",
+      "ptx_sha256": "8d97b3a345e97006309fde71fbb927761d480ff6647ed9a1130730ab5f163c2f",
+      "sass_sha256": "9f97fded6e30bee2c93c5d4fc56bcf67069fae68a815417df735b04475b7ceff",
+      "ptx_static": {
+        "fma_f32": 56,
+        "global_loads": 14,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 56,
+        "global_loads": 14,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {
+        "ttir": "reconstruction/kernel.ttir",
+        "ttgir": "reconstruction/kernel.ttgir",
+        "ptx": "reconstruction/kernel.ptx",
+        "sass": "reconstruction/kernel.sass"
+      },
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_reconstruction_kernel:\n  REG:40 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:440 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "CBX64FDUD5QEOHV6H2D3KUK3D242CVR22E6CTRWFQJSOOPHNCPUA",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "106fee14741f60471ebe3e87b5515b1eb9a1563ad13c29c6c58264e73ced13e8",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 24576,
+      "registers_per_thread": 41,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "08ba75d052f0d636b55c2d414d920dae4aa68b70ee2cd9a0ff5029e9e960391b",
+      "ptx_sha256": "e0565cb6c350dde59024f331665dd913103c659c3eb82c5e1ee7e0516875d590",
+      "sass_sha256": "b2080f45fdc62e393395c1ce224bfc13076838850d13946bb814832beb39e967",
+      "ptx_static": {
+        "fma_f32": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {
+        "ttir": "fused_input/kernel.ttir",
+        "ttgir": "fused_input/kernel.ttgir",
+        "ptx": "fused_input/kernel.ptx",
+        "sass": "fused_input/kernel.sass"
+      },
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:41 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "D7THDDETYO4LY4SJOMJEX5TPDMTAX6WWB4GGHA5RORUGJ6DDB52A",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "1fe6718c93c3b8bc724973124bf66f1b260bfad60f0c6383b1746864f8630f74",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 24576,
+      "registers_per_thread": 50,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "d33189f4a07fd8c696d082657b5d557decd2450c2da7582549f55d55287b9c9e",
+      "ptx_sha256": "81b33e45c1caa14e0d25593fde410e41cd78cdb401bddf646cef9177442554e3",
+      "sass_sha256": "1b698007995eb12f204b6480abcaeb763494f805c9d36fe680e5019bd5fa1431",
+      "ptx_static": {
+        "fma_f32": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:50 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "DVYNPYY2DXQWQSV6YCPMKGOK5U7ODK42IWZWO2RK3KMRYTUWMGWA",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "1d70d7e31a1de1684abec09ec519caed3ee1ab9a45b3676a2ada991c4e9661ac",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 16384,
+      "registers_per_thread": 41,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "5249226c118bb8fc9487d53ea266005c2c7656cbbfc7db445914a1223ea7b30f",
+      "ptx_sha256": "cbfa343d25dbcc0c4c39ee0402e569950e911ea4d022623535161a21fe58c877",
+      "sass_sha256": "041bbcf20d3599fa681d4657ad753b3e4aa0e365ff3eb3082f7bbece495837c6",
+      "ptx_static": {
+        "fma_f32": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:41 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "EJHLQCKQDNGKYD5A3QGJWWLUZIVIW237ZMOGWJAA4C5SSE3XFECA",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "224eb809501b4cac0fa0dc0c9b5974ca2a8b6b7fcb1c6b2400e0bb2913772904",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 20480,
+      "registers_per_thread": 44,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "ce300291ba8fc0c29f51c8df1ca622270385b94bbec0039cd98c5618dbd79326",
+      "ptx_sha256": "8e39d67a354bf622869dc23edf91fe5663b81eb0a95131ddb142311000473b86",
+      "sass_sha256": "ab301acaac80daef5aab1f65825c98cdca72571b4f5a4099d7999d7174be8382",
+      "ptx_static": {
+        "fma_f32": 132,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 132,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:44 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "FSI2UGM6SXUCLTCW2WMNXB4OOXYL5WRLQYUXMEKIU3MIUYPELUNQ",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "2c91aa199e95e825cc56d598db878e75f0beda2b8629761148a6d88a61e45d1b",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 20480,
+      "registers_per_thread": 44,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "45285c5114669db0b2833baf431821f193caada044bc4fec6e153355b37a4ec7",
+      "ptx_sha256": "336f133f08e8d8449a6611bf8a9b1466ce6959477eaeab84e619e89172a2c50e",
+      "sass_sha256": "fe636f412f4448b4d54f4aa8c626ed17a124bef6f6bf4a0f6ae5f728283f355b",
+      "ptx_static": {
+        "fma_f32": 132,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 132,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:44 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "XOIEXB7ENOAURNACZ66CIZ777HYLXKFDQVSFIQ6YMPK5UKNJB5OA",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "bb904b87e46b8148b402cfbc2467fff9f0bba8a385645443d863d5da29a90f5c",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 20480,
+      "registers_per_thread": 44,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "f49b1cfcfc8e7836b26c3b1f3ee2c12ae1a6930a5d78f16749c72101b1ffe471",
+      "ptx_sha256": "869e6bfc901fa7bb4cba0b05f51747e2ccdeb6a360b671e75516c7b7a81ba2e2",
+      "sass_sha256": "ae736884924114cb17f8186e31b23622b8f9656db61d1bc26a73be7803782cb3",
+      "ptx_static": {
+        "fma_f32": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:44 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    },
+    {
+      "cache_key": "YE4SLHT4AHOJFB5MHSYX6LHCKDCDJQEVJDAERCPQTFKY643UFN4A",
+      "kernel": "_fused_input_gemm_kernel",
+      "kind": "fused_input",
+      "compiler_hash": "c139259e7c01dc9287ac3cb17f2ce250c434c09548c04889f099558f73742b78",
+      "target": {
+        "backend": "cuda",
+        "arch": 89,
+        "warp_size": 32
+      },
+      "triton_version": "3.6.0",
+      "num_warps": 4,
+      "num_stages": 3,
+      "dynamic_shared_bytes": 16384,
+      "registers_per_thread": 41,
+      "stack_bytes": 0,
+      "static_shared_bytes": 0,
+      "local_bytes": 0,
+      "cubin_sha256": "cb4fab8481380685eccc9912e1f74f5002cab06ca06941d59628e1e7d270e49c",
+      "ptx_sha256": "d6222e1cbb8031bba9fa5cb6a5f2129c74a9fec3e61e835371bc0a0590fde815",
+      "sass_sha256": "ca6ef2947a94f489d136029d7e3450af4abb92e6dc784df0a65d445d42c54195",
+      "ptx_static": {
+        "fma_f32": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "sass_static": {
+        "ffma": 128,
+        "global_loads": 0,
+        "global_stores": 2
+      },
+      "preserved_text_artifacts": {},
+      "resource_tool_output": "Resource usage:\n Common:\n  GLOBAL:0\n Function _fused_input_gemm_kernel:\n  REG:41 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0"
+    }
+  ],
+  "notes": [
+    "CUBIN hashes refer to uncommitted cache binaries.",
+    "Static instruction counts are text occurrences, not dynamic execution counts.",
+    "One input and one reconstruction text artifact are preserved per candidate."
+  ]
+}

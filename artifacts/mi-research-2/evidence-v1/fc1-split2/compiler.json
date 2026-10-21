@@ -1,0 +1,970 @@
+{
+  "A": {
+    "baseline_compiler": "UNAVAILABLE",
+    "kernel_name": "fc1_kernel",
+    "metadata": {
+      "global_scratch_size": 0,
+      "n_regs": 121,
+      "n_spills": 0,
+      "num_stages": 3,
+      "num_warps": 4,
+      "shared": 24576
+    },
+    "ptx": "CAPTURED",
+    "ptx_summary": {
+      "address_size": 64,
+      "discovered_entries": [
+        "fc1_kernel"
+      ],
+      "discovered_functions": [],
+      "module_shared_memory_declarations": [
+        {
+          "dynamic": true,
+          "elements": null,
+          "name": "global_smem",
+          "static_bytes": null,
+          "text": ".extern .shared .align 16 .b8 global_smem[];",
+          "type": "b8"
+        }
+      ],
+      "ptx_version": "8.7",
+      "resource_note": "Register and shared-memory values are PTX declarations only. They are not final physical register allocation, final hardware resource usage, or an occupancy estimate.",
+      "selected_symbols": [
+        {
+          "directives": [
+            ".loc 1 43 0",
+            ".loc 1 43 0",
+            ".loc 1 61 24",
+            ".loc 1 67 22",
+            ".loc 1 71 20",
+            ".loc 1 72 8",
+            ".loc 1 76 15",
+            ".loc 1 81 9",
+            ".loc 1 76 35",
+            ".loc 1 76 8",
+            ".loc 1 83 21",
+            ".loc 1 83 44",
+            ".loc 1 83 31",
+            ".loc 1 84 21",
+            ".loc 1 84 44",
+            ".loc 1 84 31",
+            ".loc 1 89 28",
+            ".loc 1 89 10",
+            ".loc 1 90 17",
+            ".loc 1 90 10",
+            ".loc 1 95 28",
+            ".loc 1 95 10",
+            ".loc 1 96 10",
+            ".loc 1 95 10",
+            ".loc 1 96 10",
+            ".loc 1 107 35",
+            ".loc 1 106 12",
+            ".loc 1 112 12",
+            ".loc 1 119 18",
+            ".loc 1 120 18",
+            ".loc 1 106 12",
+            ".loc 1 112 12",
+            ".loc 1 104 22",
+            ".loc 1 106 12",
+            ".loc 1 112 12",
+            ".loc 1 117 33",
+            ".loc 1 120 18",
+            ".loc 1 104 22",
+            ".loc 1 106 12",
+            ".loc 1 112 12",
+            ".loc 1 104 22",
+            ".loc 1 83 31",
+            ".loc 1 104 22",
+            ".loc 1 122 23",
+            ".loc 1 126 28",
+            ".loc 1 126 10",
+            ".loc 1 127 10",
+            ".loc 1 131 27",
+            ".loc 1 135 21",
+            ".loc 1 135 4"
+          ],
+          "has_dynamic_shared_memory": false,
+          "instruction_categories": {
+            "arithmetic": 255,
+            "comparison_predication": 13,
+            "control_flow": 2,
+            "conversion": 34,
+            "memory_global": 8,
+            "memory_param": 3,
+            "memory_shared": 16,
+            "other": 38,
+            "synchronization": 7,
+            "tensor": 32
+          },
+          "instruction_count": 408,
+          "instruction_mnemonics": {
+            "add.s32": 39,
+            "add.s64": 33,
+            "and.b32": 13,
+            "bar.sync": 7,
+            "bfe.s32": 1,
+            "bfe.u32": 2,
+            "bra": 1,
+            "cp.async.cg.shared.global": 18,
+            "cp.async.commit_group": 6,
+            "cp.async.wait_group": 2,
+            "cvt.rn.f16x2.f32": 32,
+            "cvt.s64.s32": 1,
+            "cvt.u32.u64": 1,
+            "div.s32": 1,
+            "ld.param.b64": 3,
+            "ld.shared.v4.b32": 8,
+            "ldmatrix.sync.aligned.m8n8.x4.shared.b16": 8,
+            "ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16": 4,
+            "mad.lo.s32": 1,
+            "mad.wide.s32": 10,
+            "mad.wide.u32": 2,
+            "min.s32": 1,
+            "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32": 32,
+            "mov.b32": 69,
+            "mov.b64": 1,
+            "mov.u32": 2,
+            "mul.hi.u32": 1,
+            "mul.lo.s32": 14,
+            "mul.wide.s32": 3,
+            "mul.wide.u32": 2,
+            "or.b32": 20,
+            "or.b64": 2,
+            "ret": 1,
+            "selp.b32": 6,
+            "setp.eq.b32": 1,
+            "setp.gt.s32": 2,
+            "setp.lt.s32": 2,
+            "setp.lt.u32": 1,
+            "setp.ne.b32": 1,
+            "shl.b32": 18,
+            "shl.b64": 1,
+            "shr.u32": 3,
+            "st.global.v4.b32": 8,
+            "st.shared.v4.b32": 8,
+            "sub.s32": 3,
+            "xor.b32": 13
+          },
+          "interface": ".entry fc1_kernel( .param .u64 .ptr .global .align 1 fc1_kernel_param_0, .param .u64 .ptr .global .align 1 fc1_kernel_param_1, .param .u64 .ptr .global .align 1 fc1_kernel_param_2, .param .u64 .ptr .global .align 1 fc1_kernel_param_3, .param .u64 .ptr .global .align 1 fc1_kernel_param_4 ) .reqntid 128",
+          "kind": "entry",
+          "label_count": 5,
+          "labels": [
+            "$L__func_begin0",
+            "$L__tmp0",
+            "$L__BB0_1",
+            "$L__tmp1",
+            "$L__func_end0"
+          ],
+          "name": "fc1_kernel",
+          "parameter_types": [
+            "u64",
+            "u64",
+            "u64",
+            "u64",
+            "u64"
+          ],
+          "predicated_instruction_count": 9,
+          "ptx_declared_registers_by_type": {
+            "b32": 318,
+            "b64": 56,
+            "pred": 8
+          },
+          "ptx_declared_static_shared_bytes": 0,
+          "register_declarations": [
+            {
+              "count": 8,
+              "text": ".reg .pred %p<8>;",
+              "type": "pred"
+            },
+            {
+              "count": 318,
+              "text": ".reg .b32 %r<318>;",
+              "type": "b32"
+            },
+            {
+              "count": 56,
+              "text": ".reg .b64 %rd<56>;",
+              "type": "b64"
+            }
+          ],
+          "shared_memory_declarations": []
+        }
+      ],
+      "target": "sm_89"
+    },
+    "sass": "UNAVAILABLE",
+    "sass_reason": "Triton did not expose decoded SASS; nvdisasm was not required",
+    "status": "CAPTURED"
+  },
+  "B": {
+    "kernel_name": "reduce_partials",
+    "metadata": {
+      "n_regs": 22,
+      "n_spills": 0,
+      "num_stages": 3,
+      "num_warps": 4,
+      "shared": 0
+    },
+    "ptx": "CAPTURED",
+    "ptx_summary": {
+      "address_size": 64,
+      "discovered_entries": [
+        "reduce_partials"
+      ],
+      "discovered_functions": [],
+      "module_shared_memory_declarations": [],
+      "ptx_version": "8.7",
+      "resource_note": "Register and shared-memory values are PTX declarations only. They are not final physical register allocation, final hardware resource usage, or an occupancy estimate.",
+      "selected_symbols": [
+        {
+          "directives": [
+            ".loc 1 50 0",
+            ".loc 1 50 0",
+            ".loc 1 56 28",
+            ".loc 1 56 33",
+            ".loc 1 56 54",
+            ".loc 1 56 41",
+            ".loc 1 57 22",
+            ".loc 1 58 34",
+            ".loc 1 58 20",
+            ".loc 1 59 43",
+            ".loc 1 59 21",
+            ".loc 1 61 23",
+            ".loc 1 61 45",
+            ".loc 1 61 56",
+            ".loc 1 61 45",
+            ".loc 1 61 56",
+            ".loc 1 61 45",
+            ".loc 1 61 56",
+            ".loc 1 61 45",
+            ".loc 1 61 56",
+            ".loc 1 61 36",
+            ".loc 1 61 4"
+          ],
+          "has_dynamic_shared_memory": false,
+          "instruction_categories": {
+            "arithmetic": 36,
+            "comparison_predication": 1,
+            "control_flow": 1,
+            "conversion": 4,
+            "memory_global": 5,
+            "memory_param": 2
+          },
+          "instruction_count": 49,
+          "instruction_mnemonics": {
+            "add.f32": 8,
+            "add.s64": 3,
+            "and.b32": 1,
+            "cvt.rn.f16x2.f32": 4,
+            "ld.global.v4.b32": 4,
+            "ld.param.b64": 2,
+            "mad.wide.s32": 2,
+            "mov.b32": 1,
+            "mov.u32": 18,
+            "or.b32": 1,
+            "ret": 1,
+            "setp.lt.s32": 1,
+            "shl.b32": 2,
+            "st.global.v4.b32": 1
+          },
+          "interface": ".entry reduce_partials( .param .u64 .ptr .global .align 1 reduce_partials_param_0, .param .u64 .ptr .global .align 1 reduce_partials_param_1, .param .u64 .ptr .global .align 1 reduce_partials_param_2, .param .u64 .ptr .global .align 1 reduce_partials_param_3 ) .reqntid 128",
+          "kind": "entry",
+          "label_count": 4,
+          "labels": [
+            "$L__func_begin0",
+            "$L__tmp0",
+            "$L__tmp1",
+            "$L__func_end0"
+          ],
+          "name": "reduce_partials",
+          "parameter_types": [
+            "u64",
+            "u64",
+            "u64",
+            "u64"
+          ],
+          "predicated_instruction_count": 5,
+          "ptx_declared_registers_by_type": {
+            "b32": 36,
+            "b64": 8,
+            "pred": 2
+          },
+          "ptx_declared_static_shared_bytes": 0,
+          "register_declarations": [
+            {
+              "count": 2,
+              "text": ".reg .pred %p<2>;",
+              "type": "pred"
+            },
+            {
+              "count": 36,
+              "text": ".reg .b32 %r<36>;",
+              "type": "b32"
+            },
+            {
+              "count": 8,
+              "text": ".reg .b64 %rd<8>;",
+              "type": "b64"
+            }
+          ],
+          "shared_memory_declarations": []
+        }
+      ],
+      "target": "sm_89"
+    },
+    "sass": "UNAVAILABLE",
+    "sass_reason": "trusted entrypoint did not expose decoded SASS",
+    "status": "CAPTURED"
+  },
+  "machine_code_note": "PTX differences do not establish decoded SASS or final machine-code changes",
+  "ptx_comparison": {
+    "A_ptx_sha256": "16be26977e1fc6b029cdaac1df5870f307b4e1e9f63f0240ec223f04f4fda668",
+    "B_ptx_sha256": "c55e88127b68d46b35e81d79d7418baaaf52317068a19ee69f29f30df46b36a2",
+    "artifact": "ptx_comparison/comparison.json",
+    "kernel": {
+      "baseline": {
+        "directives": [
+          ".loc 1 43 0",
+          ".loc 1 43 0",
+          ".loc 1 61 24",
+          ".loc 1 67 22",
+          ".loc 1 71 20",
+          ".loc 1 72 8",
+          ".loc 1 76 15",
+          ".loc 1 81 9",
+          ".loc 1 76 35",
+          ".loc 1 76 8",
+          ".loc 1 83 21",
+          ".loc 1 83 44",
+          ".loc 1 83 31",
+          ".loc 1 84 21",
+          ".loc 1 84 44",
+          ".loc 1 84 31",
+          ".loc 1 89 28",
+          ".loc 1 89 10",
+          ".loc 1 90 17",
+          ".loc 1 90 10",
+          ".loc 1 95 28",
+          ".loc 1 95 10",
+          ".loc 1 96 10",
+          ".loc 1 95 10",
+          ".loc 1 96 10",
+          ".loc 1 107 35",
+          ".loc 1 106 12",
+          ".loc 1 112 12",
+          ".loc 1 119 18",
+          ".loc 1 120 18",
+          ".loc 1 106 12",
+          ".loc 1 112 12",
+          ".loc 1 104 22",
+          ".loc 1 106 12",
+          ".loc 1 112 12",
+          ".loc 1 117 33",
+          ".loc 1 120 18",
+          ".loc 1 104 22",
+          ".loc 1 106 12",
+          ".loc 1 112 12",
+          ".loc 1 104 22",
+          ".loc 1 83 31",
+          ".loc 1 104 22",
+          ".loc 1 122 23",
+          ".loc 1 126 28",
+          ".loc 1 126 10",
+          ".loc 1 127 10",
+          ".loc 1 131 27",
+          ".loc 1 135 21",
+          ".loc 1 135 4"
+        ],
+        "has_dynamic_shared_memory": false,
+        "instruction_categories": {
+          "arithmetic": 255,
+          "comparison_predication": 13,
+          "control_flow": 2,
+          "conversion": 34,
+          "memory_global": 8,
+          "memory_param": 3,
+          "memory_shared": 16,
+          "other": 38,
+          "synchronization": 7,
+          "tensor": 32
+        },
+        "instruction_count": 408,
+        "instruction_mnemonics": {
+          "add.s32": 39,
+          "add.s64": 33,
+          "and.b32": 13,
+          "bar.sync": 7,
+          "bfe.s32": 1,
+          "bfe.u32": 2,
+          "bra": 1,
+          "cp.async.cg.shared.global": 18,
+          "cp.async.commit_group": 6,
+          "cp.async.wait_group": 2,
+          "cvt.rn.f16x2.f32": 32,
+          "cvt.s64.s32": 1,
+          "cvt.u32.u64": 1,
+          "div.s32": 1,
+          "ld.param.b64": 3,
+          "ld.shared.v4.b32": 8,
+          "ldmatrix.sync.aligned.m8n8.x4.shared.b16": 8,
+          "ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16": 4,
+          "mad.lo.s32": 1,
+          "mad.wide.s32": 10,
+          "mad.wide.u32": 2,
+          "min.s32": 1,
+          "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32": 32,
+          "mov.b32": 69,
+          "mov.b64": 1,
+          "mov.u32": 2,
+          "mul.hi.u32": 1,
+          "mul.lo.s32": 14,
+          "mul.wide.s32": 3,
+          "mul.wide.u32": 2,
+          "or.b32": 20,
+          "or.b64": 2,
+          "ret": 1,
+          "selp.b32": 6,
+          "setp.eq.b32": 1,
+          "setp.gt.s32": 2,
+          "setp.lt.s32": 2,
+          "setp.lt.u32": 1,
+          "setp.ne.b32": 1,
+          "shl.b32": 18,
+          "shl.b64": 1,
+          "shr.u32": 3,
+          "st.global.v4.b32": 8,
+          "st.shared.v4.b32": 8,
+          "sub.s32": 3,
+          "xor.b32": 13
+        },
+        "interface": ".entry fc1_kernel( .param .u64 .ptr .global .align 1 fc1_kernel_param_0, .param .u64 .ptr .global .align 1 fc1_kernel_param_1, .param .u64 .ptr .global .align 1 fc1_kernel_param_2, .param .u64 .ptr .global .align 1 fc1_kernel_param_3, .param .u64 .ptr .global .align 1 fc1_kernel_param_4 ) .reqntid 128",
+        "kind": "entry",
+        "label_count": 5,
+        "labels": [
+          "$L__func_begin0",
+          "$L__tmp0",
+          "$L__BB0_1",
+          "$L__tmp1",
+          "$L__func_end0"
+        ],
+        "name": "fc1_kernel",
+        "parameter_types": [
+          "u64",
+          "u64",
+          "u64",
+          "u64",
+          "u64"
+        ],
+        "predicated_instruction_count": 9,
+        "ptx_declared_registers_by_type": {
+          "b32": 318,
+          "b64": 56,
+          "pred": 8
+        },
+        "ptx_declared_static_shared_bytes": 0,
+        "register_declarations": [
+          {
+            "count": 8,
+            "text": ".reg .pred %p<8>;",
+            "type": "pred"
+          },
+          {
+            "count": 318,
+            "text": ".reg .b32 %r<318>;",
+            "type": "b32"
+          },
+          {
+            "count": 56,
+            "text": ".reg .b64 %rd<56>;",
+            "type": "b64"
+          }
+        ],
+        "shared_memory_declarations": []
+      },
+      "baseline_interface": ".entry fc1_kernel( .param .u64 .ptr .global .align 1 fc1_kernel_param_0, .param .u64 .ptr .global .align 1 fc1_kernel_param_1, .param .u64 .ptr .global .align 1 fc1_kernel_param_2, .param .u64 .ptr .global .align 1 fc1_kernel_param_3, .param .u64 .ptr .global .align 1 fc1_kernel_param_4 ) .reqntid 128",
+      "baseline_name": "fc1_kernel",
+      "candidate": {
+        "directives": [
+          ".loc 1 50 0",
+          ".loc 1 50 0",
+          ".loc 1 56 28",
+          ".loc 1 56 33",
+          ".loc 1 56 54",
+          ".loc 1 56 41",
+          ".loc 1 57 22",
+          ".loc 1 58 34",
+          ".loc 1 58 20",
+          ".loc 1 59 43",
+          ".loc 1 59 21",
+          ".loc 1 61 23",
+          ".loc 1 61 45",
+          ".loc 1 61 56",
+          ".loc 1 61 45",
+          ".loc 1 61 56",
+          ".loc 1 61 45",
+          ".loc 1 61 56",
+          ".loc 1 61 45",
+          ".loc 1 61 56",
+          ".loc 1 61 36",
+          ".loc 1 61 4"
+        ],
+        "has_dynamic_shared_memory": false,
+        "instruction_categories": {
+          "arithmetic": 36,
+          "comparison_predication": 1,
+          "control_flow": 1,
+          "conversion": 4,
+          "memory_global": 5,
+          "memory_param": 2
+        },
+        "instruction_count": 49,
+        "instruction_mnemonics": {
+          "add.f32": 8,
+          "add.s64": 3,
+          "and.b32": 1,
+          "cvt.rn.f16x2.f32": 4,
+          "ld.global.v4.b32": 4,
+          "ld.param.b64": 2,
+          "mad.wide.s32": 2,
+          "mov.b32": 1,
+          "mov.u32": 18,
+          "or.b32": 1,
+          "ret": 1,
+          "setp.lt.s32": 1,
+          "shl.b32": 2,
+          "st.global.v4.b32": 1
+        },
+        "interface": ".entry reduce_partials( .param .u64 .ptr .global .align 1 reduce_partials_param_0, .param .u64 .ptr .global .align 1 reduce_partials_param_1, .param .u64 .ptr .global .align 1 reduce_partials_param_2, .param .u64 .ptr .global .align 1 reduce_partials_param_3 ) .reqntid 128",
+        "kind": "entry",
+        "label_count": 4,
+        "labels": [
+          "$L__func_begin0",
+          "$L__tmp0",
+          "$L__tmp1",
+          "$L__func_end0"
+        ],
+        "name": "reduce_partials",
+        "parameter_types": [
+          "u64",
+          "u64",
+          "u64",
+          "u64"
+        ],
+        "predicated_instruction_count": 5,
+        "ptx_declared_registers_by_type": {
+          "b32": 36,
+          "b64": 8,
+          "pred": 2
+        },
+        "ptx_declared_static_shared_bytes": 0,
+        "register_declarations": [
+          {
+            "count": 2,
+            "text": ".reg .pred %p<2>;",
+            "type": "pred"
+          },
+          {
+            "count": 36,
+            "text": ".reg .b32 %r<36>;",
+            "type": "b32"
+          },
+          {
+            "count": 8,
+            "text": ".reg .b64 %rd<8>;",
+            "type": "b64"
+          }
+        ],
+        "shared_memory_declarations": []
+      },
+      "candidate_interface": ".entry reduce_partials( .param .u64 .ptr .global .align 1 reduce_partials_param_0, .param .u64 .ptr .global .align 1 reduce_partials_param_1, .param .u64 .ptr .global .align 1 reduce_partials_param_2, .param .u64 .ptr .global .align 1 reduce_partials_param_3 ) .reqntid 128",
+      "candidate_name": "reduce_partials",
+      "dynamic_shared_memory": {
+        "baseline": false,
+        "candidate": false
+      },
+      "instruction_categories": [
+        {
+          "baseline": 255,
+          "candidate": 36,
+          "delta": -219,
+          "name": "arithmetic"
+        },
+        {
+          "baseline": 13,
+          "candidate": 1,
+          "delta": -12,
+          "name": "comparison_predication"
+        },
+        {
+          "baseline": 2,
+          "candidate": 1,
+          "delta": -1,
+          "name": "control_flow"
+        },
+        {
+          "baseline": 34,
+          "candidate": 4,
+          "delta": -30,
+          "name": "conversion"
+        },
+        {
+          "baseline": 8,
+          "candidate": 5,
+          "delta": -3,
+          "name": "memory_global"
+        },
+        {
+          "baseline": 3,
+          "candidate": 2,
+          "delta": -1,
+          "name": "memory_param"
+        },
+        {
+          "baseline": 16,
+          "candidate": 0,
+          "delta": -16,
+          "name": "memory_shared"
+        },
+        {
+          "baseline": 38,
+          "candidate": 0,
+          "delta": -38,
+          "name": "other"
+        },
+        {
+          "baseline": 7,
+          "candidate": 0,
+          "delta": -7,
+          "name": "synchronization"
+        },
+        {
+          "baseline": 32,
+          "candidate": 0,
+          "delta": -32,
+          "name": "tensor"
+        }
+      ],
+      "instruction_mnemonics": [
+        {
+          "baseline": 0,
+          "candidate": 8,
+          "delta": 8,
+          "name": "add.f32"
+        },
+        {
+          "baseline": 39,
+          "candidate": 0,
+          "delta": -39,
+          "name": "add.s32"
+        },
+        {
+          "baseline": 33,
+          "candidate": 3,
+          "delta": -30,
+          "name": "add.s64"
+        },
+        {
+          "baseline": 13,
+          "candidate": 1,
+          "delta": -12,
+          "name": "and.b32"
+        },
+        {
+          "baseline": 7,
+          "candidate": 0,
+          "delta": -7,
+          "name": "bar.sync"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "bfe.s32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "bfe.u32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "bra"
+        },
+        {
+          "baseline": 18,
+          "candidate": 0,
+          "delta": -18,
+          "name": "cp.async.cg.shared.global"
+        },
+        {
+          "baseline": 6,
+          "candidate": 0,
+          "delta": -6,
+          "name": "cp.async.commit_group"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "cp.async.wait_group"
+        },
+        {
+          "baseline": 32,
+          "candidate": 4,
+          "delta": -28,
+          "name": "cvt.rn.f16x2.f32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "cvt.s64.s32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "cvt.u32.u64"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "div.s32"
+        },
+        {
+          "baseline": 0,
+          "candidate": 4,
+          "delta": 4,
+          "name": "ld.global.v4.b32"
+        },
+        {
+          "baseline": 3,
+          "candidate": 2,
+          "delta": -1,
+          "name": "ld.param.b64"
+        },
+        {
+          "baseline": 8,
+          "candidate": 0,
+          "delta": -8,
+          "name": "ld.shared.v4.b32"
+        },
+        {
+          "baseline": 8,
+          "candidate": 0,
+          "delta": -8,
+          "name": "ldmatrix.sync.aligned.m8n8.x4.shared.b16"
+        },
+        {
+          "baseline": 4,
+          "candidate": 0,
+          "delta": -4,
+          "name": "ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "mad.lo.s32"
+        },
+        {
+          "baseline": 10,
+          "candidate": 2,
+          "delta": -8,
+          "name": "mad.wide.s32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "mad.wide.u32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "min.s32"
+        },
+        {
+          "baseline": 32,
+          "candidate": 0,
+          "delta": -32,
+          "name": "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32"
+        },
+        {
+          "baseline": 69,
+          "candidate": 1,
+          "delta": -68,
+          "name": "mov.b32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "mov.b64"
+        },
+        {
+          "baseline": 2,
+          "candidate": 18,
+          "delta": 16,
+          "name": "mov.u32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "mul.hi.u32"
+        },
+        {
+          "baseline": 14,
+          "candidate": 0,
+          "delta": -14,
+          "name": "mul.lo.s32"
+        },
+        {
+          "baseline": 3,
+          "candidate": 0,
+          "delta": -3,
+          "name": "mul.wide.s32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "mul.wide.u32"
+        },
+        {
+          "baseline": 20,
+          "candidate": 1,
+          "delta": -19,
+          "name": "or.b32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "or.b64"
+        },
+        {
+          "baseline": 1,
+          "candidate": 1,
+          "delta": 0,
+          "name": "ret"
+        },
+        {
+          "baseline": 6,
+          "candidate": 0,
+          "delta": -6,
+          "name": "selp.b32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "setp.eq.b32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 0,
+          "delta": -2,
+          "name": "setp.gt.s32"
+        },
+        {
+          "baseline": 2,
+          "candidate": 1,
+          "delta": -1,
+          "name": "setp.lt.s32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "setp.lt.u32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "setp.ne.b32"
+        },
+        {
+          "baseline": 18,
+          "candidate": 2,
+          "delta": -16,
+          "name": "shl.b32"
+        },
+        {
+          "baseline": 1,
+          "candidate": 0,
+          "delta": -1,
+          "name": "shl.b64"
+        },
+        {
+          "baseline": 3,
+          "candidate": 0,
+          "delta": -3,
+          "name": "shr.u32"
+        },
+        {
+          "baseline": 8,
+          "candidate": 1,
+          "delta": -7,
+          "name": "st.global.v4.b32"
+        },
+        {
+          "baseline": 8,
+          "candidate": 0,
+          "delta": -8,
+          "name": "st.shared.v4.b32"
+        },
+        {
+          "baseline": 3,
+          "candidate": 0,
+          "delta": -3,
+          "name": "sub.s32"
+        },
+        {
+          "baseline": 13,
+          "candidate": 0,
+          "delta": -13,
+          "name": "xor.b32"
+        }
+      ],
+      "interface_compatible": false,
+      "ptx_declared_registers": [
+        {
+          "baseline": 318,
+          "candidate": 36,
+          "delta": -282,
+          "name": "b32"
+        },
+        {
+          "baseline": 56,
+          "candidate": 8,
+          "delta": -48,
+          "name": "b64"
+        },
+        {
+          "baseline": 8,
+          "candidate": 2,
+          "delta": -6,
+          "name": "pred"
+        }
+      ],
+      "scope": "selected_entry_only",
+      "static_shared_bytes": {
+        "baseline": 0,
+        "candidate": 0
+      }
+    },
+    "normalized_A_sha256": "108be0b070dd2ce8c7c15cc7ef745e1f0c4ef5298dc95cf91549c852a9816066",
+    "normalized_B_sha256": "8579fb5a9852164d90890c5964d335d348638a2fcda8df8dbafd968ef9e6505b",
+    "normalized_changed_lines": 754,
+    "normalized_equal": false,
+    "status": "CAPTURED"
+  }
+}

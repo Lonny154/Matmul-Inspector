@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "base_commit": "d569e063859b09096b709eb9a6438c9d7bdb7b00",
+  "conditions": {
+    "staged_null": ["staged", "staged"],
+    "fused_null": ["fused", "fused"],
+    "cross": ["staged", "fused"]
+  },
+  "size": 96,
+  "operations_per_replay": 20,
+  "warmups_per_instance": 10,
+  "rounds_per_session": 8,
+  "sessions_per_condition": 2,
+  "control_design": "Two independently allocated fixed-address input, output, and if applicable coefficient/scratch buffer sets; same input contents; distinct captured graph objects. Cross comparison uses the same buffer separation. Session 1 captures X then Y and session 2 captures Y then X.",
+  "cross_extra_control": "Eight same-instance staged A/A blocks, one before each cross A/B round, reproduce the MI-Research-6D rule input without modifying that rule.",
+  "predeclared_offline_diagnostics": [
+    "Unchanged schema-v3 cross decision with its same-instance staged A/A control",
+    "Per-session count of positive paired staged-minus-fused differences",
+    "Median and range of paired differences from each independent null and cross condition",
+    "Maximum, median, and empirical 90th percentile of absolute independent-null differences",
+    "Descriptive comparison of cross paired gaps to same-instance and independent staged-null distributions",
+    "First-half versus second-half median event times and block-position/order traces",
+    "Host-submission, synchronized perf_counter, RAW, and CUDA-event intervals for every block"
+  ],
+  "interpretation_rule": "These are sensitivity diagnostics, not replacement production decisions. Do not choose a threshold after seeing the cross result or retroactively relabel MI-Research-6D. Any replacement requires prospective null and known-contrast validation."
+}

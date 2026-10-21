@@ -1,0 +1,23 @@
+{
+  "tool": "Nsight Compute 2026.2.1.0",
+  "source_commit": "c469232a3cb56dac1e4685be74ce5ee76f20d4b3",
+  "matrix_size": 512,
+  "seed": 20261018,
+  "input_dtype": "fp16",
+  "capture": "One complete selected-rank8 invocation per process, filtering only _materialize_u_form and the first two _shared_form_gemm kernels; all other kernels are excluded from these totals.",
+  "metric_names": ["dram__bytes_read.sum", "dram__bytes_write.sum", "lts__t_sectors.sum"],
+  "command_prefix": "PYTHONPATH=src:. ncu --target-processes all --metrics dram__bytes_read.sum,dram__bytes_write.sum,lts__t_sectors.sum --kernel-name 'regex:(_materialize_u_form|_shared_form_gemm)' --csv /home/daniel/IsaacLab/.venv/bin/python -c <single-invocation workload> <mode>",
+  "workload": "Load the retained frozen rank-8 actions, construct create_lowering('project-rank8', actions), seed torch with 20261018, create two 512x512 CUDA float16 random matrices, allocate selected workspace, execute_selected once in the specified mode, synchronize.",
+  "runs": [
+    {"mode": "stored_form", "run": 1, "captured_kernel_count": 3, "per_kernel_dram_bytes_read": [267392, 269952, 301952], "per_kernel_dram_bytes_write": [0, 256, 0], "per_kernel_lts_sectors": [13155, 74987, 75987], "captured_dram_bytes_read_total": 839296, "captured_lts_sectors_total": 164129},
+    {"mode": "recomputed_form", "run": 1, "captured_kernel_count": 2, "per_kernel_dram_bytes_read": [402048, 401792], "per_kernel_dram_bytes_write": [0, 0], "per_kernel_lts_sectors": [107865, 107834], "captured_dram_bytes_read_total": 803840, "captured_lts_sectors_total": 215699},
+    {"mode": "stored_form", "run": 2, "captured_kernel_count": 3, "per_kernel_dram_bytes_read": [273536, 304768, 297088], "per_kernel_dram_bytes_write": [0, 0, 0], "per_kernel_lts_sectors": [13329, 76069, 75830], "captured_dram_bytes_read_total": 875392, "captured_lts_sectors_total": 165228},
+    {"mode": "recomputed_form", "run": 2, "captured_kernel_count": 2, "per_kernel_dram_bytes_read": [411264, 411008], "per_kernel_dram_bytes_write": [0, 0], "per_kernel_lts_sectors": [108156, 108128], "captured_dram_bytes_read_total": 822272, "captured_lts_sectors_total": 216284}
+  ],
+  "limitations": [
+    "These are first-execution profiler-replayed kernels from separate processes, without a separate warmup; they are not CUDA-event benchmark operations.",
+    "The measured subset omits six generic GEMMs and reconstruction, which are unchanged between the pair.",
+    "DRAM writes read as zero or near zero in these short captures and are not a reliable estimate of materialization writes.",
+    "Cache state and profiler replay can alter traffic. Two exploratory captures do not establish a DRAM-causality claim."
+  ]
+}

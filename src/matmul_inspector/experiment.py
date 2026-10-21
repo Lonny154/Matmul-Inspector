@@ -262,19 +262,22 @@ class CudaTritonBackend:
         return entry
 
     @staticmethod
-    def _measure(torch, function: Callable[[], Any], iterations: int) -> dict[str, float]:
+    def _measure(torch, function: Callable[[], Any], iterations: int, *,
+                 raw_clock: Callable[[], int] | None = None) -> dict[str, float]:
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
         wall_start = time.perf_counter_ns()
+        raw_start = raw_clock() if raw_clock is not None else None
         start.record()
         for _ in range(iterations):
             function()
         end.record()
         submission_end = time.perf_counter_ns()
         end.synchronize()
+        raw_end = raw_clock() if raw_clock is not None else None
         wall_end = time.perf_counter_ns()
         elapsed = float(start.elapsed_time(end))
-        return {
+        result = {
             "cuda_event_elapsed_ms_per_operation": elapsed / iterations,
             "cuda_event_elapsed_ms_per_block": elapsed,
             "host_submission_ms_per_block": (submission_end - wall_start) / 1e6,
@@ -282,6 +285,11 @@ class CudaTritonBackend:
             "cuda_event_minus_host_wall_ms_per_block": (
                 elapsed - (wall_end - wall_start) / 1e6),
         }
+        if raw_start is not None and raw_end is not None:
+            raw_ms = (raw_end - raw_start) / 1e6
+            result["monotonic_raw_ms_per_block"] = raw_ms
+            result["cuda_event_minus_monotonic_raw_ms_per_block"] = elapsed - raw_ms
+        return result
 
     def run(self, config: Mapping[str, Any], log: Callable[[str], None]) -> dict[str, Any]:
         log("prerequisite: checking PyTorch, Triton, and CUDA")

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "recorded_before_new_kernel_compilation": true,
+  "base_commit": "e08ca67bca9d8af8ef1d10868f69dfb111eebbdf",
+  "question": "Does the exact 55-addition circuit change resources or complete-operation CUDA Graph latency relative to the original 58-addition circuit at fixed 36-CTA output ownership?",
+  "exact_identity": {
+    "original_circuit_additions": {"U": 14, "V": 15, "W": 29, "total": 58},
+    "optimized_circuit_additions": {"U": 13, "V": 14, "W": 28, "total": 55},
+    "same_rank_23_factor_coefficients": true,
+    "each_circuit_tensor_coefficients": {"checked": 729, "ones": 27, "zeros": 702, "mismatches": 0},
+    "longest_whole_DAG_depth": {"58": 12, "55": 15},
+    "prior_reordered_peak_live_intermediates": {"58": 18, "55": 17}
+  },
+  "implementation_identity": {
+    "baseline_55_source_sha256": "10b94103a2dbf3d1649d1e3d79560d45830eeb5d960161905d69a6d5947db418",
+    "new_58_source_sha256": "1ac97e326467fac40fef9f5eca2b15e3e13a9f736d723cdfa0a746f5d0ae731f",
+    "matched_generator_reproduces_55_source_byte_for_byte": true,
+    "same_grid": [2, 2, 9],
+    "same_threads_per_CTA": 128,
+    "same_num_warps": 4,
+    "same_num_stages": 2,
+    "same_dot_shape": [16, 16, 32],
+    "same_dot_precision": "tf32x3",
+    "same_input_output_policy": "FP16 inputs/output, FP32 forms/products/reconstruction",
+    "one_output_block_per_CTA": true,
+    "one_launch_no_product_scratch_or_atomics": true
+  },
+  "output_slice_work": {
+    "55_dots_by_block": [8, 6, 6, 12, 3, 10, 9, 3, 7],
+    "58_dots_by_block": [8, 6, 6, 11, 3, 10, 5, 3, 6],
+    "55_gate_additions_by_block": [20, 16, 20, 33, 2, 31, 30, 2, 22],
+    "58_gate_additions_by_block": [21, 19, 14, 29, 2, 27, 15, 2, 13],
+    "55_aggregate_dots_across_36_CTAs": 256,
+    "58_aggregate_dots_across_36_CTAs": 232,
+    "55_aggregate_gate_additions_across_36_CTAs": 704,
+    "58_aggregate_gate_additions_across_36_CTAs": 568,
+    "interpretation": "The exact 55-gate whole circuit has fewer additions, but its independent output dependency slices duplicate more gates and product expressions. This is an intrinsic circuit-structure consequence under fixed output ownership. The GPU comparison cannot isolate a three-addition effect."
+  },
+  "bounded_decision": "Proceed with correctness and compiler gates for one matched 58 circuit. If feasible, run exactly two fresh paired 8-round CUDA Graph sessions with unchanged decision rule; no cuBLAS rerun."
+}

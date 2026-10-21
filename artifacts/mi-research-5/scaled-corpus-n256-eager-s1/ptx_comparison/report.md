@@ -1,0 +1,123 @@
+# PTX comparison
+
+- Baseline: `/home/daniel/projects/matmul-inspector/artifacts/mi-research-5/scaled-corpus-n256-eager-s1/A.ptx`
+- Candidate: `/home/daniel/projects/matmul-inspector/artifacts/mi-research-5/scaled-corpus-n256-eager-s1/B.ptx`
+- Kernels: `_strassen_kernel` → `_variant_kernel`
+
+## Compatibility
+
+| Field | Baseline | Candidate | Match |
+|---|---|---|---|
+| PTX version | 8.7 | 8.7 | True |
+| Target | sm_89 | sm_89 | True |
+| Address size | 64 | 64 | True |
+| Kernel interface | — | — | True |
+
+## Full-module text comparison
+
+These raw and normalized results compare the complete PTX modules, not only the selected entry point.
+
+| Layer | Result | Changed lines |
+|---|---|---:|
+| Raw | different | 7357 |
+| Normalized | different | 6782 |
+
+## Selected-entry structural comparison
+
+The instruction and resource statistics below cover only the selected entry point; called device-function bodies are excluded.
+
+### Instruction categories
+
+| Category | Baseline | Candidate | Delta |
+|---|---:|---:|---:|
+| arithmetic | 1206 | 1396 | +190 |
+| comparison_predication | 146 | 146 | +0 |
+| control_flow | 8 | 8 | +0 |
+| conversion | 626 | 690 | +64 |
+| memory_global | 4 | 4 | +0 |
+| memory_param | 3 | 3 | +0 |
+| memory_shared | 20 | 20 | +0 |
+| other | 158 | 182 | +24 |
+| synchronization | 28 | 28 | +0 |
+| tensor | 168 | 168 | +0 |
+
+### Full mnemonics
+
+| Mnemonic | Baseline | Candidate | Delta |
+|---|---:|---:|---:|
+| `add.f32` | 424 | 376 | -48 |
+| `add.s32` | 25 | 34 | +9 |
+| `add.s64` | 56 | 68 | +12 |
+| `and.b32` | 15 | 15 | +0 |
+| `and.pred` | 1 | 1 | +0 |
+| `bar.sync` | 28 | 28 | +0 |
+| `bfe.s32` | 3 | 3 | +0 |
+| `bfe.u32` | 2 | 2 | +0 |
+| `bra` | 7 | 7 | +0 |
+| `cp.async.ca.shared.global` | 48 | 56 | +8 |
+| `cp.async.commit_group` | 48 | 56 | +8 |
+| `cp.async.wait_group` | 14 | 14 | +0 |
+| `cvt.f32.f16` | 384 | 448 | +64 |
+| `cvt.rn.f16x2.f32` | 16 | 16 | +0 |
+| `cvt.rna.tf32.f32` | 224 | 224 | +0 |
+| `cvt.s64.s32` | 2 | 2 | +0 |
+| `fma.rn.f32` | 0 | 48 | +48 |
+| `ld.param.b64` | 3 | 3 | +0 |
+| `ld.shared.b32` | 4 | 4 | +0 |
+| `ldmatrix.sync.aligned.m8n8.x4.shared.b16` | 24 | 32 | +8 |
+| `ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16` | 24 | 24 | +0 |
+| `mad.wide.s32` | 2 | 2 | +0 |
+| `mad.wide.u32` | 2 | 2 | +0 |
+| `mma.sync.aligned.m16n8k8.row.col.f32.tf32.tf32.f32` | 168 | 168 | +0 |
+| `mov.b32` | 307 | 342 | +35 |
+| `mov.b64` | 23 | 22 | -1 |
+| `mov.u32` | 3 | 3 | +0 |
+| `mul.wide.s32` | 2 | 2 | +0 |
+| `mul.wide.u32` | 4 | 4 | +0 |
+| `or.b32` | 8 | 8 | +0 |
+| `or.b64` | 2 | 1 | -1 |
+| `ret` | 1 | 1 | +0 |
+| `selp.b32` | 24 | 24 | +0 |
+| `selp.f32` | 56 | 56 | +0 |
+| `setp.eq.b32` | 1 | 1 | +0 |
+| `setp.lt.s32` | 1 | 1 | +0 |
+| `setp.lt.u32` | 1 | 1 | +0 |
+| `setp.lt.u64` | 7 | 7 | +0 |
+| `setp.num.f32` | 56 | 56 | +0 |
+| `shl.b32` | 14 | 14 | +0 |
+| `shl.b64` | 2 | 2 | +0 |
+| `st.global.b32` | 4 | 4 | +0 |
+| `st.shared.b32` | 16 | 16 | +0 |
+| `sub.f32` | 304 | 440 | +136 |
+| `xor.b32` | 7 | 7 | +0 |
+
+### PTX-declared resources
+
+These are virtual register and static/dynamic shared-memory declarations in PTX. They are not final physical register allocation, hardware resource usage, or occupancy estimates.
+
+| Register type | Baseline | Candidate | Delta |
+|---|---:|---:|---:|
+| b16 | 385 | 449 | +64 |
+| b32 | 1765 | 2009 | +244 |
+| b64 | 75 | 85 | +10 |
+| pred | 68 | 68 | +0 |
+
+- PTX-declared static shared bytes: 0 → 0
+- Dynamic shared declaration: False → False
+
+### Baseline shared-memory declarations
+
+None in the selected entry.
+
+### Candidate shared-memory declarations
+
+None in the selected entry.
+
+## Conclusions
+
+- The input PTX files are different after the documented conservative normalization.
+- Instruction and declaration differences are static PTX observations; they do not establish SASS changes or runtime performance effects.
+
+## Limitations
+
+Normalization removes only `.file`/`.loc` source annotations and whitespace differences described in the JSON report. Comments, predicates, constants, operands, labels, symbols, and instruction order are retained. Per-entry statistics exclude called device-function bodies. PTX instructions do not map one-to-one to SASS instructions.

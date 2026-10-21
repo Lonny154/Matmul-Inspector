@@ -1,0 +1,44 @@
+{
+  "candidate_source": "matmul_inspector/triton_fc1.py",
+  "candidate_source_sha256": "a88226c46f335a9768f15b52eb275abf6066bfb57b1f7e012faa937a51768552",
+  "command": [
+    "matmul-inspector-python",
+    "experiment",
+    "compare",
+    "--spec",
+    "examples/mi_workflow_1_fc1.json",
+    "--output",
+    "/tmp/mi-workflow-1-fc1-v1"
+  ],
+  "driver_version": "616.92",
+  "environment": {
+    "device": {
+      "compute_capability": "8.9",
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "total_memory_bytes": 17175150592,
+      "type": "cuda"
+    },
+    "versions": {
+      "cuda_runtime": "12.8",
+      "python": "3.13.11",
+      "torch": "2.11.0+cu128",
+      "triton": "3.6.0"
+    }
+  },
+  "git": {
+    "commit": "1a5dd403ddb40dcb9b7b93937aac776e8174b982",
+    "dirty": true
+  },
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "post_run_audit": {
+    "derived_change": "timing-boundary discrepancy now gates speedup and direction claims",
+    "original_bundle_manifest_sha256": "39361159d6a25bab2261216a1d9c0f7c59dc96e995ba4ea357fc2f68fd5d2dd6",
+    "original_comparison_sha256": "1c1799fc8b9710e731fcf4bd0c8e85759d892d8d6abf144f4003fb3fffc35ba2",
+    "raw_run_unchanged": true
+  },
+  "python": "3.13.11",
+  "raw_run_result": "raw/20261019T203620.970239Z-5c854c86/result.json",
+  "schema_version": 1,
+  "timing_separation": "first-invocation host setup is separate from repeated CUDA-event and host block timing"
+}

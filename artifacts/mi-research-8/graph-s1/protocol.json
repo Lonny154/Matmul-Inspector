@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "recorded_before_GPU_compilation": true,
+  "base_commit": "e08ca67bca9d8af8ef1d10868f69dfb111eebbdf",
+  "mapping_plan_sha256": "5c8a7a4cfbdb8fb9ed1404e1ee5a3b2417aa767a291ef8109e99be5102b95f18",
+  "prior_6c_manifest_sha256": "45315957d06913e3d1ea8cfb1eadc66548376f247429a4d6210ab709e3c075c3",
+  "prior_7b_analysis_manifest_sha256": "e6c1992e9c3b1c80cea8827954c9dd99f079275d54ecafc001db4ee182990c9e",
+  "prior_7c_manifest_sha256": "c719d98502d561bed885c0dedd295b5aacfc7b547d18ad6d4e7f7fedbedad485",
+  "source_sha256": {
+    "A_55": "10b94103a2dbf3d1649d1e3d79560d45830eeb5d960161905d69a6d5947db418",
+    "B_58": "1ac97e326467fac40fef9f5eca2b15e3e13a9f736d723cdfa0a746f5d0ae731f"
+  },
+  "size": 96,
+  "dtype": "float16",
+  "reference": "FP32 matmul of exact FP16 inputs, rounded to FP16",
+  "tolerance": {"atol": 0.01, "rtol": 0.01},
+  "correctness_cases": ["seed-0", "seed-1", "seed-2", "zero", "identity", "cancellation"],
+  "graph_operations_per_replay": 20,
+  "warmups": 10,
+  "paired_rounds_per_session": 8,
+  "sessions": 2,
+  "session_initialization_order": {"1": ["A", "B"], "2": ["B", "A"]},
+  "timing_order": "existing experiment_pair balanced A/B and A/A controls before each round",
+  "decision_rule": "unchanged experiment_pair.summarize_clock_aware",
+  "topology_gate": "one physical _fused launch per complete operation, grid [2,2,9], block [128,1,1]",
+  "stop_rule": "No paired timing unless exact, compiler, numerical, and graph topology gates pass. Stop after two fresh primary paired sessions; no external baseline rerun."
+}
