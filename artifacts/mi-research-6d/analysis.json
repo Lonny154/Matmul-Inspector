@@ -1,0 +1,145 @@
+{
+  "classification": "C",
+  "comparison_limit": "The candidates differ in algebraic representation and GPU execution design. No causal contribution of addition count, fusion, launch boundaries, product scratch, registers, or CTA count is isolated.",
+  "fused_source_sha256": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+  "milestone": "MI-Research-6D",
+  "mode": "fixed_address_cuda_graph",
+  "operations_per_replay": 20,
+  "performance_advantage_demonstrated": false,
+  "schema_version": 1,
+  "sessions": [
+    {
+      "aa_differences_us": [
+        -52.26399898529052,
+        -56.40000104904175,
+        -31.774401664733887,
+        -0.7615983486175537,
+        17.94400215148925,
+        -1.9664049148559597,
+        -31.89600110054017,
+        1.5120029449462864
+      ],
+      "aa_max_absolute_gap_us": 56.40000104904175,
+      "capture_order": [
+        "A",
+        "B"
+      ],
+      "capture_setup_ms": {
+        "A": 48.33329,
+        "B": 0.621874
+      },
+      "decision": "INCONCLUSIVE",
+      "event_us": {
+        "A": {
+          "cv": 0.251990465733606,
+          "mad_us": 6.568801403045654,
+          "max_us": 113.30879926681519,
+          "median_us": 68.25520098209381,
+          "min_us": 61.11040115356445
+        },
+        "B": {
+          "cv": 0.045212343837122526,
+          "mad_us": 0.17360001802444458,
+          "max_us": 17.51520037651062,
+          "median_us": 15.775199979543686,
+          "min_us": 15.193599462509155
+        }
+      },
+      "first_compile_ms": {
+        "A": 491.102883,
+        "B": 18.204544
+      },
+      "host_clock_preflight": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "c974150aedbbdfbfd894e657e32250fdd9e24e0fcf1d4f2503d709c28b8526c2",
+      "paired_A_minus_B_us": [
+        46.700797975063324,
+        79.85280156135559,
+        54.043202102184296,
+        97.39999920129776,
+        48.78399968147278,
+        50.88319927453995,
+        45.9168016910553,
+        77.00640261173248
+      ],
+      "paired_mad_us": 6.154400855302811,
+      "paired_median_us": 52.46320068836212,
+      "physical_kernels_per_operation": {
+        "A": 24,
+        "B": 1
+      },
+      "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+      "session": 1,
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE",
+        "AB_WITHIN_AA_VARIABILITY"
+      ]
+    },
+    {
+      "aa_differences_us": [
+        -50.34400224685669,
+        -52.48799920082092,
+        -60.05760431289672,
+        -57.46079683303833,
+        5.371201038360591,
+        -18.975996971130364,
+        21.926403045654297,
+        66.54559373855591
+      ],
+      "aa_max_absolute_gap_us": 66.54559373855591,
+      "capture_order": [
+        "B",
+        "A"
+      ],
+      "capture_setup_ms": {
+        "A": 6.11665,
+        "B": 16.263514
+      },
+      "decision": "INCONCLUSIVE",
+      "event_us": {
+        "A": {
+          "cv": 0.333661702931781,
+          "mad_us": 28.811198472976685,
+          "max_us": 121.70720100402832,
+          "median_us": 87.52880096435547,
+          "min_us": 53.1328022480011
+        },
+        "B": {
+          "cv": 0.023308097518564733,
+          "mad_us": 0.12400001287460327,
+          "max_us": 16.019199788570404,
+          "median_us": 15.191199630498886,
+          "min_us": 15.049600601196289
+        }
+      },
+      "first_compile_ms": {
+        "A": 306.680981,
+        "B": 12.593001
+      },
+      "host_clock_preflight": "RATE_DIFFERENCE_OBSERVED",
+      "manifest_sha256": "742ab478b2a60ec3a0515761b4228ae5b030d7a67a559c86fb72a1c435f33e8f",
+      "paired_A_minus_B_us": [
+        45.367999374866486,
+        100.56959539651871,
+        38.708797097206116,
+        100.38080364465714,
+        77.30240225791931,
+        67.63999909162521,
+        106.41440153121948,
+        38.043202459812164
+      ],
+      "paired_mad_us": 28.00399884581566,
+      "paired_median_us": 72.47120067477226,
+      "physical_kernels_per_operation": {
+        "A": 24,
+        "B": 1
+      },
+      "reason": "an A/B paired gap does not exceed the largest observed A/A gap",
+      "session": 2,
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE",
+        "AB_WITHIN_AA_VARIABILITY"
+      ]
+    }
+  ],
+  "staged_source_sha256": "8b328950567868b2d119e021a0dd3bcc312d6e1c8138a1577b0e0491949fbca1"
+}
