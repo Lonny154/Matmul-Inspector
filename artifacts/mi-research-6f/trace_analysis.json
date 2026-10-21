@@ -1,0 +1,93 @@
+{
+  "decision": "C \u2014 Still unexplained",
+  "decision_basis": "No event interval meeting the historical slow band occurred in the bounded graph session, which generated no trace. Node tracing shows nearly unchanged kernel spans and gaps while host graph-launch API duration differs, but its large overhead prevents attributing the historical unprofiled slow mode.",
+  "gpu": [
+    {
+      "name": "NVIDIA GeForce RTX 4060 Ti",
+      "smCount": 34
+    }
+  ],
+  "schema_version": 1,
+  "session1": {
+    "blocks": 12,
+    "historical_slow_band_count": 0,
+    "maximum_event_us_per_operation": 68.8480019569397,
+    "median_event_us_per_operation": 59.646400809288025,
+    "minimum_event_us_per_operation": 58.31519961357117,
+    "predeclared_profiled_relative_baseline_us_per_operation": 60.01119911670685,
+    "relative_anomaly_count": 0,
+    "relative_anomaly_threshold_us_per_operation": 81.01511880755424,
+    "trace_status": "no Nsight report generated; NVTX trigger failed"
+  },
+  "session2": {
+    "all_kernels_single_stream_no_overlap": true,
+    "blocks": [
+      {
+        "api_end_to_first_kernel_us": 47.147,
+        "cuda_event_us_per_block": 1972.7040529251099,
+        "cuda_event_us_per_operation": 98.6352026462555,
+        "first_graph_node_id": 8589934592,
+        "first_kernel_start_ns": 6228913,
+        "graph_id": 2,
+        "graph_launch_api_us": 883.298,
+        "graph_launch_correlation_id": 20,
+        "host_submission_us_per_block": 1232.742,
+        "inter_kernel_gap_sum_us": 16.595,
+        "kernel_count": 480,
+        "kernel_span_us": 1181.592,
+        "kernel_sum_us": 1164.997,
+        "largest_inter_kernel_gap_us": 0.064,
+        "last_graph_node_id": 8589935071,
+        "last_kernel_end_ns": 7410505,
+        "nvtx_range_us": 2482.776,
+        "product_count": 460,
+        "product_sum_us": 1131.34,
+        "reconstruction_count": 20,
+        "reconstruction_sum_us": 33.657,
+        "replay_id": "MI6F_S2_NODE_B01",
+        "stream_id": 7
+      },
+      {
+        "api_end_to_first_kernel_us": 41.756,
+        "cuda_event_us_per_block": 1687.615990638733,
+        "cuda_event_us_per_operation": 84.38079953193665,
+        "first_graph_node_id": 8589934592,
+        "first_kernel_start_ns": 8295447,
+        "graph_id": 2,
+        "graph_launch_api_us": 467.942,
+        "graph_launch_correlation_id": 68,
+        "host_submission_us_per_block": 587.6400000000001,
+        "inter_kernel_gap_sum_us": 15.944,
+        "kernel_count": 480,
+        "kernel_span_us": 1182.102,
+        "kernel_sum_us": 1166.158,
+        "largest_inter_kernel_gap_us": 0.064,
+        "last_graph_node_id": 8589935071,
+        "last_kernel_end_ns": 9477549,
+        "nvtx_range_us": 1830.752,
+        "product_count": 460,
+        "product_sum_us": 1132.532,
+        "reconstruction_count": 20,
+        "reconstruction_sum_us": 33.626,
+        "replay_id": "MI6F_S2_NODE_B02",
+        "stream_id": 7
+      }
+    ],
+    "cuda_event_gpu_timestamps_available_in_sqlite": false,
+    "node_order_identical": true,
+    "profiler_overhead_note": "Node instrumentation alters the timing environment; block event-to-kernel difference cannot be partitioned precisely without GPU event timestamps.",
+    "trace_status": "node trace exported and correlated by NVTX range plus graph launch correlation ID"
+  },
+  "source": {
+    "node_report_sha256": "6dbcb5e267a52728cdf10e18645021833065441f529337e5be6130df85ec30ae",
+    "node_sqlite_sha256": "9f252f5d9201856c36e99a5f34b3de498db3fbf568afb31230b156371114ff7e",
+    "session1_manifest_sha256": "447a9b01cf7563b65a347fa5c5fa53894b16cebc4b1a0980b49ce93222219d6e",
+    "session2_manifest_sha256": "2bc3b46f8330e6e537098c44ab19952a9c450b343f4bc07b6eaeebab2310d139"
+  },
+  "trace_diagnostics": [
+    "Installed CUDA driver version (13.4) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 13.3",
+    "Not all NVTX events might have been collected.",
+    "Not all CUDA events might have been collected.",
+    "CUDA hardware tracing is not supported on this system. A legacy (software instrumented) trace was collected instead."
+  ]
+}
