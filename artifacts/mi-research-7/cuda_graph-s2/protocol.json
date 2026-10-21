@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "base_commit": "d095aa9939316414c8122ec5fa09a40839e10c60",
+  "hypothesis": "The frozen fused Perminov-55 kernel may or may not outperform optimized conventional FP16 GEMM under matched eager and CUDA Graph comparisons.",
+  "workload": {"gpu": "NVIDIA GeForce RTX 4060 Ti", "compute_capability": "8.9", "m": 96, "n": 96, "k": 96, "input_dtype": "float16", "output_dtype": "float16", "layout": "contiguous row-major, strides (96,1)"},
+  "reference": "torch.matmul(left.float(), right.float()).half() of exact FP16 inputs; float32_matmul_precision=highest; allow_tf32=false",
+  "tolerance": {"atol": 0.01, "rtol": 0.01},
+  "correctness_cases": ["seed-0", "seed-1", "seed-2", "zero", "identity", "cancellation"],
+  "implementations": {
+    "P": "unchanged MI-Research-6C fused Perminov-55 source, 2x2 CTAs, 4 warps, 2 stages, tf32x3 dots",
+    "T": "unchanged packaged triton_fc1.fc1_kernel, block_m=32, block_n=32, block_k=32, num_warps=4, num_stages=3, group_size_m=1; nine CTAs",
+    "C": "torch.mm(left,right,out=preallocated_output), FP16 multiply with FP32 accumulation where supported, allow_fp16_reduced_precision_reduction=false"
+  },
+  "modes": ["eager", "cuda_graph"],
+  "fresh_process_sessions_per_mode": 2,
+  "pairs": [["P", "T"], ["P", "C"]],
+  "pair_order_by_session": {"1": ["T", "C"], "2": ["C", "T"]},
+  "capture_or_initialization_order_by_session": {"1": ["P", "T", "C"], "2": ["C", "T", "P"]},
+  "rounds_per_pair": 8,
+  "operations_per_eager_block": 20,
+  "operations_per_graph_replay": 20,
+  "eager_warmups_per_implementation": 10,
+  "graph_warmups_per_implementation": 10,
+  "aa_control": "P measured as X and Y before each A/B pair; balanced XY/YX order",
+  "ab_order": "balanced AB/BA; A=P, B=T or C",
+  "decision_rule": "existing Matmul Inspector schema-v3 summarize_clock_aware, unchanged",
+  "profiling": "one separate eager operation and one separate graph replay per implementation outside primary timing; retain kernel topology and compiler metadata",
+  "limits": "One N=96 workload, three implementations, two modes, two fresh processes per mode, eight rounds per pair, no parameter sweep or retries to obtain a favorable result."
+}
