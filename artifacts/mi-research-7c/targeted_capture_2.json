@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "recorded_before_second_captures": true,
+  "reason": "The first one-metric graph-node permission probes succeeded for both frozen kernels. Use the one remaining bounded capture per kernel for attribution counters.",
+  "ncu_options": ["--profile-from-start", "off", "--graph-profiling", "node", "--replay-mode", "kernel", "--cache-control", "none", "--clock-control", "none", "--kernel-name-base", "function", "--kernel-name", "regex:_fused", "--launch-count", "1", "--csv", "--print-details", "all", "--section", "Occupancy"],
+  "metrics": [
+    "sm__ctas_launched.sum",
+    "sm__ctas_launched.min",
+    "sm__ctas_launched.max",
+    "sm__cycles_active.min",
+    "sm__cycles_active.max",
+    "smsp__warps_eligible.avg.per_cycle_active",
+    "smsp__issue_active.avg.pct_of_peak_sustained_active",
+    "smsp__inst_executed.sum",
+    "smsp__inst_executed_pipe_tensor.sum",
+    "smsp__sass_inst_executed_op_local_ld.sum",
+    "smsp__sass_inst_executed_op_local_st.sum",
+    "l1tex__t_bytes_pipe_lsu_mem_local_op_ld.sum",
+    "l1tex__t_bytes_pipe_lsu_mem_local_op_st.sum",
+    "l1tex__t_bytes.sum",
+    "l1tex__t_bytes_lookup_hit.sum",
+    "l1tex__t_bytes_lookup_miss.sum",
+    "lts__t_bytes.sum",
+    "dram__bytes_read.sum",
+    "dram__bytes_write.sum",
+    "smsp__warp_issue_stalled_long_scoreboard_per_warp_active.pct",
+    "smsp__warp_issue_stalled_lg_throttle_per_warp_active.pct"
+  ],
+  "interpretation_limits": "One instrumented graph node per kernel; Nsight kernel replay can perturb state and timing. Aggregate cache and DRAM counters do not identify spill-origin bytes. Theoretical and achieved occupancy are distinct from active-SM coverage."
+}
