@@ -1,0 +1,414 @@
+{
+  "base_commit": "0b6c741f92073b20ec9009ef808704225e47826c",
+  "classification": "A \u2014 Higher-parallelism performance improvement",
+  "cuBLAS_qualification": "No practical cuBLAS advantage: C faster in the single matched comparison",
+  "historical_7_analysis_manifest_sha256": "8de962eda7c422ee649116b903a81acf3c60ef1ab1b22a1ea5a98b1b7ad5b863",
+  "interpretation": "The 36-CTA mapping is reproducibly faster than the four-CTA original despite 2.78x source-level dot duplication. This does not isolate a single causal mechanism or prove hardware spill traffic. Both remain slower than cuBLAS in the matched comparison.",
+  "mapping_plan_sha256": "78c04dac51ec1a09f2166bf1226dc53e3de935934714567239f72f6ad5c1b987",
+  "protocol_sha256": "ffccace8eee045e2026a4d434626fb9ef3cc8f427cb5d7b7b6fae5d14fd108c4",
+  "schema_version": 1,
+  "sessions": {
+    "cublas-s1": {
+      "aa_max_absolute_gap_us": 1.260799914598465,
+      "compiler": {
+        "B": {
+          "ir_sha256": {
+            "llir": "738b72fd45ada48e9e8ef9a8d5b834245f58c3ece10b8f416996db3d8f367e35",
+            "ttgir": "44f65dd881bf4a30c77acd9ff40fc2167b3d956c33ef8ae81c656741eaadf4fd",
+            "ttir": "7e355f93f2c7604d1269116518567e0d1bf8fe145c70d2a61a629a5f131a25b5"
+          },
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_ld_local_text_occurrences": 0,
+          "ptx_sha256": "f8df8aa6abe1f3e84678bda1cb8479568f3cdee5f5fc7c3daa8adc400635a91f",
+          "ptx_st_local_text_occurrences": 0,
+          "static_ptx_mma_sync_occurrences": 1536
+        }
+      },
+      "decision": "B_FASTER",
+      "environment": {
+        "compute_capability": "8.9",
+        "cuda_runtime": "12.8",
+        "driver": "616.92",
+        "gpu": "NVIDIA GeForce RTX 4060 Ti",
+        "python": "3.13.11",
+        "sm_count": 34,
+        "torch": "2.11.0+cu128",
+        "triton": "3.6.0"
+      },
+      "event_median_us": {
+        "A": 10.048000141978264,
+        "B": 2.5320000015199184
+      },
+      "event_us_per_operation": {
+        "A": [
+          9.779199957847595,
+          11.766400188207626,
+          10.014399886131287,
+          10.040000081062317,
+          9.567999839782715,
+          11.747200042009354,
+          10.05600020289421,
+          11.604800075292587
+        ],
+        "B": [
+          2.3520000278949738,
+          2.6688000187277794,
+          2.3183999583125114,
+          2.3760000243782997,
+          2.3951999843120575,
+          3.1615998595952988,
+          3.150400146842003,
+          3.2079998403787613
+        ]
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "initialization_order": [
+        "B",
+        "C"
+      ],
+      "manifest_sha256": "34cdc40ff4f128ec8b510a8f83d1c412b0a7f26626e9c6c1809cd51f52155b72",
+      "paired_A_minus_B_us": [
+        7.4271999299526215,
+        9.097600169479847,
+        7.695999927818775,
+        7.664000056684017,
+        7.172799855470657,
+        8.585600182414055,
+        6.905600056052208,
+        8.396800234913826
+      ],
+      "paired_median_us": 7.679999992251396,
+      "physical_labels": [
+        "B",
+        "C"
+      ],
+      "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+      "topology": {
+        "B": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            9
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "C": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8>(cutlass_80_wmma_tensorop_f16_s161616gemm_f16_32x32_128x2_nn_align8::Params)",
+          "grid": [
+            12,
+            1,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        }
+      },
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE"
+      ]
+    },
+    "primary-s1": {
+      "aa_max_absolute_gap_us": 1.5952005982398987,
+      "compiler": {
+        "A": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_ld_local_text_occurrences": 0,
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "ptx_st_local_text_occurrences": 0,
+          "static_ptx_mma_sync_occurrences": 552
+        },
+        "B": {
+          "ir_sha256": {
+            "llir": "738b72fd45ada48e9e8ef9a8d5b834245f58c3ece10b8f416996db3d8f367e35",
+            "ttgir": "44f65dd881bf4a30c77acd9ff40fc2167b3d956c33ef8ae81c656741eaadf4fd",
+            "ttir": "7e355f93f2c7604d1269116518567e0d1bf8fe145c70d2a61a629a5f131a25b5"
+          },
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_ld_local_text_occurrences": 0,
+          "ptx_sha256": "f8df8aa6abe1f3e84678bda1cb8479568f3cdee5f5fc7c3daa8adc400635a91f",
+          "ptx_st_local_text_occurrences": 0,
+          "static_ptx_mma_sync_occurrences": 1536
+        }
+      },
+      "decision": "B_FASTER",
+      "environment": {
+        "compute_capability": "8.9",
+        "cuda_runtime": "12.8",
+        "driver": "616.92",
+        "gpu": "NVIDIA GeForce RTX 4060 Ti",
+        "python": "3.13.11",
+        "sm_count": 34,
+        "torch": "2.11.0+cu128",
+        "triton": "3.6.0"
+      },
+      "event_median_us": {
+        "A": 15.742399543523788,
+        "B": 9.563999995589256
+      },
+      "event_us_per_operation": {
+        "A": [
+          15.710400044918062,
+          15.980799496173859,
+          15.729600191116335,
+          15.747199952602386,
+          15.732799470424652,
+          15.745599567890167,
+          15.73919951915741,
+          15.747199952602386
+        ],
+        "B": [
+          9.561599791049957,
+          9.563200175762177,
+          9.79359969496727,
+          9.548799693584442,
+          9.564799815416336,
+          9.551999717950821,
+          9.787199646234512,
+          9.814400225877762
+        ]
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "initialization_order": [
+        "A",
+        "B"
+      ],
+      "manifest_sha256": "66fcfff544f6f1310553d21572baec7c6d9d1cd97c3165b5a5e86e6a34eea734",
+      "paired_A_minus_B_us": [
+        6.148800253868105,
+        6.417599320411682,
+        5.936000496149065,
+        6.198400259017944,
+        6.167999655008316,
+        6.193599849939346,
+        5.951999872922897,
+        5.932799726724625
+      ],
+      "paired_median_us": 6.15839995443821,
+      "physical_labels": [
+        "A",
+        "B"
+      ],
+      "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+      "topology": {
+        "A": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "B": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            9
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        }
+      },
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE"
+      ]
+    },
+    "primary-s2": {
+      "aa_max_absolute_gap_us": 1.3760000467300415,
+      "compiler": {
+        "A": {
+          "ir_sha256": {
+            "llir": "8ebfa814fcd2f34db71925571e24dc15a8b66adf0ec55fd2a3f081d000f73b88",
+            "ttgir": "477e5ff30192ab49a2d0655950526600850cbe3a6f284f6577c3bc1cb2b82dbc",
+            "ttir": "615f397b7a3de8df9e9078f00dc852634e17d37319d2de64b7cebda3a4d46954"
+          },
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 422,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_ld_local_text_occurrences": 0,
+          "ptx_sha256": "6c935dfb99bf7e6f0051ff9766c85ab40a4ff3bd3ab12f304b341dff822ff00b",
+          "ptx_st_local_text_occurrences": 0,
+          "static_ptx_mma_sync_occurrences": 552
+        },
+        "B": {
+          "ir_sha256": {
+            "llir": "738b72fd45ada48e9e8ef9a8d5b834245f58c3ece10b8f416996db3d8f367e35",
+            "ttgir": "44f65dd881bf4a30c77acd9ff40fc2167b3d956c33ef8ae81c656741eaadf4fd",
+            "ttir": "7e355f93f2c7604d1269116518567e0d1bf8fe145c70d2a61a629a5f131a25b5"
+          },
+          "metadata": {
+            "global_scratch_size": 0,
+            "n_regs": 255,
+            "n_spills": 166,
+            "num_stages": 2,
+            "num_warps": 4,
+            "shared": 1024
+          },
+          "ptx_ld_local_text_occurrences": 0,
+          "ptx_sha256": "f8df8aa6abe1f3e84678bda1cb8479568f3cdee5f5fc7c3daa8adc400635a91f",
+          "ptx_st_local_text_occurrences": 0,
+          "static_ptx_mma_sync_occurrences": 1536
+        }
+      },
+      "decision": "B_FASTER",
+      "environment": {
+        "compute_capability": "8.9",
+        "cuda_runtime": "12.8",
+        "driver": "616.92",
+        "gpu": "NVIDIA GeForce RTX 4060 Ti",
+        "python": "3.13.11",
+        "sm_count": 34,
+        "torch": "2.11.0+cu128",
+        "triton": "3.6.0"
+      },
+      "event_median_us": {
+        "A": 16.338399797677994,
+        "B": 10.044800117611885
+      },
+      "event_us_per_operation": {
+        "A": [
+          17.91680008172989,
+          16.275200247764587,
+          17.09119975566864,
+          15.753600001335144,
+          15.731200575828552,
+          16.785599291324615,
+          15.961599349975586,
+          16.4015993475914
+        ],
+        "B": [
+          10.06079986691475,
+          10.028800368309021,
+          10.891199856996536,
+          9.545599669218063,
+          11.724799871444702,
+          9.74079966545105,
+          9.566400200128555,
+          10.220800340175629
+        ]
+      },
+      "host_clock_preflight_status": "RATE_DIFFERENCE_OBSERVED",
+      "initialization_order": [
+        "B",
+        "A"
+      ],
+      "manifest_sha256": "6ddfb8b689f44dd6dc99ed64cc0cdf63eb1bee7ce2418fdba53d4d826dbcc161",
+      "paired_A_minus_B_us": [
+        7.85600021481514,
+        6.246399879455566,
+        6.199999898672104,
+        6.208000332117081,
+        4.00640070438385,
+        7.044799625873566,
+        6.395199149847031,
+        6.1807990074157715
+      ],
+      "paired_median_us": 6.2272001057863235,
+      "physical_labels": [
+        "A",
+        "B"
+      ],
+      "reason": "event ranges separate, both host paired directions agree, and every A/B gap exceeds A/A",
+      "topology": {
+        "A": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            1
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        },
+        "B": {
+          "block": [
+            128,
+            1,
+            1
+          ],
+          "cuda_graph_launch_calls": 1,
+          "first_kernel_name": "_fused",
+          "grid": [
+            2,
+            2,
+            9
+          ],
+          "kernels_per_operation": 1,
+          "physical_kernel_events": 20
+        }
+      },
+      "warnings": [
+        "HOST_CLOCK_RATE_DIFFERENCE"
+      ]
+    }
+  },
+  "source_sha256": {
+    "A": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db",
+    "B": "10b94103a2dbf3d1649d1e3d79560d45830eeb5d960161905d69a6d5947db418"
+  }
+}
