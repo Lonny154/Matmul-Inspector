@@ -1,0 +1,40 @@
+.......F.............                                                    [100%]
+=================================== FAILURES ===================================
+__________________ test_evidence_and_frozen_prediction_audit ___________________
+
+    def test_evidence_and_frozen_prediction_audit() -> None:
+>       assert study.verify()["status"] == "PASS"
+               ^^^^^^^^^^^^^^
+
+tests/mi_research_10_test.py:7: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/analyze_mi_research_10.py:94: in verify
+    if json.loads(ANALYSIS.read_text()) != analyze():
+                  ^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/daniel/projects/matmul-recovery/mi-research-10-restored/artifacts/mi-research-10/analysis.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/daniel/projects/matmul-recovery/mi-research-10-restored/artifacts/mi-research-10/analysis.json'
+
+../../../miniconda3/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/mi_research_10_test.py::test_evidence_and_frozen_prediction_audit
+1 failed, 20 passed in 7.40s
