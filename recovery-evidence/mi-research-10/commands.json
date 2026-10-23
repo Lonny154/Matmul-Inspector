@@ -1,0 +1,96 @@
+{
+  "all-original-test-files": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/mi_research_9_test.py",
+      "tests/mi_research_10_test.py",
+      "tests/mi_research_10_preregistration_test.py"
+    ],
+    "exit_code": 1,
+    "log": "all-original-test-files.log"
+  },
+  "cpu-tests": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/mi_research_9_test.py",
+      "tests/mi_research_10_preregistration_test.py"
+    ],
+    "exit_code": 0,
+    "log": "cpu-tests.log"
+  },
+  "historical-plan-preregistration": {
+    "command": [
+      "/usr/bin/python3",
+      "scripts/mi_research_10_preregistration.py",
+      "artifacts/mi-research-10/frozen_plan.json"
+    ],
+    "exit_code": 2,
+    "log": "historical-plan-preregistration.log"
+  },
+  "kernel-regeneration": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "scripts/generate_mi_research_10_kernel.py"
+    ],
+    "exit_code": 0,
+    "log": "kernel-regeneration.log"
+  },
+  "mi9-replay": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "scripts/analyze_mi_research_9.py",
+      "--verify"
+    ],
+    "exit_code": 0,
+    "log": "mi9-replay.log"
+  },
+  "offline-replay": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "scripts/analyze_mi_research_10.py",
+      "--verify"
+    ],
+    "exit_code": 1,
+    "log": "offline-replay.log"
+  },
+  "original-20-test-selection": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/mi_research_9_test.py",
+      "tests/mi_research_10_test.py",
+      "tests/mi_research_10_preregistration_test.py",
+      "-k",
+      "not test_cli_rejects_historical_plan_without_a_traceback"
+    ],
+    "exit_code": 1,
+    "log": "original-20-test-selection.log"
+  },
+  "recovered-plan-replay": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "scripts/freeze_mi_research_10.py"
+    ],
+    "exit_code": 0,
+    "log": "recovered-plan-replay.log"
+  },
+  "reversed-4096-claim-test": {
+    "command": [
+      "/home/daniel/projects/matmul-inspector/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/mi_research_10_preregistration_test.py::test_exact_historical_4096_byte_contradiction_is_rejected"
+    ],
+    "exit_code": 0,
+    "log": "reversed-4096-claim-test.log"
+  }
+}

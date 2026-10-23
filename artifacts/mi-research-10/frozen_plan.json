@@ -1,0 +1,128 @@
+{
+  "base_commit": "ff55666ea0dff33bdb5ee19061c5cd950ee60be9",
+  "candidate_selection_rule": "Use the only previously uncompiled combination of the two certified circuits and the two established output ownership mappings; no latency data used.",
+  "candidates": [
+    {
+      "circuit": "perminov_55",
+      "descriptors": {
+        "cta_count": 4,
+        "mathematical_rank": 23,
+        "max_dependency_path_depth_operations": 15,
+        "max_estimated_live_bytes_per_cta": 59392,
+        "output_blocks_per_cta": 9,
+        "output_elements_per_cta": 2304,
+        "peak_live_intermediates_per_cta": 17,
+        "peak_live_values_including_inputs_per_cta": 31,
+        "per_grid_dot_instances": 92,
+        "per_grid_extra_dots_due_to_output_slicing": 0,
+        "per_grid_extra_gates_due_to_output_slicing": 0,
+        "per_grid_gate_instances": 220,
+        "per_grid_gates_by_phase": {
+          "U": 52,
+          "V": 56,
+          "W": 112
+        },
+        "per_grid_zero_net_product_dependency_instances": 0,
+        "unique_gate_labels_per_tile_position": 55,
+        "unique_product_labels_per_tile_position": 23,
+        "whole_circuit_additions": 55
+      },
+      "id": "perminov55_four_cta",
+      "mapping": "four_cta",
+      "role": "retained_compiled_control",
+      "source": "examples/kernels/mi_research_6c_fused_perminov55.py",
+      "source_sha256": "c9b2d61fc6a1b6a658f1198d1a3938fae154efce2029c463e439b7fabbfaf8db"
+    },
+    {
+      "circuit": "perminov_58",
+      "descriptors": {
+        "cta_count": 4,
+        "mathematical_rank": 23,
+        "max_dependency_path_depth_operations": 12,
+        "max_estimated_live_bytes_per_cta": 63488,
+        "output_blocks_per_cta": 9,
+        "output_elements_per_cta": 2304,
+        "peak_live_intermediates_per_cta": 18,
+        "peak_live_values_including_inputs_per_cta": 33,
+        "per_grid_dot_instances": 92,
+        "per_grid_extra_dots_due_to_output_slicing": 0,
+        "per_grid_extra_gates_due_to_output_slicing": 0,
+        "per_grid_gate_instances": 232,
+        "per_grid_gates_by_phase": {
+          "U": 56,
+          "V": 60,
+          "W": 116
+        },
+        "per_grid_zero_net_product_dependency_instances": 0,
+        "unique_gate_labels_per_tile_position": 58,
+        "unique_product_labels_per_tile_position": 23,
+        "whole_circuit_additions": 58
+      },
+      "id": "perminov58_four_cta",
+      "mapping": "four_cta",
+      "role": "prospective_unbenchmarked_candidate",
+      "source": "artifacts/mi-research-10/perminov58_four_cta.py",
+      "source_sha256": "fa0715e83b773816966ec70ea6f536d16d0f9ca72be0753ed16875bb504d0cd0"
+    }
+  ],
+  "compilation_status_at_freeze": "not_started",
+  "control_evidence": "artifacts/mi-research-6c/gpu-probe-n96",
+  "execution_set": [
+    "perminov58_four_cta"
+  ],
+  "frozen_at_utc": "2026-10-23T13:18:13.511578+00:00",
+  "prior_benchmarked_combinations": [
+    "perminov55_four_cta",
+    "perminov55_thirty_six_cta",
+    "perminov58_thirty_six_cta"
+  ],
+  "prior_evidence_sha256": {
+    "artifacts/mi-research-6c/analysis.json": "b4f23808753504666d186650d73b89954d49f0ee738634ba6b8f99974a799c2f",
+    "artifacts/mi-research-6c/upstream/certificate.json": "91c36b1165a71d4ba78cd8eb9c51ef9666d05e9162fdef5cba28d1d697a17dff",
+    "artifacts/mi-research-6c/upstream/perminov_source.json": "80bb4187ddf0cfc04654ca3e524f4d311c5a62245ee231a1101280b43fd2ae3a",
+    "artifacts/mi-research-9/analysis.json": "72377726c8d4a6645f2b7f229ad597e887eb5da4f334f0f324fb11c09a925b2d",
+    "artifacts/mi-research-9/hash_manifest.json": "535f35bbef578fc5b6cc49be41908c72053ccd911b912799548f01e7f863fa16"
+  },
+  "schema_version": 1,
+  "screening_hypotheses": [
+    "Both four-CTA circuits contain 23 dots per CTA and 92 dots per grid; compiled TTIR dot and PTX MMA counts should agree if dot lowering is stable.",
+    "The 58 circuit has 12 more source gate instances per grid; compiled arithmetic may differ in count and need not preserve this exact delta.",
+    "The 58 circuit has 4096 fewer modeled live bytes per CTA and a dependency path shorter by three operations; test whether reported registers or spills differ, without equating model bytes to allocation.",
+    "The 58 circuit is a work/storage/depth tradeoff against the 55 control; no latency direction is predicted."
+  ],
+  "study": "MI-Research-10",
+  "tensor_identity": {
+    "certificate": "artifacts/mi-research-6c/upstream/certificate.json",
+    "exact_tensor_check": {
+      "checked": 729,
+      "mismatches": 0,
+      "unit": 27,
+      "zero": 702
+    },
+    "factor_maps_identical": true,
+    "ordered_block_tensor_shape": [
+      3,
+      3,
+      3
+    ],
+    "rank": 23,
+    "source": "artifacts/mi-research-6c/upstream/perminov_source.json"
+  },
+  "workload": {
+    "N": 96,
+    "cta_count": 4,
+    "dot_input_precision": "tf32x3",
+    "grid": [
+      2,
+      2
+    ],
+    "input_dtype": "float16",
+    "output_dtype": "float16",
+    "output_ownership": "one CTA owns one local tile in each of nine output blocks",
+    "output_tile": [
+      16,
+      16
+    ],
+    "warps_per_cta": 4
+  }
+}
