@@ -56,15 +56,25 @@ Those summaries cannot establish every analysis field or recreate the original
 hash chain. Exact reconstruction of `analysis.json` from this session is
 unverifiable. No substitute analysis or GPU measurements were created.
 
-The original 20-test selection has 19 passes and one failure. After the final
-preregistration patch added one test, the full three-file run has 20 passes and
-one failure. All 20 tests that do not need the missing GPU evidence pass.
-`test_evidence_and_frozen_prediction_audit` needs the missing
-`artifacts/mi-research-10/analysis.json`. The original offline evidence replay
-fails at the same missing file. The GPU validation and timing directories are
-also absent. Historical compiler, correctness, timing, and final manifest
-claims therefore remain unverified here. The original hash checks were not
-bypassed.
+The current three-file MI-Research-9/10 CPU selection has 28 passes and one
+skip. `test_evidence_and_frozen_prediction_audit` skips only when all four
+historical outputs are absent: `analysis.json`, `hash_manifest.json`,
+`gpu-validation-v1/`, and `graph-pair-s1/`. The recovered frozen plan, kernel
+source, and small `environment.json` do not count as GPU evidence. A partial
+bundle, corrupt analysis, or hash mismatch enters the original strict replay
+and fails. CPU-only regression tests cover the missing, present, partial,
+corrupt, and mismatched cases. The historical evidence test is **skipped, not
+passed**, in this checkout.
+
+The standalone `scripts/analyze_mi_research_10.py --verify` still fails at the
+missing `artifacts/mi-research-10/analysis.json`. The GPU validation and
+timing directories are also absent. Historical compiler, correctness, timing,
+and final manifest claims remain unverified here. Restoring only the lost GPU
+files may still fail their frozen-plan identity checks: the original plan hash
+is `89952d7ecf4a08764f768cadfd827940d64352f0921dd5b7c3b0db6e1490b55d`,
+while this checkout's regenerated plan hashes to
+`0063d03a5b7a5f9727a968a709a164072d060b62231c67b73c6d5fc37d4482cd`.
+The verification rules and original numerical tolerances were not changed.
 
 The preregistration checker rejects the historical plan because it lacks
 structured `descriptor_claims`. Its targeted CPU test also rejects a new
